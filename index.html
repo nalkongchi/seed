@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>나는야 종자검사원</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game-container">
+
+  <!-- ═══════════════════════════════════════════
+       TITLE SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="title-screen" class="screen active">
+    <div class="title-stars" id="stars"></div>
+    <div class="title-logo">
+      <div class="sub">⚔️ CLASSIC RPG EDUCATION GAME ⚔️</div>
+      <div class="main">나는야<br><span>종자검사원</span></div>
+      <div class="subtitle">검사원이 되기 위한 용사의 모험</div>
+    </div>
+    <div class="title-character">
+      <svg width="280" height="150" viewBox="0 0 280 150" style="image-rendering:pixelated">
+        <rect x="0" y="110" width="280" height="40" fill="#2d5a1a"/>
+        <rect x="0" y="100" width="120" height="15" fill="#3a6a22" rx="3"/>
+        <rect x="160" y="95" width="120" height="20" fill="#3a6a22" rx="3"/>
+        <rect x="10" y="105" width="6" height="10" fill="#4a8a2a"/>
+        <rect x="20" y="103" width="6" height="12" fill="#5a9a3a"/>
+        <rect x="240" y="100" width="6" height="12" fill="#4a8a2a"/>
+        <rect x="255" y="103" width="6" height="10" fill="#5a9a3a"/>
+        <rect x="120" y="60" width="40" height="40" fill="#3a5a8a"/>
+        <rect x="124" y="38" width="32" height="28" fill="#f5d0a0"/>
+        <rect x="122" y="34" width="36" height="10" fill="#4a3010"/>
+        <rect x="122" y="34" width="8" height="18" fill="#4a3010"/>
+        <rect x="130" y="46" width="6" height="6" fill="#2a1a08"/>
+        <rect x="144" y="46" width="6" height="6" fill="#2a1a08"/>
+        <rect x="132" y="47" width="2" height="2" fill="#fff"/>
+        <rect x="146" y="47" width="2" height="2" fill="#fff"/>
+        <rect x="134" y="56" width="12" height="4" fill="#c0705a"/>
+        <rect x="112" y="62" width="16" height="30" fill="#2a4a6a"/>
+        <rect x="152" y="62" width="16" height="30" fill="#2a4a6a"/>
+        <rect x="155" y="68" width="20" height="26" fill="#e8d8a0"/>
+        <rect x="157" y="70" width="16" height="2" fill="#8a6a40"/>
+        <rect x="157" y="74" width="12" height="2" fill="#8a6a40"/>
+        <rect x="157" y="78" width="14" height="2" fill="#8a6a40"/>
+        <rect x="100" y="70" width="18" height="20" fill="#8a3a3a"/>
+        <rect x="103" y="73" width="12" height="12" fill="#c05050"/>
+        <rect x="105" y="75" width="8" height="8" fill="#e06060"/>
+        <rect x="124" y="98" width="14" height="14" fill="#2a4060"/>
+        <rect x="142" y="98" width="14" height="14" fill="#2a4060"/>
+        <rect x="122" y="110" width="16" height="6" fill="#3a2a18"/>
+        <rect x="140" y="110" width="16" height="6" fill="#3a2a18"/>
+        <rect x="130" y="28" width="4" height="8" fill="#8a8a30"/>
+        <rect x="128" y="24" width="2" height="6" fill="#a0a040"/>
+        <rect x="132" y="22" width="2" height="8" fill="#a0a040"/>
+        <rect x="136" y="24" width="2" height="6" fill="#a0a040"/>
+        <rect x="105" y="115" width="70" height="20" fill="#1a3a1a" rx="2"/>
+        <text x="140" y="129" text-anchor="middle" font-size="9" fill="#7ab648" font-family="monospace" font-weight="bold">검사원 지망생</text>
+      </svg>
+    </div>
+    <div class="title-menu">
+      <button class="menu-btn primary" onclick="goToNameInput()">🗡️ 모험 시작</button>
+      <button class="menu-btn" id="continue-btn" onclick="continueGame()">📖 이어하기</button>
+      <button class="menu-btn" onclick="showWrongnote()">📝 오답노트</button>
+      <button class="menu-btn" onclick="showTutorial()">❓ 게임 방법</button>
+      <button class="menu-btn" onclick="showSetting()">⚙️ 설정</button>
+    </div>
+    <div class="title-footer">© 국립종자원 교육게임 · v0.3</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       NAME INPUT SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="name-screen" class="screen">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,#0d2a1a,#1a4a2a);"></div>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+      <div class="name-box">
+        <div class="name-title">🌾 검사원 지망생 등록</div>
+        <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
+        <input class="name-input" id="player-name-input" type="text" maxlength="8" placeholder="이름을 입력하세요">
+        <button class="name-confirm-btn" onclick="confirmName()">✅ 등록하고 출발!</button>
+        <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       OPENING SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="opening-screen" class="screen">
+    <button class="opening-skip" onclick="skipOpening()">SKIP ▶</button>
+    <div class="opening-content">
+      <div class="opening-line" id="op0">먼 옛날,</div>
+      <div class="opening-line" id="op1">종자의 질서가 무너진 왕국에는</div>
+      <div class="opening-line highlight" id="op2">기준 미달 종자, 혼입 종자,</div>
+      <div class="opening-line highlight" id="op3">허위 주장 민원인, 잘못된 판정이 넘쳐난다.</div>
+      <div class="opening-line" id="op4" style="margin-top:16px">이 혼란을 바로잡기 위해</div>
+      <div class="opening-line highlight" id="op5">종자검사원단이 창설되었다.</div>
+      <div class="opening-line" id="op6" style="margin-top:16px">왕국 깊은 곳에는</div>
+      <div class="opening-line highlight" id="op7">모든 기준을 뒤틀고 잘못된 판정을 퍼뜨리는</div>
+      <div class="opening-line highlight" id="op8">최종 보스가 기다리고 있다.</div>
+      <div class="opening-line" id="op9" style="margin-top:16px">올바른 판단만으로 그를 물리치고</div>
+      <div class="opening-line" id="op10">왕국의 질서를 되찾아라.</div>
+      <div class="opening-line player-name" id="op11" style="margin-top:20px"></div>
+      <button class="opening-start-btn" id="opening-start-btn" onclick="startGame()">⚔️ 모험을 시작하라!</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MAP SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="map-screen" class="screen">
+    <div class="map-header">
+      <div class="map-title">🗺️ 종자왕국 지도</div>
+      <div class="map-progress" id="map-progress-text">0 / 6 클리어</div>
+    </div>
+    <div class="map-area">
+      <div class="map-bg"></div>
+      <!-- 배경 장식 SVG -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 390 700">
+        <rect x="20" y="20" width="12" height="30" fill="#5a3a1a"/>
+        <polygon points="26,0 8,25 44,25" fill="#2a6a1a"/>
+        <rect x="330" y="50" width="12" height="35" fill="#5a3a1a"/>
+        <polygon points="336,15 318,55 354,55" fill="#2a6a1a"/>
+        <rect x="30" y="230" width="10" height="25" fill="#5a3a1a"/>
+        <polygon points="35,195 20,235 50,235" fill="#2a6a1a"/>
+        <rect x="330" y="350" width="10" height="25" fill="#5a3a1a"/>
+        <polygon points="335,315 320,355 350,355" fill="#2a6a1a"/>
+        <ellipse cx="70" cy="430" rx="18" ry="12" fill="#4a4a4a"/>
+        <ellipse cx="320" cy="270" rx="15" ry="10" fill="#4a4a4a"/>
+        <path d="M 0 490 Q 100 470 200 490 Q 300 510 390 490" stroke="#2a5a8a" stroke-width="18" fill="none" opacity="0.5"/>
+        <rect x="175" y="480" width="40" height="20" fill="#6a4a2a"/>
+        <rect x="172" y="478" width="46" height="5" fill="#8a6a3a"/>
+        <!-- 성 -->
+        <rect x="155" y="575" width="80" height="55" fill="#3a3a5a"/>
+        <rect x="148" y="563" width="20" height="28" fill="#2a2a4a"/>
+        <rect x="222" y="563" width="20" height="28" fill="#2a2a4a"/>
+        <rect x="185" y="553" width="20" height="28" fill="#2a2a4a"/>
+        <rect x="170" y="603" width="50" height="27" fill="#2a2a4a"/>
+        <rect x="193" y="533" width="3" height="23" fill="#888"/>
+        <polygon points="196,533 210,540 196,548" fill="#cc2222"/>
+        <rect x="130" y="548" width="130" height="85" fill="#1a1a2a" opacity="0.35"/>
+      </svg>
+      <!-- 노드 연결선 SVG (JS로 렌더링) -->
+      <svg id="path-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg>
+      <!-- 노드 컨테이너 (JS로 렌더링) -->
+      <div id="nodes-container"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       NODE POPUP
+  ═══════════════════════════════════════════ -->
+  <div id="node-popup">
+    <div class="node-popup-box">
+      <div class="popup-emoji" id="popup-emoji">🌾</div>
+      <div class="popup-enemy-name" id="popup-enemy"></div>
+      <div class="popup-desc" id="popup-desc"></div>
+      <div class="popup-hp-info" id="popup-hp"></div>
+      <div class="popup-btns">
+        <button class="popup-cancel" onclick="closeNodePopup()">← 돌아가기</button>
+        <button class="popup-start" onclick="startBattle()">⚔️ 전투 시작!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TUTORIAL POPUP
+  ═══════════════════════════════════════════ -->
+  <div id="tutorial-popup">
+    <div class="tutorial-box">
+      <div class="tutorial-title">📖 게임 방법</div>
+      <div class="tutorial-row">
+        <div class="tutorial-icon">🗺️</div>
+        <div class="tutorial-text">지도에서 <strong>지역(노드)</strong>을 눌러 전투에 진입합니다.</div>
+      </div>
+      <div class="tutorial-row">
+        <div class="tutorial-icon">⚔️</div>
+        <div class="tutorial-text">적이 종자 관련 주장을 합니다. <strong>합격 / 불합격</strong> 중 하나를 선택하세요.</div>
+      </div>
+      <div class="tutorial-row">
+        <div class="tutorial-icon">🌾</div>
+        <div class="tutorial-text">틀리면 <strong>체력이 감소</strong>합니다. 체력이 0이 되면 그 노드를 재도전해야 합니다.</div>
+      </div>
+      <div class="tutorial-row">
+        <div class="tutorial-icon">✅</div>
+        <div class="tutorial-text"><strong>5문제</strong>를 모두 풀면 클리어! 다음 지역이 열립니다.</div>
+      </div>
+      <div class="tutorial-row">
+        <div class="tutorial-icon">👑</div>
+        <div class="tutorial-text">최종 보스를 물리치면 <strong>정식 종자검사원</strong>으로 임명됩니다!</div>
+      </div>
+      <button class="tutorial-close" onclick="closeTutorial()">✅ 이해했다!</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       WRONGNOTE POPUP
+  ═══════════════════════════════════════════ -->
+  <div id="wrongnote-popup">
+    <div class="wrongnote-header">
+      <div class="wrongnote-title">📝 오답노트</div>
+      <button class="wrongnote-close" onclick="closeWrongnote()">✕ 닫기</button>
+    </div>
+    <div class="wrongnote-body" id="wrongnote-body"></div>
+    <button class="wrongnote-clear-btn" onclick="clearWrongnote()">🗑️ 오답노트 초기화</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SETTING POPUP
+  ═══════════════════════════════════════════ -->
+  <div id="setting-popup">
+    <div class="setting-box">
+      <div class="setting-title">⚙️ 설정</div>
+      <div class="setting-row">
+        <div class="setting-label">🎵 배경음악 (BGM)</div>
+        <button class="setting-toggle on" id="bgm-toggle" onclick="toggleBGM()">ON</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">🔊 효과음 (SE)</div>
+        <button class="setting-toggle on" id="se-toggle" onclick="toggleSE()">ON</button>
+      </div>
+      <button class="setting-close" onclick="closeSetting()">✅ 확인</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ENCOUNTER SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="encounter-screen" class="screen">
+    <div class="encounter-bg"></div>
+    <div class="encounter-content">
+      <div class="encounter-enemy" id="enc-emoji">🧑‍🌾</div>
+      <div class="encounter-text">적이 나타났다!</div>
+      <div class="encounter-name" id="enc-name"></div>
+      <button class="encounter-btn" id="enc-battle-btn" onclick="startActualBattle()">⚔️ 전투!</button>
+    </div>
+    <!-- 보스 등장 대사창 -->
+    <div class="boss-intro-box" id="boss-intro-box" style="display:none">
+      <div class="boss-intro-text" id="boss-intro-text"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       BATTLE SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="battle-screen" class="screen">
+    <div class="battle-header">
+      <div class="battle-header-left">
+        <button class="battle-exit-btn" onclick="showExitConfirm()">← 나가기</button>
+        <div class="battle-enemy-name" id="battle-enemy-name"></div>
+      </div>
+      <div class="battle-hp" id="battle-hp"></div>
+    </div>
+    <div class="battle-enemy-area" id="battle-enemy-area">
+      <div class="battle-enemy-sprite" id="battle-sprite">🧑‍🌾</div>
+      <div class="q-counter" id="q-counter">1 / 5</div>
+      <div class="boss-label" id="boss-label" style="display:none">⚠️ BOSS</div>
+    </div>
+    <div class="battle-question-area">
+      <div class="speech-bubble" id="speech-bubble">
+        <div class="bubble-text" id="battle-question"></div>
+      </div>
+    </div>
+    <div class="battle-buttons">
+      <button class="judge-btn btn-pass" onclick="answer('pass')">✅ 합격</button>
+      <button class="judge-btn btn-fail" onclick="answer('fail')">❌ 불합격</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       EXIT CONFIRM
+  ═══════════════════════════════════════════ -->
+  <div id="exit-confirm">
+    <div class="exit-box">
+      <div class="exit-title">⚠️ 전투를 포기하시겠습니까?</div>
+      <div class="exit-desc">지금 나가면 이 전투의 진행이 취소되고<br>노드가 재도전 상태로 돌아갑니다.</div>
+      <div class="exit-btns">
+        <button class="exit-cancel" onclick="hideExitConfirm()">계속 싸우기</button>
+        <button class="exit-ok" onclick="exitToMap()">나가기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       RESULT POPUP
+  ═══════════════════════════════════════════ -->
+  <div id="result-popup">
+    <div class="result-box" id="result-box">
+      <div class="stamp-effect" id="stamp-effect"></div>
+      <div class="result-badge" id="result-badge">✅</div>
+      <div class="result-title" id="result-title">정답!</div>
+      <div class="result-answer" id="result-answer"></div>
+      <div class="result-reason" id="result-reason"></div>
+      <button class="result-next-btn" onclick="nextQuestion()">다음으로 →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CLEAR SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="clear-screen" class="screen">
+    <div class="clear-content">
+      <div class="clear-icon">🏆</div>
+      <div class="clear-title" id="clear-title">클리어!</div>
+      <div class="clear-sub" id="clear-sub"></div>
+      <div class="clear-stats">
+        <div class="stat-row"><span>정답</span><span id="cs-correct">5개</span></div>
+        <div class="stat-row"><span>오답</span><span id="cs-wrong">0개</span></div>
+        <div class="stat-row"><span>남은 체력</span><span id="cs-hp">🌾🌾🌾</span></div>
+      </div>
+      <button class="clear-btn" onclick="afterClear()">🗺️ 지도로 돌아가기</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       GAME OVER SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="gameover-screen" class="screen">
+    <div class="gameover-content">
+      <div class="gameover-icon">💀</div>
+      <div class="gameover-title">검사원 실격!</div>
+      <div class="gameover-sub">아직 수련이 더 필요합니다.<br>기준을 다시 살펴보고 도전하세요!</div>
+      <div class="gameover-btns">
+        <button class="gameover-btn" onclick="retryNode()">🔄 다시 도전</button>
+        <button class="gameover-btn secondary" onclick="goTitle()">🏠 타이틀로</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ENDING SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="ending-screen" class="screen">
+    <div class="particles" id="ending-particles"></div>
+    <div class="ending-content">
+      <div class="ending-icon">🏅</div>
+      <div class="ending-title">축하합니다!<br>정식 종자검사원 임명!</div>
+      <div class="ending-sub" id="ending-sub"></div>
+      <div class="rank-badge" id="ending-rank">🥇 S랭크 완벽한 판정관</div>
+      <div class="certificate">
+        <div class="cert-title">🌾 종자검사원 임명장</div>
+        <div class="cert-body">
+          위 용사는 종자왕국의 모든 시련을 통과하여<br>
+          <div class="cert-name" id="cert-player-name">용사</div>
+          정식 종자검사원으로 임명함을 증명합니다.
+        </div>
+        <div class="cert-stamp">📛</div>
+      </div>
+      <button class="ending-btn" onclick="goTitle()">🏠 타이틀로</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 순서 중요: data.js → game.js -->
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
