@@ -7,9 +7,9 @@
 // 나중에 파일 첨부 시 경로 변경하세요.
 // ==============================
 const SOUND_FILES = {
-  bgm_title:  'sounds/bgm.mp3',
-  bgm_battle: 'sounds/bgm.mp3',
-  bgm_boss:   'sounds/boss.mp3',
+  bgm_title:  'sounds/bgm_title.mp3',
+  bgm_battle: 'sounds/bgm_battle.mp3',
+  bgm_boss:   'sounds/bgm_boss.mp3',
   se_correct: 'sounds/se_correct.mp3',
   se_wrong:   'sounds/se_wrong.mp3',
   se_stamp:   'sounds/se_stamp.mp3',
