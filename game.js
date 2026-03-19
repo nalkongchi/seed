@@ -190,6 +190,11 @@ function highlightNumbers(text) {
   return text.replace(/(\d+\.?\d*%)/g, '<span class="highlight">$1</span>');
 }
 
+function formatQuestion(text) {
+  // 문장 부호 뒤 자동 줄바꿈 (마침표/물음표/느낌표/말줄임 뒤)
+  return text.replace(/([.?!~…])\s+/g, '$1\n');
+}
+
 // ==============================
 // 별 생성 (타이틀용)
 // ==============================
@@ -560,29 +565,33 @@ function startActualBattle() {
   const isBoss = node.type === 'boss';
 
   document.getElementById('battle-enemy-name').textContent = node.enemy;
+  document.getElementById('battle-name-badge').textContent = '⚔ ' + node.enemy;
 
-  // 적 스프라이트 (이미지 또는 이모지)
-  const spriteEl = document.getElementById('battle-sprite');
+  // 카드형 적 이미지 영역
+  const cardImg = document.getElementById('battle-card-img');
+  const cardFade = document.getElementById('battle-card-fade');
   if (node.enemyImage) {
-    spriteEl.innerHTML = '<img class="enemy-img" src="' + node.enemyImage + '" alt="' + node.enemy + '">';
-    spriteEl.className = 'battle-enemy-sprite' + (isBoss ? ' boss-sprite' : '');
+    cardImg.innerHTML = '<img src="' + node.enemyImage + '" alt="' + node.enemy + '">';
+    cardImg.className = 'battle-card-img';
+    cardFade.style.display = 'block';
   } else {
-    spriteEl.textContent = node.enemyEmoji;
-    spriteEl.className = 'battle-enemy-sprite' + (isBoss ? ' boss-sprite' : '');
+    // 이미지 없으면 이모지 폴백
+    cardImg.innerHTML = node.enemyEmoji;
+    cardImg.className = 'battle-card-img emoji-mode' + (isBoss ? ' boss-bg' : '');
+    cardFade.style.display = 'none';
   }
 
   // 보스 전용 UI
   const bossLabel = document.getElementById('boss-label');
-  const battleBg = document.getElementById('battle-enemy-area');
   const bubble = document.getElementById('speech-bubble');
   if (isBoss) {
     bossLabel.style.display = 'block';
-    battleBg.classList.add('boss-bg');
     bubble.classList.add('boss-bubble');
+    document.getElementById('battle-name-badge').style.borderColor = '#ff4444';
   } else {
     bossLabel.style.display = 'none';
-    battleBg.classList.remove('boss-bg');
     bubble.classList.remove('boss-bubble');
+    document.getElementById('battle-name-badge').style.borderColor = '#ff4444';
   }
 
   renderHp();
@@ -619,7 +628,8 @@ function animateHpBreak(idx) {
 // ==============================
 function loadQuestion() {
   const q = G.shuffledQ[G.currentQ];
-  document.getElementById('battle-question').innerHTML = highlightNumbers(q.text);
+  const formatted = formatQuestion(q.text);
+  document.getElementById('battle-question').innerHTML = highlightNumbers(formatted);
   document.getElementById('q-counter').textContent = (G.currentQ + 1) + ' / 5';
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);
 }
@@ -647,7 +657,7 @@ function answer(choice) {
     stamp.classList.remove('show');
     requestAnimationFrame(() => stamp.classList.add('show'));
     // 적 흔들림
-    const sprite = document.getElementById('battle-sprite');
+    const sprite = document.getElementById('battle-card-img');
     sprite.classList.add('shake');
     setTimeout(() => sprite.classList.remove('shake'), 500);
     Sound.playSE('se_correct');
