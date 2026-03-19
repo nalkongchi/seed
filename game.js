@@ -266,6 +266,33 @@ function goTitle() {
   showScreen('title-screen');
 }
 
+function confirmGoTitle() {
+  if (confirm('타이틀로 돌아가시겠습니까?\n현재 진행 상황은 저장되어 있습니다.')) {
+    Sound.stopBGM();
+    initTitle();
+    showScreen('title-screen');
+  }
+}
+
+function toggleMapBGM() {
+  const isOn = Sound.toggleBGM();
+  const btn = document.getElementById('map-bgm-btn');
+  if (btn) {
+    btn.textContent = isOn ? '🎵 BGM ON' : '🔇 BGM OFF';
+    btn.className = 'map-bgm-btn' + (isOn ? '' : ' off');
+  }
+  if (isOn) Sound.playBGM('bgm_title');
+  updateSettingUI();
+}
+
+function updateMapBGMBtn() {
+  const btn = document.getElementById('map-bgm-btn');
+  if (!btn) return;
+  const isOn = Sound.isBGMOn();
+  btn.textContent = isOn ? '🎵 BGM ON' : '🔇 BGM OFF';
+  btn.className = 'map-bgm-btn' + (isOn ? '' : ' off');
+}
+
 // ==============================
 // OPENING
 // ==============================
@@ -331,6 +358,7 @@ function renderMap() {
   renderPaths();
   const cleared = G.nodeStatus.filter(s => s === 'cleared').length;
   document.getElementById('map-progress-text').textContent = cleared + ' / ' + NODES.length + ' 스테이지 클리어';
+  updateMapBGMBtn();
 }
 
 function renderNodes() {
@@ -338,11 +366,20 @@ function renderNodes() {
   container.innerHTML = '';
   NODES.forEach((node, i) => {
     const status = G.nodeStatus[i];
+    const isBoss = node.type === 'boss';
     const div = document.createElement('div');
-    div.className = 'map-node ' + status + (node.type === 'boss' ? ' boss' : '');
+    div.className = 'map-node ' + status + (isBoss ? ' boss' : '');
     div.style.left = node.x + 'px';
     div.style.top = node.y + 'px';
     div.id = 'node-' + i;
+
+    // 보스 BOSS 뱃지
+    if (isBoss) {
+      const bossTag = document.createElement('div');
+      bossTag.style.cssText = 'font-size:9px;font-weight:900;color:#ff4444;letter-spacing:2px;margin-bottom:2px;text-shadow:1px 1px 0 #000;';
+      bossTag.textContent = '⚠ BOSS';
+      div.appendChild(bossTag);
+    }
 
     const circle = document.createElement('div');
     circle.className = 'node-circle';
