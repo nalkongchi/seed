@@ -416,9 +416,10 @@ function renderPaths() {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
     line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
-    line.setAttribute('stroke', G.nodeStatus[i + 1] === 'locked' ? '#333' : '#7ab648');
-    line.setAttribute('stroke-width', '3');
-    line.setAttribute('stroke-dasharray', '8,5');
+    line.setAttribute('stroke', G.nodeStatus[i + 1] === 'locked' ? '#333' : '#8a7a50');
+    line.setAttribute('stroke-width', '2.5');
+    line.setAttribute('stroke-dasharray', '7,5');
+    line.setAttribute('opacity', '0.75');
     svg.appendChild(line);
   }
 }
