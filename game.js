@@ -196,34 +196,19 @@ function formatQuestion(text) {
 }
 
 // ==============================
-// 별 생성 (타이틀용)
-// ==============================
-(function createStars() {
-  const c = document.getElementById('stars');
-  if (!c) return;
-  for (let i = 0; i < 40; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    s.style.left = Math.random() * 100 + '%';
-    s.style.top = Math.random() * 100 + '%';
-    s.style.animationDelay = Math.random() * 3 + 's';
-    s.style.animationDuration = (1.5 + Math.random() * 2) + 's';
-    c.appendChild(s);
-  }
-})();
-
-// ==============================
 // TITLE
 // ==============================
 function initTitle() {
   const saved = loadSave();
   const btn = document.getElementById('continue-btn');
   if (saved && saved.playerName) {
-    btn.disabled = false;
-    btn.textContent = '📖 이어하기 (' + saved.playerName + ')';
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    btn.querySelector('.tmenu-label').textContent = '이어하기 (' + saved.playerName + ')';
   } else {
-    btn.disabled = true;
-    btn.textContent = '📖 이어하기 (저장 없음)';
+    btn.style.opacity = '0.4';
+    btn.style.pointerEvents = 'none';
+    btn.querySelector('.tmenu-label').textContent = '이어하기';
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
@@ -273,25 +258,6 @@ function confirmGoTitle() {
     initTitle();
     showScreen('title-screen');
   }
-}
-
-function toggleMapBGM() {
-  const isOn = Sound.toggleBGM();
-  const btn = document.getElementById('map-bgm-btn');
-  if (btn) {
-    btn.textContent = isOn ? '🎵 BGM ON' : '🔇 BGM OFF';
-    btn.className = 'map-bgm-btn' + (isOn ? '' : ' off');
-  }
-  if (isOn) Sound.playBGM('bgm_title');
-  updateSettingUI();
-}
-
-function updateMapBGMBtn() {
-  const btn = document.getElementById('map-bgm-btn');
-  if (!btn) return;
-  const isOn = Sound.isBGMOn();
-  btn.textContent = isOn ? '🎵 BGM ON' : '🔇 BGM OFF';
-  btn.className = 'map-bgm-btn' + (isOn ? '' : ' off');
 }
 
 // ==============================
@@ -453,8 +419,6 @@ function startOpening() {
   opShowLine();
 }
 
-function skipOpening() { opSkipAll(); }
-
 function startGame() {
   showScreen('map-screen');
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -462,7 +426,6 @@ function startGame() {
   }));
   Sound.playBGM('bgm_title');
 }
-
 
 // ==============================
 // MAP
@@ -472,7 +435,6 @@ function renderMap() {
   renderPaths();
   const cleared = G.nodeStatus.filter(s => s === 'cleared').length;
   document.getElementById('map-progress-text').textContent = cleared + ' / ' + NODES.length + ' 스테이지 클리어';
-  updateMapBGMBtn();
 }
 
 function renderNodes() {
@@ -567,8 +529,6 @@ function closeNodePopup() {
 // ==============================
 // TUTORIAL
 // ==============================
-function showTutorial() { document.getElementById('tutorial-popup').classList.add('show'); }
-function closeTutorial() { document.getElementById('tutorial-popup').classList.remove('show'); }
 
 // ==============================
 // 오답노트
