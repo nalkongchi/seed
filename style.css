@@ -157,7 +157,7 @@ body {
 .footer-home-btn { background:#1a2a1a; border:2px solid #3a5a3a; color:#7ab648; font-family:'Noto Sans KR',sans-serif; font-size:12px; font-weight:700; padding:5px 12px; cursor:pointer; letter-spacing:1px; transition:all 0.1s; }
 .footer-home-btn:hover { background:#2a4a2a; border-color:#7ab648; }
 .map-area { flex:1; position:relative; overflow:hidden; }
-.map-bg { position:absolute; inset:0; }
+.map-bg { position:absolute; inset:0; width:100%; height:100%; }
 .map-footer { background:#0a140a; border-top:2px solid #1a3a1a; padding:8px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; z-index:10; height:52px; }
 .footer-logo { font-size:10px; color:#555; text-align:center; letter-spacing:1px; }
 .footer-setting-btn { background:#1a2a1a; border:2px solid #3a5a3a; color:#7ab648; font-family:'Noto Sans KR',sans-serif; font-size:11px; font-weight:700; padding:5px 10px; cursor:pointer; transition:all 0.1s; }
@@ -268,7 +268,7 @@ body {
 .hp-icon.breaking { animation:hp-break 0.4s ease-out forwards; }
 
 /* 카드형 적 영역 */
-.battle-card-area { position:relative; height:180px; flex-shrink:0; overflow:hidden; }
+.battle-card-area { position:relative; flex:1; min-height:0; overflow:hidden; }
 .battle-card-img { position:absolute; inset:0; background-size:cover; background-position:top center; background-repeat:no-repeat; }
 .battle-card-img img { width:100%; height:100%; object-fit:cover; object-position:center; }
 .battle-card-img.emoji-mode { display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#0a1a0a 0%,#1a2a0a 100%); font-size:90px; filter:drop-shadow(0 5px 15px rgba(0,0,0,0.8)); animation:enemy-idle 2s ease-in-out infinite; }
@@ -280,9 +280,9 @@ body {
 .boss-label { position:absolute; top:10px; left:12px; font-size:11px; color:#ff4444; background:rgba(0,0,0,0.8); padding:4px 8px; border:1px solid #ff4444; letter-spacing:1px; font-weight:700; z-index:2; }
 
 /* 적 이름 배지 */
-.battle-name-badge { background:rgba(0,0,0,0.9); border:2px solid #ff4444; padding:5px 14px; font-size:12px; font-weight:900; color:#ff8888; letter-spacing:1px; text-align:center; margin:0 20px 8px; flex-shrink:0; position:relative; z-index:1; }
+.battle-name-badge { background:rgba(0,0,0,0.9); border:2px solid #ff4444; padding:5px 14px; font-size:12px; font-weight:900; color:#ff8888; letter-spacing:1px; text-align:center; margin:0 20px 6px; flex-shrink:0; position:relative; z-index:1; }
 
-.battle-question-area { flex:1; padding:8px 15px 8px; display:flex; flex-direction:column; justify-content:flex-start; overflow-y:auto; }
+.battle-question-area { flex:0; padding:6px 15px 6px; display:flex; flex-direction:column; justify-content:flex-start; }
 .speech-bubble { background:rgba(20,36,20,0.97); border:2px solid var(--green); padding:14px; position:relative; box-shadow:3px 3px 0 #000; }
 .speech-bubble.boss-bubble { border-color:#ff4444; background:rgba(30,0,0,0.97); }
 .speech-bubble::before { content:''; position:absolute; top:-10px; left:20px; border:6px solid transparent; border-bottom-color:var(--green); }
@@ -292,7 +292,7 @@ body {
 .bubble-text { font-size:14px; color:#ddd; line-height:1.8; white-space:pre-line; }
 .bubble-text .highlight { color:var(--gold); font-weight:700; }
 
-.battle-buttons { display:flex; gap:10px; padding:0 15px 15px; flex-shrink:0; }
+.battle-buttons { display:flex; gap:10px; padding:0 15px 10px; flex-shrink:0; }
 .judge-btn { flex:1; padding:16px 10px; font-family:'Noto Sans KR',sans-serif; font-size:18px; font-weight:900; cursor:pointer; border:3px solid; box-shadow:4px 4px 0 #000; transition:all 0.1s; letter-spacing:2px; }
 .judge-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #000; }
 .judge-btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; box-shadow:2px 2px 0 #000; filter:grayscale(0.6); }
