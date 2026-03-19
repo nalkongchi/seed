@@ -20,6 +20,18 @@
       <div class="subtitle">검사원이 되기 위한 용사의 모험</div>
     </div>
     <div class="title-character">
+      <style>
+        @keyframes tc-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+        @keyframes tc-arm-l  { 0%,100%{transform:rotate(-22deg)} 50%{transform:rotate(22deg)} }
+        @keyframes tc-arm-r  { 0%,100%{transform:rotate(22deg)}  50%{transform:rotate(-22deg)} }
+        @keyframes tc-leg-l  { 0%,100%{transform:rotate(-24deg)} 50%{transform:rotate(24deg)} }
+        @keyframes tc-leg-r  { 0%,100%{transform:rotate(24deg)}  50%{transform:rotate(-24deg)} }
+        #tc-body  { animation: tc-bounce 0.5s ease-in-out infinite; }
+        #tc-arm-l { transform-origin: 112px 82px; animation: tc-arm-l 0.5s ease-in-out infinite; }
+        #tc-arm-r { transform-origin: 168px 82px; animation: tc-arm-r 0.5s ease-in-out infinite; }
+        #tc-leg-l { transform-origin: 128px 119px; animation: tc-leg-l 0.5s ease-in-out infinite; }
+        #tc-leg-r { transform-origin: 152px 119px; animation: tc-leg-r 0.5s ease-in-out infinite; }
+      </style>
       <svg width="280" height="160" viewBox="0 0 280 160" style="image-rendering:pixelated">
         <!-- 배경 잔디 -->
         <rect x="0"   y="128" width="280" height="32" fill="#2d5a1a"/>
@@ -30,106 +42,109 @@
         <rect x="248" y="118" width="5" height="9"  fill="#4a8a2a"/>
         <rect x="260" y="120" width="5" height="8"  fill="#5a9a3a"/>
 
-        <!-- 마법사 모자 챙 -->
-        <rect x="112" y="40" width="56" height="7"  fill="#1a5a10"/>
-        <rect x="115" y="38" width="50" height="5"  fill="#2a7018"/>
-        <rect x="118" y="36" width="44" height="4"  fill="#3a8a22"/>
-        <!-- 모자 밴드 -->
-        <rect x="122" y="30" width="36" height="5"  fill="#a07820"/>
-        <rect x="122" y="30" width="36" height="2"  fill="#c8a030"/>
-        <!-- 모자 몸통 -->
-        <rect x="124" y="13" width="32" height="19" fill="#1a5a10"/>
-        <rect x="127" y="13" width="26" height="16" fill="#2a7018"/>
-        <rect x="127" y="13" width="6"  height="16" fill="#3a8a22" opacity=".5"/>
-        <!-- 뾰족 끝 -->
-        <rect x="128" y="4"  width="24" height="11" fill="#1a5a10"/>
-        <rect x="131" y="1"  width="18" height="6"  fill="#2a7018"/>
-        <rect x="134" y="0"  width="12" height="4"  fill="#1a5a10"/>
-        <!-- 잎사귀 -->
-        <rect x="138" y="2"  width="11" height="4"  fill="#5ab828"/>
-        <rect x="141" y="0"  width="7"  height="3"  fill="#7ad840"/>
+        <!-- 왼팔 (몸 뒤, body보다 먼저 그림) -->
+        <g id="tc-arm-l">
+          <rect x="98"  y="82" width="14" height="9"  fill="#2a7018"/>
+          <rect x="96"  y="88" width="14" height="9"  fill="#f5d090"/>
+          <rect x="96"  y="94" width="10" height="5"  fill="#d8a860"/>
+        </g>
 
-        <!-- 머리카락 (초록) -->
-        <rect x="112" y="43" width="8"  height="20" fill="#3a8a22"/>
-        <rect x="160" y="43" width="8"  height="18" fill="#3a8a22"/>
-        <rect x="109" y="47" width="6"  height="14" fill="#2a7018"/>
+        <!-- 다리 왼쪽 -->
+        <g id="tc-leg-l">
+          <rect x="120" y="119" width="16" height="14" fill="#1a4a10"/>
+          <rect x="117" y="130" width="20" height="5"  fill="#3a2a10"/>
+        </g>
+        <!-- 다리 오른쪽 -->
+        <g id="tc-leg-r">
+          <rect x="144" y="119" width="16" height="14" fill="#1a4a10"/>
+          <rect x="143" y="130" width="20" height="5"  fill="#3a2a10"/>
+        </g>
 
-        <!-- 얼굴 -->
-        <rect x="116" y="43" width="48" height="36" fill="#f5d090"/>
-        <rect x="156" y="46" width="7"  height="30" fill="#d8a860" opacity=".28"/>
-        <!-- 볼터치 -->
-        <rect x="116" y="64" width="10" height="6"  fill="#ffaaaa" opacity=".6" rx="1"/>
-        <rect x="154" y="64" width="10" height="6"  fill="#ffaaaa" opacity=".6" rx="1"/>
-        <!-- 눈썹 -->
-        <rect x="121" y="49" width="12" height="3"  fill="#4a6a18"/>
-        <rect x="147" y="49" width="12" height="3"  fill="#4a6a18"/>
-        <!-- 눈 흰자 -->
-        <rect x="120" y="53" width="14" height="12" fill="#fff"/>
-        <rect x="146" y="53" width="14" height="12" fill="#fff"/>
-        <!-- 홍채 초록 -->
-        <rect x="121" y="54" width="11" height="9"  fill="#4a9a30"/>
-        <rect x="147" y="54" width="11" height="9"  fill="#4a9a30"/>
-        <!-- 동공 -->
-        <rect x="123" y="55" width="6"  height="6"  fill="#1a1a10"/>
-        <rect x="149" y="55" width="6"  height="6"  fill="#1a1a10"/>
-        <!-- 하이라이트 -->
-        <rect x="121" y="54" width="3"  height="3"  fill="#fff"/>
-        <rect x="147" y="54" width="3"  height="3"  fill="#fff"/>
-        <!-- 코 -->
-        <rect x="137" y="64" width="6"  height="4"  fill="#d8a070"/>
-        <!-- 입 (작게) -->
-        <rect x="133" y="72" width="14" height="4"  fill="#c07858"/>
-        <rect x="135" y="72" width="10" height="2"  fill="#d89070"/>
+        <!-- 몸 전체 (bounce) -->
+        <g id="tc-body">
+          <!-- 마법사 모자 챙 -->
+          <rect x="112" y="40" width="56" height="7"  fill="#1a5a10"/>
+          <rect x="115" y="38" width="50" height="5"  fill="#2a7018"/>
+          <rect x="118" y="36" width="44" height="4"  fill="#3a8a22"/>
+          <!-- 모자 밴드 -->
+          <rect x="122" y="30" width="36" height="5"  fill="#a07820"/>
+          <rect x="122" y="30" width="36" height="2"  fill="#c8a030"/>
+          <!-- 모자 몸통 -->
+          <rect x="124" y="13" width="32" height="19" fill="#1a5a10"/>
+          <rect x="127" y="13" width="26" height="16" fill="#2a7018"/>
+          <rect x="127" y="13" width="6"  height="16" fill="#3a8a22" opacity=".5"/>
+          <!-- 뾰족 끝 -->
+          <rect x="128" y="4"  width="24" height="11" fill="#1a5a10"/>
+          <rect x="131" y="1"  width="18" height="6"  fill="#2a7018"/>
+          <rect x="134" y="0"  width="12" height="4"  fill="#1a5a10"/>
+          <!-- 잎사귀 -->
+          <rect x="138" y="2"  width="11" height="4"  fill="#5ab828"/>
+          <rect x="141" y="0"  width="7"  height="3"  fill="#7ad840"/>
+          <!-- 머리카락 -->
+          <rect x="112" y="43" width="8"  height="20" fill="#3a8a22"/>
+          <rect x="160" y="43" width="8"  height="18" fill="#3a8a22"/>
+          <rect x="109" y="47" width="6"  height="14" fill="#2a7018"/>
+          <!-- 얼굴 -->
+          <rect x="116" y="43" width="48" height="36" fill="#f5d090"/>
+          <rect x="156" y="46" width="7"  height="30" fill="#d8a860" opacity=".28"/>
+          <!-- 볼터치 -->
+          <rect x="116" y="64" width="10" height="6"  fill="#ffaaaa" opacity=".6" rx="1"/>
+          <rect x="154" y="64" width="10" height="6"  fill="#ffaaaa" opacity=".6" rx="1"/>
+          <!-- 눈썹 -->
+          <rect x="121" y="49" width="12" height="3"  fill="#4a6a18"/>
+          <rect x="147" y="49" width="12" height="3"  fill="#4a6a18"/>
+          <!-- 눈 흰자 -->
+          <rect x="120" y="53" width="14" height="12" fill="#fff"/>
+          <rect x="146" y="53" width="14" height="12" fill="#fff"/>
+          <!-- 홍채 -->
+          <rect x="121" y="54" width="11" height="9"  fill="#4a9a30"/>
+          <rect x="147" y="54" width="11" height="9"  fill="#4a9a30"/>
+          <!-- 동공 -->
+          <rect x="123" y="55" width="6"  height="6"  fill="#1a1a10"/>
+          <rect x="149" y="55" width="6"  height="6"  fill="#1a1a10"/>
+          <!-- 하이라이트 -->
+          <rect x="121" y="54" width="3"  height="3"  fill="#fff"/>
+          <rect x="147" y="54" width="3"  height="3"  fill="#fff"/>
+          <!-- 코 -->
+          <rect x="137" y="64" width="6"  height="4"  fill="#d8a070"/>
+          <!-- 입 -->
+          <rect x="133" y="72" width="14" height="4"  fill="#c07858"/>
+          <rect x="135" y="72" width="10" height="2"  fill="#d89070"/>
+          <!-- 몸 로브 -->
+          <rect x="110" y="79" width="60" height="40" fill="#1a5a10"/>
+          <rect x="113" y="79" width="54" height="38" fill="#2a7018"/>
+          <rect x="126" y="79" width="28" height="40" fill="#7a4a18"/>
+          <rect x="129" y="79" width="22" height="38" fill="#9a6028"/>
+          <rect x="126" y="79" width="3"  height="40" fill="#b88820"/>
+          <rect x="151" y="79" width="3"  height="40" fill="#b88820"/>
+          <rect x="110" y="79" width="9"  height="40" fill="#0a3006" opacity=".28"/>
+          <rect x="161" y="79" width="9"  height="40" fill="#0a3006" opacity=".28"/>
+          <!-- 버클 -->
+          <rect x="132" y="86" width="16" height="10" fill="#b88820"/>
+          <rect x="134" y="88" width="12" height="6"  fill="#e8c040"/>
+          <rect x="136" y="89" width="8"  height="4"  fill="#2a6a10"/>
+          <rect x="138" y="90" width="4"  height="2"  fill="#5ab828"/>
+        </g>
 
-        <!-- 몸 로브 초록 -->
-        <rect x="110" y="79" width="60" height="40" fill="#1a5a10"/>
-        <rect x="113" y="79" width="54" height="38" fill="#2a7018"/>
-        <!-- 안쪽 갈색 -->
-        <rect x="126" y="79" width="28" height="40" fill="#7a4a18"/>
-        <rect x="129" y="79" width="22" height="38" fill="#9a6028"/>
-        <!-- 테두리 금 -->
-        <rect x="126" y="79" width="3"  height="40" fill="#b88820"/>
-        <rect x="151" y="79" width="3"  height="40" fill="#b88820"/>
-        <!-- 측면 음영 -->
-        <rect x="110" y="79" width="9"  height="40" fill="#0a3006" opacity=".28"/>
-        <rect x="161" y="79" width="9"  height="40" fill="#0a3006" opacity=".28"/>
-        <!-- 버클 -->
-        <rect x="132" y="86" width="16" height="10" fill="#b88820"/>
-        <rect x="134" y="88" width="12" height="6"  fill="#e8c040"/>
-        <rect x="136" y="89" width="8"  height="4"  fill="#2a6a10"/>
-        <rect x="138" y="90" width="4"  height="2"  fill="#5ab828"/>
-
-        <!-- 왼팔 (몸에 붙어서) -->
-        <rect x="100" y="79" width="12" height="9"  fill="#2a7018"/>
-        <rect x="98"  y="85" width="12" height="8"  fill="#f5d090"/>
-        <rect x="98"  y="90" width="8"  height="5"  fill="#d8a860"/>
-
-        <!-- 오른팔 (몸에 붙어서) -->
-        <rect x="168" y="79" width="12" height="9"  fill="#2a7018"/>
-        <rect x="170" y="85" width="10" height="7"  fill="#f5d090"/>
-        <!-- 클립보드 -->
-        <rect x="176" y="64" width="22" height="28" fill="#e8d8a0"/>
-        <rect x="178" y="66" width="18" height="24" fill="#f0e0b0"/>
-        <!-- 클립 -->
-        <rect x="182" y="62" width="9"  height="5"  fill="#888"/>
-        <rect x="183" y="62" width="7"  height="4"  fill="#aaa"/>
-        <!-- 줄 -->
-        <rect x="179" y="70" width="13" height="2"  fill="#999"/>
-        <rect x="179" y="75" width="13" height="2"  fill="#999"/>
-        <rect x="179" y="80" width="10" height="2"  fill="#999"/>
-        <!-- 체크 -->
-        <rect x="179" y="70" width="3"  height="2"  fill="#3a8a22"/>
-        <rect x="179" y="75" width="3"  height="2"  fill="#3a8a22"/>
-
-        <!-- 다리 (로브 바로 아래) -->
-        <rect x="120" y="117" width="16" height="13" fill="#1a4a10"/>
-        <rect x="144" y="117" width="16" height="13" fill="#1a4a10"/>
-        <rect x="118" y="127" width="20" height="5"  fill="#3a2a10"/>
-        <rect x="142" y="127" width="20" height="5"  fill="#3a2a10"/>
+        <!-- 오른팔 + 클립보드 (몸 앞) -->
+        <g id="tc-arm-r">
+          <rect x="168" y="82" width="14" height="9"  fill="#2a7018"/>
+          <rect x="170" y="88" width="12" height="8"  fill="#f5d090"/>
+          <!-- 클립보드 -->
+          <rect x="176" y="64" width="22" height="28" fill="#e8d8a0"/>
+          <rect x="178" y="66" width="18" height="24" fill="#f0e0b0"/>
+          <rect x="182" y="62" width="9"  height="5"  fill="#888"/>
+          <rect x="183" y="62" width="7"  height="4"  fill="#aaa"/>
+          <rect x="179" y="70" width="13" height="2"  fill="#999"/>
+          <rect x="179" y="75" width="13" height="2"  fill="#999"/>
+          <rect x="179" y="80" width="10" height="2"  fill="#999"/>
+          <rect x="179" y="70" width="3"  height="2"  fill="#3a8a22"/>
+          <rect x="179" y="75" width="3"  height="2"  fill="#3a8a22"/>
+        </g>
 
         <!-- 명찰 -->
-        <rect x="110" y="140" width="60" height="14" fill="#1a3a1a" rx="2"/>
-        <text x="140" y="151" text-anchor="middle" font-size="8" fill="#7ab648" font-family="monospace" font-weight="bold">검사원 지망생</text>
+        <rect x="110" y="142" width="60" height="14" fill="#1a3a1a" rx="2"/>
+        <text x="140" y="153" text-anchor="middle" font-size="8" fill="#7ab648" font-family="monospace" font-weight="bold">검사원 지망생</text>
       </svg>
     </div>
     <div class="title-menu">
@@ -162,21 +177,21 @@
        OPENING SCREEN
   ═══════════════════════════════════════════ -->
   <div id="opening-screen" class="screen">
-    <button class="opening-skip" onclick="skipOpening()">SKIP ▶</button>
+    <button class="opening-skip" onclick="event.stopPropagation(); skipOpening()">SKIP ▶</button>
     <div class="opening-content">
-      <div class="opening-line" id="op0">먼 옛날,</div>
-      <div class="opening-line" id="op1">종자의 질서가 무너진 왕국에는</div>
-      <div class="opening-line highlight" id="op2">기준 미달 종자, 혼입 종자,</div>
-      <div class="opening-line highlight" id="op3">허위 주장 민원인, 잘못된 판정이 넘쳐난다.</div>
-      <div class="opening-line" id="op4" style="margin-top:16px">이 혼란을 바로잡기 위해</div>
-      <div class="opening-line highlight" id="op5">종자검사원단이 창설되었다.</div>
-      <div class="opening-line" id="op6" style="margin-top:16px">왕국 깊은 곳에는</div>
-      <div class="opening-line highlight" id="op7">모든 기준을 뒤틀고 잘못된 판정을 퍼뜨리는</div>
-      <div class="opening-line highlight" id="op8">최종 보스가 기다리고 있다.</div>
-      <div class="opening-line" id="op9" style="margin-top:16px">올바른 판단만으로 그를 물리치고</div>
-      <div class="opening-line" id="op10">왕국의 질서를 되찾아라.</div>
+      <div class="opening-line" id="op0">오래전, 종자 왕국의 질서가 무너졌다.</div>
+      <div class="opening-line highlight" id="op1">기준 미달 종자와 혼입 종자,</div>
+      <div class="opening-line highlight" id="op2">그리고 거짓된 판정이 왕국을 뒤덮었다.</div>
+      <div class="opening-line" id="op3" style="margin-top:16px">세상의 균형을 바로잡는 자,</div>
+      <div class="opening-line highlight" id="op4">그들이 바로 종자검사원이다.</div>
+      <div class="opening-line" id="op5" style="margin-top:16px">아직은 지망생에 불과한 당신은</div>
+      <div class="opening-line" id="op6">정식 검사원이 되기 위해</div>
+      <div class="opening-line highlight" id="op7">들판, 평원, 연금실, 성소, 협곡,</div>
+      <div class="opening-line highlight" id="op8">그리고 심판의 성을 향해 떠난다.</div>
+      <div class="opening-line" id="op9" style="margin-top:16px">하지만 왕국의 끝에는</div>
+      <div class="opening-line highlight" id="op10">우량종자 공급을 방해하는 최종 보스가 기다리고 있다.</div>
       <div class="opening-line player-name" id="op11" style="margin-top:20px"></div>
-      <button class="opening-start-btn" id="opening-start-btn" onclick="startGame()">⚔️ 모험을 시작하라!</button>
+      <button class="opening-start-btn" id="opening-start-btn" onclick="event.stopPropagation(); startGame()">⚔️ 모험을 시작하라!</button>
     </div>
   </div>
 
@@ -186,7 +201,7 @@
   <div id="map-screen" class="screen">
     <div class="map-header">
       <div class="map-title">🗺️ 종자왕국 지도</div>
-      <div class="map-progress" id="map-progress-text">0 / 6 클리어</div>
+      <div class="map-progress" id="map-progress-text">0 / 6 스테이지 클리어</div>
     </div>
     <div class="map-area">
       <div class="map-bg"></div>
@@ -215,9 +230,9 @@
         <polygon points="196,533 210,540 196,548" fill="#cc2222"/>
         <rect x="130" y="548" width="130" height="85" fill="#1a1a2a" opacity="0.35"/>
       </svg>
-      <!-- 노드 연결선 SVG (JS로 렌더링) -->
+      <!-- 스테이지 연결선 SVG (JS로 렌더링) -->
       <svg id="path-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg>
-      <!-- 노드 컨테이너 (JS로 렌더링) -->
+      <!-- 스테이지 컨테이너 (JS로 렌더링) -->
       <div id="nodes-container"></div>
     </div>
   </div>
@@ -246,7 +261,7 @@
       <div class="tutorial-title">📖 게임 방법</div>
       <div class="tutorial-row">
         <div class="tutorial-icon">🗺️</div>
-        <div class="tutorial-text">지도에서 <strong>지역(노드)</strong>을 눌러 전투에 진입합니다.</div>
+        <div class="tutorial-text">지도에서 <strong>스테이지</strong>를 눌러 전투에 진입합니다.</div>
       </div>
       <div class="tutorial-row">
         <div class="tutorial-icon">⚔️</div>
@@ -254,7 +269,7 @@
       </div>
       <div class="tutorial-row">
         <div class="tutorial-icon">🌾</div>
-        <div class="tutorial-text">틀리면 <strong>체력이 감소</strong>합니다. 체력이 0이 되면 그 노드를 재도전해야 합니다.</div>
+        <div class="tutorial-text">틀리면 <strong>체력이 감소</strong>합니다. 체력이 0이 되면 해당 스테이지를 재도전해야 합니다.</div>
       </div>
       <div class="tutorial-row">
         <div class="tutorial-icon">✅</div>
@@ -348,7 +363,7 @@
   <div id="exit-confirm">
     <div class="exit-box">
       <div class="exit-title">⚠️ 전투를 포기하시겠습니까?</div>
-      <div class="exit-desc">지금 나가면 이 전투의 진행이 취소되고<br>노드가 재도전 상태로 돌아갑니다.</div>
+      <div class="exit-desc">지금 나가면 이 전투의 진행이 취소되고<br>스테이지가 재도전 상태로 돌아갑니다.</div>
       <div class="exit-btns">
         <button class="exit-cancel" onclick="hideExitConfirm()">계속 싸우기</button>
         <button class="exit-ok" onclick="exitToMap()">나가기</button>

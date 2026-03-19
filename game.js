@@ -270,33 +270,51 @@ function goTitle() {
 // OPENING
 // ==============================
 let openingTimer = null;
+let openingIdx = 0;
+let openingDone = false;
+
+function onOpeningClick() {
+  if (openingDone) return;
+  if (openingTimer) { clearTimeout(openingTimer); openingTimer = null; }
+  openingAdvance();
+}
+
+function openingAdvance() {
+  if (openingIdx <= 11) {
+    document.getElementById('op' + openingIdx).classList.add('visible');
+    openingIdx++;
+    openingTimer = setTimeout(openingAdvance, openingIdx <= 5 ? 1200 : 1000);
+  } else {
+    openingDone = true;
+    openingTimer = setTimeout(() => {
+      document.getElementById('opening-start-btn').style.display = 'inline-block';
+      document.getElementById('opening-screen').removeEventListener('click', onOpeningClick);
+    }, 400);
+  }
+}
 
 function startOpening() {
   Sound.stopBGM();
   showScreen('opening-screen');
-  document.getElementById('op11').textContent = '그리하여 ' + G.playerName + ', 당신의 모험이 시작된다.';
+  document.getElementById('op11').textContent = '당신의 올바른 판단만이 세상을 구할 수 있다. 지금, 용사 ' + G.playerName + '의 모험이 시작된다.';
   for (let i = 0; i <= 11; i++) document.getElementById('op' + i).classList.remove('visible');
   document.getElementById('opening-start-btn').style.display = 'none';
+  openingIdx = 0;
+  openingDone = false;
 
-  let idx = 0;
-  function showNext() {
-    if (idx <= 11) {
-      document.getElementById('op' + idx).classList.add('visible');
-      idx++;
-      openingTimer = setTimeout(showNext, idx <= 5 ? 1200 : 1000);
-    } else {
-      openingTimer = setTimeout(() => {
-        document.getElementById('opening-start-btn').style.display = 'inline-block';
-      }, 500);
-    }
-  }
-  showNext();
+  const screen = document.getElementById('opening-screen');
+  screen.removeEventListener('click', onOpeningClick); // 중복 방지
+  screen.addEventListener('click', onOpeningClick);
+
+  openingAdvance();
 }
 
 function skipOpening() {
   if (openingTimer) clearTimeout(openingTimer);
+  openingDone = true;
   for (let i = 0; i <= 11; i++) document.getElementById('op' + i).classList.add('visible');
   document.getElementById('opening-start-btn').style.display = 'inline-block';
+  document.getElementById('opening-screen').removeEventListener('click', onOpeningClick);
 }
 
 function startGame() {
@@ -312,7 +330,7 @@ function renderMap() {
   renderNodes();
   renderPaths();
   const cleared = G.nodeStatus.filter(s => s === 'cleared').length;
-  document.getElementById('map-progress-text').textContent = cleared + ' / ' + NODES.length + ' 클리어';
+  document.getElementById('map-progress-text').textContent = cleared + ' / ' + NODES.length + ' 스테이지 클리어';
 }
 
 function renderNodes() {
