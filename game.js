@@ -474,13 +474,19 @@ function renderMap() {
 function renderNodes() {
   const container = document.getElementById('nodes-container');
   container.innerHTML = '';
+  // 맵 영역 실제 높이에 맞게 노드 좌표 비율 조정
+  const mapArea = document.getElementById('nodes-container').parentElement;
+  const mapH = mapArea ? mapArea.offsetHeight : 720;
+  const mapW = mapArea ? mapArea.offsetWidth : 390;
+  const scaleY = mapH / 750;
+  const scaleX = mapW / 390;
   NODES.forEach((node, i) => {
     const status = G.nodeStatus[i];
     const isBoss = node.type === 'boss';
     const div = document.createElement('div');
     div.className = 'map-node ' + status + (isBoss ? ' boss' : '');
-    div.style.left = node.x + 'px';
-    div.style.top = node.y + 'px';
+    div.style.left = Math.round(node.x * scaleX) + 'px';
+    div.style.top = Math.round(node.y * scaleY) + 'px';
     div.id = 'node-' + i;
 
     // 보스 BOSS 뱃지
@@ -516,11 +522,16 @@ function renderNodes() {
 function renderPaths() {
   const svg = document.getElementById('path-svg');
   svg.innerHTML = '';
+  const mapArea = svg.parentElement;
+  const mapH = mapArea ? mapArea.offsetHeight : 720;
+  const mapW = mapArea ? mapArea.offsetWidth : 390;
+  const scaleY = mapH / 750;
+  const scaleX = mapW / 390;
   for (let i = 0; i < NODES.length - 1; i++) {
     const a = NODES[i], b = NODES[i + 1];
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
-    line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+    line.setAttribute('x1', Math.round(a.x * scaleX)); line.setAttribute('y1', Math.round(a.y * scaleY));
+    line.setAttribute('x2', Math.round(b.x * scaleX)); line.setAttribute('y2', Math.round(b.y * scaleY));
     line.setAttribute('stroke', G.nodeStatus[i + 1] === 'locked' ? '#333' : '#8a7a50');
     line.setAttribute('stroke-width', '2.5');
     line.setAttribute('stroke-dasharray', '7,5');
