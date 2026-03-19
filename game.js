@@ -254,8 +254,10 @@ function continueGame() {
   G.nodeStatus = saved.nodeStatus;
   G.totalCorrect = saved.totalCorrect || 0;
   G.totalWrong = saved.totalWrong || 0;
-  renderMap();
   showScreen('map-screen');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
   Sound.playBGM('bgm_title');
 }
 
@@ -454,8 +456,10 @@ function startOpening() {
 function skipOpening() { opSkipAll(); }
 
 function startGame() {
-  renderMap();
   showScreen('map-screen');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
   Sound.playBGM('bgm_title');
 }
 
@@ -821,8 +825,10 @@ function exitToMap() {
   document.getElementById('result-popup').classList.remove('show');
   Sound.stopBGM();
   Sound.playBGM('bgm_title');
-  renderMap();
   showScreen('map-screen');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
 }
 
 // ==============================
@@ -847,15 +853,23 @@ function stageClear() {
 
 function afterClear() {
   if (G.currentNode === NODES.length - 1) showEnding();
-  else { renderMap(); showScreen('map-screen'); Sound.playBGM('bgm_title'); }
+  else {
+    showScreen('map-screen');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      renderMap();
+    }));
+    Sound.playBGM('bgm_title');
+  }
 }
 
 // ==============================
 // GAME OVER
 // ==============================
 function retryNode() {
-  renderMap();
   showScreen('map-screen');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
   Sound.playBGM('bgm_title');
 }
 
