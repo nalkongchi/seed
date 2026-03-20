@@ -301,7 +301,7 @@ const OP_SCENES = [
   { image: 'images/scene4.png', lightning: true, lines: [
     '하지만 왕국의 끝에는',
     '우량종자 공급을 방해하는\n최종 보스가 기다리고 있다.',
-    '당신의 올바른 판단만이 세상을 구할 수 있다.',
+    '당신의 올바른 판단만이 세상을 구할 수 준다.',
     '__NAME__의 모험이 시작된다.'
   ]}
 ];
@@ -334,16 +334,13 @@ function opTypeLine(line) {
 }
 
 function opSetScene(idx) {
-  opSceneEls.forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
-    if (i === idx) {
-      const bg = el.querySelector('.op-scene-bg');
-      if (bg) {
-        bg.style.animation = 'none'; void bg.offsetWidth;
-        bg.style.animation = 'op-slow-pan 9s ease-in-out forwards';
-      }
-    }
-  });
+  const el = opSceneEls[idx];
+  const bg = el.querySelector('.op-scene-bg');
+  if (bg) {
+    bg.style.animation = 'none'; void bg.offsetWidth;
+    bg.style.animation = 'op-slow-pan 9s ease-in-out forwards';
+  }
+  
   if (OP_SCENES[idx].lightning) {
     const flash = opSceneEls[idx].querySelector('.op-flash');
     setTimeout(() => {
@@ -366,14 +363,27 @@ function opNextStep() {
   }
   const scene = OP_SCENES[opSceneIdx];
   if (opLineIdx < scene.lines.length - 1) { opLineIdx++; opShowLine(); return; }
+  
   if (opSceneIdx < OP_SCENES.length - 1) {
-    const fb = document.getElementById('op-fade-black');
-    fb.style.opacity = '1';
+    // 현재 씬 픽셀 와이프 아웃 애니메이션 적용
+    const oldLayer = opSceneEls[opSceneIdx];
+    oldLayer.classList.remove('wipe-in');
+    oldLayer.classList.add('wipe-out');
+    document.getElementById('op-text').innerHTML = ''; // 텍스트 미리 비우기
+    
+    // 와이프 아웃(0.4초) 후 다음 씬 등장
     setTimeout(() => {
+      oldLayer.classList.remove('active');
+      oldLayer.classList.remove('wipe-out');
+      
       opSceneIdx++; opLineIdx = 0;
-      opSetScene(opSceneIdx); opShowLine();
-    }, 320);
-    setTimeout(() => { fb.style.opacity = '0'; }, 640);
+      const newLayer = opSceneEls[opSceneIdx];
+      newLayer.classList.add('active');
+      newLayer.classList.add('wipe-in');
+      
+      opSetScene(opSceneIdx); 
+      opShowLine();
+    }, 400); 
     return;
   }
   opFinish();
@@ -389,15 +399,26 @@ function opFinish() {
 
 function opSkipAll() {
   clearTimeout(opTypingTimer);
-  const fb = document.getElementById('op-fade-black');
-  fb.style.opacity = '1';
+  
+  const oldLayer = opSceneEls[opSceneIdx];
+  oldLayer.classList.remove('wipe-in');
+  oldLayer.classList.add('wipe-out');
+  document.getElementById('op-text').innerHTML = '';
+  
   setTimeout(() => {
+    oldLayer.classList.remove('active');
+    oldLayer.classList.remove('wipe-out');
+    
     opSceneIdx = OP_SCENES.length - 1;
     opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
+    
+    const newLayer = opSceneEls[opSceneIdx];
+    newLayer.classList.add('active');
+    newLayer.classList.add('wipe-in');
+    
     opSetScene(opSceneIdx);
     document.getElementById('op-text').innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
     opTyping = false;
-    fb.style.opacity = '0';
     opFinish();
   }, 400);
 }
@@ -410,7 +431,7 @@ function startOpening() {
   container.innerHTML = '';
   opSceneEls = OP_SCENES.map((scene, idx) => {
     const layer = document.createElement('div');
-    layer.className = 'op-scene-layer' + (idx === 0 ? ' active' : '');
+    layer.className = 'op-scene-layer';
     layer.innerHTML =
       '<img class="op-scene-bg" src="' + scene.image + '" alt="">' +
       '<div class="op-scene-overlay"></div>' +
@@ -426,7 +447,10 @@ function startOpening() {
   document.getElementById('op-skip').style.display = 'block';
   document.getElementById('op-tap').disabled = false;
   document.getElementById('op-tap').style.pointerEvents = 'auto';
-  document.getElementById('op-fade-black').style.opacity = '0';
+
+  // 첫 화면 등장
+  opSceneEls[0].classList.add('active');
+  opSceneEls[0].classList.add('wipe-in');
 
   // 이벤트
   const tap  = document.getElementById('op-tap');
@@ -534,10 +558,6 @@ function openNodePopup(idx) {
 function closeNodePopup() {
   document.getElementById('node-popup').classList.remove('show');
 }
-
-// ==============================
-// TUTORIAL
-// ==============================
 
 // ==============================
 // 오답노트
