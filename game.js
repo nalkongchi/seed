@@ -73,20 +73,28 @@ function showScreen(id) {
  document.getElementById(id).classList.add('active');
 }
 
+function goBackToTitle() { showScreen('title-screen'); }
+function goToNameInput() { showScreen('name-screen'); }
+
 function confirmName() {
  const val = document.getElementById('player-name-input').value.trim();
  G.playerName = val || '용사';
  startOpening();
 }
 
-// ════ OPENING (Pixel Wipe) ════
+// ════ OPENING (Typing + Pixel Wipe) ════
 const OP_SCENES = [
- { image: 'images/scene1.png', lines: ['오래전, 종자 왕국의 질서가 무너졌다.'] },
- { image: 'images/scene2.png', lines: ['세상의 균형을 바로잡는 자, 그들이 바로 종자검사원이다.'] },
- { image: 'images/scene3.png', lines: ['당신은 정식 검사원이 되기 위해 모험을 떠난다.'] },
- { image: 'images/scene4.png', lines: ['__NAME__의 모험이 시작된다.'] }
+ { image: 'images/scene1.png', lines: [ '오래전, 종자 왕국의 질서가 무너졌다.', '기준 미달 종자와 혼입 종자,\n그리고 거짓된 판정이 왕국을 뒤덮었다.' ] },
+ { image: 'images/scene2.png', lines: [ '무너진 종자 왕국,\n이 세상의 균형을 바로잡는 자,', '그들이 바로...\n종자검사원이다.' ] },
+ { image: 'images/scene3.png', lines: [ '아직은 지망생에 불과한 당신은\n정식 종자검사원이 되기 위해', '들판, 평원, 연금실, 성소, 협곡,\n그리고 심판의 성을 향해 떠난다.' ] },
+ { image: 'images/scene4.png', lines: [ '하지만 왕국 너머,\n그 긴긴 길의 끝에는', '우량종자 공급을 방해하는\n최종 보스가 기다리고 있다고 전해진다.', '당신의 올바른 판단만이 세상을 구할 수 있다.', '지금부터... __NAME__의 모험이 시작된다.' ] }
 ];
 let opSceneIdx = 0, opLineIdx = 0, opTyping = false, opFullLine = '', opTypingTimer = null, opSceneEls = [];
+
+function opRenderLine(line) {
+ const safe = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ return safe.replace(/__NAME__/g, '<span class="op-player-name">' + G.playerName + '</span>');
+}
 
 function opTypeLine(line) {
  clearTimeout(opTypingTimer); opTyping = true; opFullLine = line;
@@ -96,7 +104,7 @@ function opTypeLine(line) {
  function tick() {
  textEl.textContent = plain.slice(0,i); i++;
  if (i <= plain.length) opTypingTimer = setTimeout(tick, 32);
- else { textEl.innerHTML = line.replace(/__NAME__/g, '<span class="op-player-name">'+G.playerName+'</span>'); opTyping = false; }
+ else { textEl.innerHTML = opRenderLine(line); opTyping = false; }
  }
  tick();
 }
@@ -109,7 +117,7 @@ function opSetScene(idx) {
 }
 
 function opNextStep() {
- if (opTyping) { clearTimeout(opTypingTimer); document.getElementById('op-text').innerHTML = opFullLine.replace(/__NAME__/g, G.playerName); opTyping = false; return; }
+ if (opTyping) { clearTimeout(opTypingTimer); document.getElementById('op-text').innerHTML = opRenderLine(opFullLine); opTyping = false; return; }
  if (opLineIdx < OP_SCENES[opSceneIdx].lines.length - 1) { opLineIdx++; opTypeLine(OP_SCENES[opSceneIdx].lines[opLineIdx]); return; }
  if (opSceneIdx < OP_SCENES.length - 1) { opSceneIdx++; opLineIdx = 0; opSetScene(opSceneIdx); opTypeLine(OP_SCENES[opSceneIdx].lines[opLineIdx]); return; }
  document.getElementById('op-end-btn').style.display = 'block'; document.getElementById('op-arrow').style.display = 'none';
@@ -169,7 +177,8 @@ function renderHp() {
 }
 
 function loadQuestion() {
- const q = G.shuffledQ[G.currentQ]; document.getElementById('battle-question').textContent = q.text;
+ const q = G.shuffledQ[G.currentQ]; 
+ document.getElementById('battle-question').textContent = q.text;
  document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);
 }
 
@@ -185,17 +194,5 @@ function answer(choice) {
 function nextQuestion() {
  document.getElementById('result-popup').classList.remove('show');
  if (G.hp <= 0) { showScreen('gameover-screen'); return; }
- if (G.enemyHp <= 0) { G.nodeStatus[G.currentNode] = 'cleared'; if(G.currentNode < NODES.length-1) G.nodeStatus[G.currentNode+1] = 'available'; showScreen('clear-screen'); return; }
- G.currentQ++; if (G.currentQ >= G.shuffledQ.length) G.shuffledQ.sort(() => Math.random() - 0.5), G.currentQ = 0;
- loadQuestion();
-}
-
-function afterClear() { showScreen('map-screen'); renderMap(); Sound.playBGM('bgm_title'); }
-function goTitle() { location.reload(); }
-function goBackToTitle() { showScreen('title-screen'); }
-function goToNameInput() { showScreen('name-screen'); }
-function showExitConfirm() { document.getElementById('exit-confirm').classList.add('show'); }
-function hideExitConfirm() { document.getElementById('exit-confirm').classList.remove('show'); }
-function exitToMap() { hideExitConfirm(); showScreen('map-screen'); renderMap(); Sound.playBGM('bgm_title'); }
-
-Sound.loadSettings();
+ if (G.enemyHp <= 0) { 
+  G.nodeStatus[G.currentNode] =
