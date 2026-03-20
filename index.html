@@ -9,9 +9,7 @@
 <body>
 <div id="game-container">
 
- <!-- ═══════════════════════════════════════════
- TITLE SCREEN
- ═══════════════════════════════════════════ -->
+ <!-- TITLE SCREEN -->
  <div id="title-screen" class="screen active">
  <div class="title-bg"></div>
  <div class="title-overlay"></div>
@@ -44,9 +42,7 @@
  <div class="title-footer-new">© National Seed RPG · v0.4</div>
  </div>
 
- <!-- ═══════════════════════════════════════════
- NAME INPUT SCREEN
- ═══════════════════════════════════════════ -->
+ <!-- NAME INPUT SCREEN -->
  <div id="name-screen" class="screen">
  <div class="name-box">
  <div class="name-glow"></div>
@@ -59,19 +55,14 @@
  </div>
  </div>
 
- <!-- ═══════════════════════════════════════════
- OPENING SCREEN
- ═══════════════════════════════════════════ -->
- <!-- ═══════════════════════════════════════════
- OPENING SCREEN (컷신)
- ═══════════════════════════════════════════ -->
+ <!-- OPENING SCREEN -->
  <div id="opening-screen" class="screen">
  <div id="op-scene-container"></div>
  <div id="op-fade-black" style="position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity 480ms ease;z-index:20;"></div>
  <button id="op-tap" style="position:absolute;inset:0;z-index:10;background:transparent;border:none;padding:0;cursor:pointer;pointer-events:none;" aria-label="다음"></button>
  <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
  <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;">
- <div style="padding:0;pointer-events:auto;">
+ <div style="padding:0;pointer-events:auto;"> <!-- 꽉 차게 수정됨 -->
  <div id="op-box" class="op-frame-box">
  <div id="op-text" class="op-frame-text"></div>
  <div style="margin-top:10px;display:flex;align-items:center;">
@@ -83,9 +74,7 @@
  </div>
  </div>
 
- <!-- ═══════════════════════════════════════════
- MAP SCREEN
- ═══════════════════════════════════════════ -->
+ <!-- MAP SCREEN -->
  <div id="map-screen" class="screen">
  <div class="map-header">
  <div class="map-title">MAP</div>
@@ -95,9 +84,7 @@
  <div class="map-bg">
  <div class="map-overlay"></div>
  </div>
- <!-- 연결선 SVG (JS 렌더링) -->
  <svg id="path-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg>
- <!-- 스테이지 컨테이너 (JS 렌더링) -->
  <div id="nodes-container"></div>
  </div>
  <div class="map-footer">
@@ -107,61 +94,7 @@
  </div>
  </div>
 
- <!-- ═══════════════════════════════════════════
- NODE POPUP
- ═══════════════════════════════════════════ -->
- <div id="node-popup">
- <div class="node-popup-box">
- <div class="popup-emoji" id="popup-emoji"></div>
- <div class="popup-enemy-name" id="popup-enemy"></div>
- <div class="popup-desc" id="popup-desc"></div>
- <div class="popup-hp-info" id="popup-hp"></div>
- <div class="popup-btns">
- <button class="popup-cancel" onclick="closeNodePopup()">← 돌아가기</button>
- <button class="popup-start" onclick="startBattle()"> 전투 시작!</button>
- </div>
- </div>
- </div>
-
- <!-- ═══════════════════════════════════════════
- WRONGNOTE POPUP
- ═══════════════════════════════════════════ -->
- <div id="wrongnote-popup">
- <div class="wrongnote-header">
- <div class="wrongnote-title"> 오답노트</div>
- <button class="wrongnote-close" onclick="closeWrongnote()"> 닫기</button>
- </div>
- <div class="wrongnote-body" id="wrongnote-body"></div>
- <button class="wrongnote-clear-btn" onclick="clearWrongnote()"> 오답노트 초기화</button>
- </div>
-
- <!-- ═══════════════════════════════════════════
- SETTING POPUP
- ═══════════════════════════════════════════ -->
- <div id="setting-popup">
- <div class="setting-box">
- <div class="setting-title">BGM</div>
- <div class="setting-row">
- <div class="setting-label">🎵 배경음악</div>
- <div class="setting-slider-wrap">
- <input class="setting-slider" id="bgm-slider" type="range" min="0" max="100" value="70" oninput="Sound.setBGMVol(this.value)">
- <span class="setting-slider-val" id="bgm-val">70</span>
- </div>
- </div>
- <div class="setting-row">
- <div class="setting-label">🔊 효과음</div>
- <div class="setting-slider-wrap">
- <input class="setting-slider" id="se-slider" type="range" min="0" max="100" value="70" oninput="Sound.setSEVol(this.value)">
- <span class="setting-slider-val" id="se-val">70</span>
- </div>
- </div>
- <button class="setting-close" onclick="closeSetting()"> 확인</button>
- </div>
- </div>
-
- <!-- ═══════════════════════════════════════════
- ENCOUNTER SCREEN
- ═══════════════════════════════════════════ -->
+ <!-- ENCOUNTER SCREEN -->
  <div id="encounter-screen" class="screen">
  <div class="encounter-bg" id="encounter-bg"></div>
  <div class="encounter-enemy-img" id="enc-enemy-img"></div>
@@ -170,48 +103,37 @@
  <div class="encounter-name" id="enc-name"></div>
  <button class="encounter-btn" id="enc-battle-btn" onclick="startActualBattle()"> 전투!</button>
  </div>
- <!-- 보스 등장 대사창 -->
  <div class="boss-intro-box" id="boss-intro-box" style="display:none">
  <div class="boss-intro-text" id="boss-intro-text"></div>
  </div>
  </div>
 
- <!-- ═══════════════════════════════════════════
- BATTLE SCREEN (심사대 컨셉 리뉴얼)
- ═══════════════════════════════════════════ -->
+ <!-- BATTLE SCREEN (리뉴얼) -->
  <div id="battle-screen" class="screen">
-  <div class="battle-header">
-    <div class="battle-header-left">
-      <button class="battle-exit-btn" onclick="showExitConfirm()">← 나가기</button>
-      <div class="battle-enemy-name" id="battle-enemy-name"></div>
+  <div class="battle-header dual-hp-header">
+    <div class="hp-wrapper player-side">
+      <div class="hp-label">나의 멘탈</div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill player-fill" id="player-hp-fill"></div></div>
+      <div class="hp-text" id="player-hp-text">3 / 3</div>
     </div>
-    <!-- 🌾 이모지 대신 들어가는 RPG 체력바 -->
-    <div class="battle-hp-container" id="battle-hp-container">
-      <div class="hp-bar-bg">
-        <div class="hp-bar-fill" id="hp-bar-fill"></div>
-      </div>
-      <div class="hp-text" id="hp-text">3 / 3</div>
+    <button class="battle-exit-btn" onclick="showExitConfirm()">포기</button>
+    <div class="hp-wrapper enemy-side">
+      <div class="hp-text" id="enemy-hp-text">3 / 3</div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill enemy-fill" id="enemy-hp-fill"></div></div>
+      <div class="hp-label" id="battle-enemy-name">적 이름</div>
     </div>
   </div>
 
-  <!-- 심사대 영역 (거대 이미지 대신 들어감) -->
   <div class="inspection-desk-area">
-    <!-- 뒷배경 벽 -->
     <div class="desk-wall"></div>
-    
-    <!-- 책상 너머에 서 있는 적 (크기 축소됨) -->
     <div class="desk-enemy" id="battle-card-img"></div>
-    
-    <!-- 플레이어 쪽 심사 책상 -->
     <div class="desk-fg">
       <div class="boss-label" id="boss-label" style="display:none">BOSS</div>
-      <!-- 책상 위에 올려진 명패 느낌 -->
       <div class="battle-name-badge" id="battle-name-badge"></div>
-      <div class="q-counter" id="q-counter">1 / 5</div>
+      <div class="q-counter" id="q-counter">턴 시작</div>
     </div>
   </div>
 
-  <!-- 서류(말풍선) 및 판정 버튼 영역 -->
   <div class="battle-question-area">
     <div class="speech-bubble" id="speech-bubble">
       <div class="bubble-text" id="battle-question"></div>
