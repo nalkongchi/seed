@@ -17,10 +17,30 @@
   font-family:'Galmuri9','DotGothic16',monospace;
 }
 
-/* 오프닝 컷신 씬 레이어 */
-.op-scene-layer { position:absolute; inset:0; opacity:0; transform:scale(1.02);
-  transition:opacity 700ms ease, transform 700ms ease; pointer-events:none; }
-.op-scene-layer.active { opacity:1; transform:scale(1); }
+/* 오프닝 컷신 씬 레이어 - 픽셀 와이프 효과 적용 */
+.op-scene-layer { 
+  position:absolute; inset:0; 
+  display:none; /* opacity 대신 display로 제어 */
+  transform:scale(1.02); pointer-events:none; 
+}
+.op-scene-layer.active { display:block; }
+
+/* 픽셀 와이프 아웃 (아래에서 위로 검게 덮임) */
+@keyframes pixelWipeOut {
+  0%   { clip-path: inset(0% 0% 0% 0%); }
+  100% { clip-path: inset(0% 0% 100% 0%); }
+}
+
+/* 픽셀 와이프 인 (위에서 아래로 차오름) */
+@keyframes pixelWipeIn {
+  0%   { clip-path: inset(0% 0% 100% 0%); }
+  100% { clip-path: inset(0% 0% 0% 0%); }
+}
+
+/* steps(16)으로 16단계로 뚝뚝 끊기게 만들어 픽셀 블록 느낌 강조 */
+.wipe-out { animation: pixelWipeOut 0.4s steps(16) forwards; }
+.wipe-in  { animation: pixelWipeIn 0.4s steps(16) forwards; }
+
 .op-scene-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
   image-rendering:pixelated; filter:brightness(0.88) saturate(0.95);
   animation:op-slow-pan 9s ease-in-out forwards; }
@@ -256,7 +276,6 @@ body {
 .footer-setting-btn:hover { border-color:#444; color:#aaa; }
 
 /* 스테이지 */
-/* 노드 - 스프라이트 아이콘 방식 */
 .map-node { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:10; transform:translate(-50%,-50%); transition:transform 0.12s; }
 .map-node:not(.locked):hover { transform:translate(-50%,-50%) scale(1.08); }
 .map-node:active { transform:translate(-50%,-50%) scale(0.95); }
@@ -384,7 +403,6 @@ body {
 #battle-screen { background:#0d1117; }
 #battle-screen.shake { animation:screen-shake 0.4s ease-out; }
 .battle-header { background:#0a0a0a; border-bottom:1px solid #1a1a1a; padding:8px 15px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
-  font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 .battle-header-left { display:flex; align-items:center; gap:10px; }
 .battle-exit-btn { background:#1a1a1a; border:2px solid #555; color:#888; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:11px; padding:5px 10px; cursor:pointer; }
 .battle-exit-btn:hover { border-color:#aaa; color:#ccc; }
@@ -397,7 +415,6 @@ body {
 
 /* 카드형 적 영역 */
 .battle-card-area { position:relative; flex:0 0 65%; overflow:hidden; background:#000; }
-.battle-card-img { position:absolute; inset:0; background-size:cover; background-position:top center; background-repeat:no-repeat; }
 .battle-card-img { position:absolute; inset:0; background-size:cover; background-position:center top; }
 .battle-card-img.emoji-mode { display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#0a1a0a 0%,#1a2a0a 100%); font-size:90px; filter:drop-shadow(0 5px 15px rgba(0,0,0,0.8)); animation:enemy-idle 2s ease-in-out infinite; }
 .battle-card-img.emoji-mode.boss-bg { background:linear-gradient(180deg,#1a0000 0%,#2a0a0a 100%); animation:boss-entrance 0.8s ease-out, enemy-idle 2s ease-in-out 0.8s infinite; }
@@ -454,9 +471,7 @@ body {
 .result-title { font-size:24px; font-weight:900; margin-bottom:5px;
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 .result-box.correct .result-title { color:#4caf50; font-family:'Galmuri11','Noto Sans KR',sans-serif; }
-  font-family:'Galmuri9','Noto Sans KR',sans-serif;}
-.result-box.wrong .result-title { color:#ff6666;
-  font-family:'Galmuri9','Noto Sans KR',sans-serif;}
+.result-box.wrong .result-title { color:#ff6666; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
 /* 도장 이펙트 */
 .stamp-effect { font-size:60px; margin-bottom:8px; display:none; }
 .stamp-effect.show { display:block; animation:stamp-pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
