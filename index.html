@@ -177,36 +177,50 @@
  </div>
 
  <!-- ═══════════════════════════════════════════
- BATTLE SCREEN
+ BATTLE SCREEN (심사대 컨셉 리뉴얼)
  ═══════════════════════════════════════════ -->
  <div id="battle-screen" class="screen">
- <div class="battle-header">
- <div class="battle-header-left">
- <button class="battle-exit-btn" onclick="showExitConfirm()">← 나가기</button>
- <div class="battle-enemy-name" id="battle-enemy-name"></div>
- </div>
- <div class="battle-hp" id="battle-hp"></div>
- </div>
- <!-- 카드형 적 배경 -->
- <div class="battle-card-area" id="battle-card-area">
- <div class="battle-card-img" id="battle-card-img"></div>
- <div class="battle-card-fade" id="battle-card-fade"></div>
- <div class="battle-card-bottom"></div>
- <div class="q-counter" id="q-counter">1 / 5</div>
- <div class="boss-label" id="boss-label" style="display:none"> BOSS</div>
- </div>
- <!-- 적 이름 배지 -->
- <div class="battle-name-badge" id="battle-name-badge"></div>
- <!-- 말풍선 -->
- <div class="battle-question-area">
- <div class="speech-bubble" id="speech-bubble">
- <div class="bubble-text" id="battle-question"></div>
- </div>
- </div>
- <div class="battle-buttons">
- <button class="judge-btn btn-pass" onclick="answer('pass')">합  격</button>
- <button class="judge-btn btn-fail" onclick="answer('fail')">불합격</button>
- </div>
+  <div class="battle-header">
+    <div class="battle-header-left">
+      <button class="battle-exit-btn" onclick="showExitConfirm()">← 나가기</button>
+      <div class="battle-enemy-name" id="battle-enemy-name"></div>
+    </div>
+    <!-- 🌾 이모지 대신 들어가는 RPG 체력바 -->
+    <div class="battle-hp-container" id="battle-hp-container">
+      <div class="hp-bar-bg">
+        <div class="hp-bar-fill" id="hp-bar-fill"></div>
+      </div>
+      <div class="hp-text" id="hp-text">3 / 3</div>
+    </div>
+  </div>
+
+  <!-- 심사대 영역 (거대 이미지 대신 들어감) -->
+  <div class="inspection-desk-area">
+    <!-- 뒷배경 벽 -->
+    <div class="desk-wall"></div>
+    
+    <!-- 책상 너머에 서 있는 적 (크기 축소됨) -->
+    <div class="desk-enemy" id="battle-card-img"></div>
+    
+    <!-- 플레이어 쪽 심사 책상 -->
+    <div class="desk-fg">
+      <div class="boss-label" id="boss-label" style="display:none">BOSS</div>
+      <!-- 책상 위에 올려진 명패 느낌 -->
+      <div class="battle-name-badge" id="battle-name-badge"></div>
+      <div class="q-counter" id="q-counter">1 / 5</div>
+    </div>
+  </div>
+
+  <!-- 서류(말풍선) 및 판정 버튼 영역 -->
+  <div class="battle-question-area">
+    <div class="speech-bubble" id="speech-bubble">
+      <div class="bubble-text" id="battle-question"></div>
+    </div>
+  </div>
+  <div class="battle-buttons">
+    <button class="judge-btn btn-pass" onclick="answer('pass')">합  격</button>
+    <button class="judge-btn btn-fail" onclick="answer('fail')">불합격</button>
+  </div>
  </div>
 
  <!-- ═══════════════════════════════════════════
