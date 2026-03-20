@@ -14,7 +14,8 @@ var NODES = [
     emoji: '',
     enemy: '수상한 씨앗지기',
     enemyEmoji: '',
-    enemyImage: 'images/enemy_01.png',
+    enemyImage: 'images/enemy_01.png', // 조우 화면용 (큰 그림)
+    enemySprite: 'images/enemy_01_dot.png',   // 전투 아레나용 (도트 캐릭터)
     desc: '씨앗지기가 자신의 수확물을 통과시켜 달라고 요구하고 있다...',
     maxHp: 3,
     type: 'normal',
@@ -69,7 +70,8 @@ var NODES = [
     emoji: '',
     enemy: '황금들판의 장로',
     enemyEmoji: '',
-    enemyImage: 'images/enemy_02.png',
+    enemyImage: 'images/enemy_02.png',  // 조우 화면용 (큰 그림)
+    enemySprite: 'images/enemy_02_dot.png',   // 전투 아레나용 (도트 캐릭터)
     desc: '황금들판의 장로가 풍요의 수확을 인정해 달라고 요구한다...',
     maxHp: 3,
     type: 'normal',
@@ -119,7 +121,8 @@ var NODES = [
     emoji: '',
     enemy: '혼합의 연금술사',
     enemyEmoji: '',
-    enemyImage: 'images/enemy_03.png',
+    enemyImage: 'images/enemy_03.png',  // 조우 화면용 (큰 그림)
+    enemySprite: 'images/enemy_03_dot.png',   // 전투 아레나용 (도트 캐릭터)
     desc: '연금술사가 뒤섞인 시료로 당신의 판정을 흐리려 한다...',
     maxHp: 3,
     type: 'normal',
@@ -164,7 +167,8 @@ var NODES = [
     emoji: '',
     enemy: '순계의 수호자',
     enemyEmoji: '',
-    enemyImage: 'images/enemy_04.png',
+    enemyImage: 'images/enemy_04.png',  // 조우 화면용 (큰 그림)
+    enemySprite: 'images/enemy_04_dot.png',   // 전투 아레나용 (도트 캐릭터)
     desc: '순수한 혈통의 기준을 증명할 수 있는지 시험받게 된다...',
     maxHp: 5,
     type: 'normal',
@@ -209,7 +213,8 @@ var NODES = [
     emoji: '',
     enemy: '규율의 감시자',
     enemyEmoji: '',
-    enemyImage: 'images/enemy_05.png',
+    enemyImage: 'images/enemy__05.png',  // 조우 화면용 (큰 그림)
+    enemySprite: 'images/enemy_05_dot.png',   // 전투 아레나용 (도트 캐릭터)
     desc: '조심해! 규율의 감시자가 당신의 판정을 지켜보고 있다!',
     maxHp: 5,
     type: 'normal',
@@ -254,7 +259,8 @@ var NODES = [
     emoji: '',
     enemy: '기준왜곡 대심판관',
     enemyEmoji: '',
-    enemyImage: 'images/enemy_06.png',
+    enemyImage: 'images/enemy_06.png',  // 조우 화면용 (큰 그림)
+    enemySprite: 'images/enemy_06_dot.png',   // 전투 아레나용 (도트 캐릭터)
     desc: '최후의 심판이 시작된다. 왜곡된 기준을 바로잡아라!',
     maxHp: 7,
     type: 'boss',
