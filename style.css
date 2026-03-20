@@ -25,21 +25,34 @@
 }
 .op-scene-layer.active { display:block; }
 
-/* 픽셀 와이프 아웃 (아래에서 위로 검게 덮임) */
-@keyframes pixelWipeOut {
-  0%   { clip-path: inset(0% 0% 0% 0%); }
-  100% { clip-path: inset(0% 0% 100% 0%); }
+/* =========================================
+   블라인드 트랜지션 (고전 도트 감성 샤락!)
+   ========================================= */
+
+/* 크로스 브라우징을 위해 -webkit- 접두사가 추가된 안전한 버전입니다! */
+.wipe-out { 
+  -webkit-mask-image: linear-gradient(to bottom, black 10px, transparent 10px);
+  mask-image: linear-gradient(to bottom, black 10px, transparent 10px);
+  /* 선이 점점 얇아지면서 사라짐 */
+  animation: blindWipeOut 0.3s steps(10) forwards; 
 }
 
-/* 픽셀 와이프 인 (위에서 아래로 차오름) */
-@keyframes pixelWipeIn {
-  0%   { clip-path: inset(0% 0% 100% 0%); }
-  100% { clip-path: inset(0% 0% 0% 0%); }
+.wipe-in { 
+  -webkit-mask-image: linear-gradient(to bottom, black 10px, transparent 10px);
+  mask-image: linear-gradient(to bottom, black 10px, transparent 10px);
+  /* 선이 점점 굵어지면서 나타남 */
+  animation: blindWipeIn 0.3s steps(10) forwards; 
 }
 
-/* steps(16)으로 16단계로 뚝뚝 끊기게 만들어 픽셀 블록 느낌 강조 */
-.wipe-out { animation: pixelWipeOut 0.4s steps(16) forwards; }
-.wipe-in  { animation: pixelWipeIn 0.4s steps(16) forwards; }
+@keyframes blindWipeOut {
+  0%   { -webkit-mask-size: 100% 20px; mask-size: 100% 20px; }
+  100% { -webkit-mask-size: 100% 0px;  mask-size: 100% 0px; }
+}
+
+@keyframes blindWipeIn {
+  0%   { -webkit-mask-size: 100% 0px;  mask-size: 100% 0px; }
+  100% { -webkit-mask-size: 100% 20px; mask-size: 100% 20px; }
+}
 
 .op-scene-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
   image-rendering:pixelated; filter:brightness(0.88) saturate(0.95);
