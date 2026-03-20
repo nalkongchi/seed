@@ -63,7 +63,7 @@ function goToNameInput() { showScreen('name-screen'); }
 function goBackToTitle() { showScreen('title-screen'); }
 function confirmName() {
     const val = document.getElementById('player-name-input').value.trim();
-    G.playerName = val || '지망생';
+    G.playerName = val || '용사';
     startOpening();
 }
 
