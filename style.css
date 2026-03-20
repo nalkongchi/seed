@@ -207,27 +207,45 @@ body {
 .footer-home-btn { background:#1a2a1a; border:2px solid #3a5a3a; color:#7ab648; font-family:'Noto Sans KR',sans-serif; font-size:12px; font-weight:700; padding:5px 12px; cursor:pointer; letter-spacing:1px; transition:all 0.1s; }
 .footer-home-btn:hover { background:#2a4a2a; border-color:#7ab648; }
 .map-area { flex:1; position:relative; overflow:hidden; }
-.map-bg { position:absolute; inset:0; width:100%; height:100%; }
+.map-bg { position:absolute; inset:0;
+  background-image:url("images/map_bg.png");
+  background-size:cover; background-position:center top; }
+.map-overlay { position:absolute; inset:0;
+  background:linear-gradient(180deg,
+    rgba(0,0,0,0.25) 0%, transparent 15%,
+    transparent 85%, rgba(0,0,0,0.3) 100%);
+  pointer-events:none; }
 .map-footer { background:#0a140a; border-top:2px solid #1a3a1a; padding:8px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; z-index:10; height:52px; }
 .footer-logo { font-size:10px; color:#555; text-align:center; letter-spacing:1px; }
 .footer-setting-btn { background:#1a2a1a; border:2px solid #3a5a3a; color:#7ab648; font-family:'Noto Sans KR',sans-serif; font-size:11px; font-weight:700; padding:5px 10px; cursor:pointer; transition:all 0.1s; }
 .footer-setting-btn:hover { background:#2a4a2a; border-color:#7ab648; }
 
 /* 스테이지 */
-.map-node { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:10; transform:translate(-50%,-50%); transition:transform 0.1s; }
+/* 노드 - 스프라이트 아이콘 방식 */
+.map-node { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:10; transform:translate(-50%,-50%); transition:transform 0.12s; }
+.map-node:hover { transform:translate(-50%,-50%) scale(1.08); }
 .map-node:active { transform:translate(-50%,-50%) scale(0.95); }
-.node-circle { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; border:3px solid; position:relative; box-shadow:0 0 0 3px rgba(0,0,0,0.5),3px 3px 0 #000; transition:all 0.15s; }
-.map-node.locked .node-circle { background:#1a1a1a; border-color:#444; filter:grayscale(1); cursor:not-allowed; }
-.map-node.available .node-circle { background:#1a3a18; border-color:var(--gold); animation:node-pulse 1.5s ease-in-out infinite; }
-.map-node.cleared .node-circle { background:var(--green-dark); border-color:var(--green-light); }
-.map-node.boss .node-circle { background:#2a0010; border-color:#ff4444; width:62px; height:62px; font-size:26px; }
-.map-node.boss.available .node-circle { animation:boss-pulse 1s ease-in-out infinite; }
-.node-label { font-size:10px; color:#e8e0c0; margin-top:5px; text-align:center; font-weight:700; text-shadow:1px 1px 0 #000; max-width:80px; line-height:1.3; white-space:normal; }
-.map-node.locked .node-label { color:#555; }
-.map-node.cleared .node-label { color:var(--green-light); }
-.map-node.boss .node-label { color:#ff9090; }
-
-.node-check { position:absolute; top:-4px; right:-4px; background:var(--green-light); color:#fff; font-size:10px; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #fff; font-weight:900; box-shadow:1px 1px 0 #000; }
+.map-node.locked { cursor:not-allowed; opacity:0.85; }
+.node-icon { width:64px; height:64px; background-image:url("images/node_icons.png"); background-size:339px 509px; background-repeat:no-repeat; }
+.stage-0.locked    .node-icon { background-position: -49px  -18px; }
+.stage-0.available .node-icon { background-position:-138px  -18px; }
+.stage-0.cleared   .node-icon { background-position:-228px  -18px; }
+.stage-1.locked    .node-icon { background-position: -49px  -88px; }
+.stage-1.available .node-icon { background-position:-138px  -88px; }
+.stage-1.cleared   .node-icon { background-position:-228px  -88px; }
+.stage-2.locked    .node-icon { background-position: -49px -159px; }
+.stage-2.available .node-icon { background-position:-138px -159px; }
+.stage-2.cleared   .node-icon { background-position:-228px -159px; }
+.stage-3.locked    .node-icon { background-position: -49px -227px; }
+.stage-3.available .node-icon { background-position:-138px -227px; }
+.stage-3.cleared   .node-icon { background-position:-228px -227px; }
+.stage-4.locked    .node-icon { background-position: -49px -295px; }
+.stage-4.available .node-icon { background-position:-138px -295px; }
+.stage-4.cleared   .node-icon { background-position:-228px -295px; }
+.stage-5.locked    .node-icon { background-position: -49px -363px; }
+.stage-5.available .node-icon { background-position:-138px -363px; }
+.stage-5.cleared   .node-icon { background-position:-228px -363px; }
+.boss-tag { font-size:9px; font-weight:900; color:#ff6644; letter-spacing:2px; margin-top:5px; text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000; background:rgba(0,0,0,0.6); padding:2px 7px; }
 
 /* ═══════════════════════════════════════════
    NODE POPUP

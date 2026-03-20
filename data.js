@@ -18,7 +18,7 @@ var NODES = [
     desc: '씨앗지기가 자신의 수확물을 통과시켜 달라고 요구하고 있다...',
     maxHp: 3,
     type: 'normal',
-    x: 110, y: 662,
+    x: 195, y: 638,
     bossLine: null,
     questions: [
       {
@@ -73,7 +73,7 @@ var NODES = [
     desc: '황금들판의 장로가 풍요의 수확을 인정해 달라고 요구한다...',
     maxHp: 3,
     type: 'normal',
-    x: 280, y: 542,
+    x: 195, y: 533,
     bossLine: null,
     questions: [
       {
@@ -128,7 +128,7 @@ var NODES = [
     desc: '연금술사가 뒤섞인 시료로 당신의 판정을 흐리려 한다...',
     maxHp: 2,
     type: 'normal',
-    x: 110, y: 422,
+    x: 195, y: 428,
     bossLine: null,
     questions: [
       {
@@ -183,7 +183,7 @@ var NODES = [
     desc: '순수한 혈통의 기준을 증명할 수 있는지 시험받게 된다...',
     maxHp: 2,
     type: 'normal',
-    x: 280, y: 302,
+    x: 195, y: 323,
     bossLine: null,
     questions: [
       {
@@ -238,7 +238,7 @@ var NODES = [
     desc: '조심해! 규율의 감시자가 당신의 판정을 지켜보고 있다!',
     maxHp: 2,
     type: 'normal',
-    x: 110, y: 182,
+    x: 195, y: 210,
     bossLine: null,
     questions: [
       {
@@ -293,7 +293,7 @@ var NODES = [
     desc: '최후의 심판이 시작된다. 왜곡된 기준을 바로잡아라!',
     maxHp: 1,
     type: 'boss',
-    x: 280, y: 62,
+    x: 195, y: 90,
     bossLine: '진정한 검사원인지... 마지막으로 시험하겠다. 모든 기준을 꿰뚫어 보아라!',
     questions: [
       {

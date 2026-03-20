@@ -440,46 +440,34 @@ function renderMap() {
 function renderNodes() {
   const container = document.getElementById('nodes-container');
   container.innerHTML = '';
-  // 맵 영역 실제 높이에 맞게 노드 좌표 비율 조정
-  const mapArea = document.getElementById('nodes-container').parentElement;
+  const mapArea = container.parentElement;
   const mapH = mapArea ? mapArea.offsetHeight : 720;
   const mapW = mapArea ? mapArea.offsetWidth : 390;
   const scaleY = mapH / 750;
   const scaleX = mapW / 390;
+
   NODES.forEach((node, i) => {
     const status = G.nodeStatus[i];
     const isBoss = node.type === 'boss';
     const div = document.createElement('div');
-    div.className = 'map-node ' + status + (isBoss ? ' boss' : '');
+    div.className = 'map-node stage-' + i + ' ' + status + (isBoss ? ' boss' : '');
     div.style.left = Math.round(node.x * scaleX) + 'px';
-    div.style.top = Math.round(node.y * scaleY) + 'px';
+    div.style.top  = Math.round(node.y * scaleY) + 'px';
     div.id = 'node-' + i;
 
-    // 보스 BOSS 뱃지
+    // 스프라이트 아이콘
+    const icon = document.createElement('div');
+    icon.className = 'node-icon';
+    div.appendChild(icon);
+
+    // 보스 태그 (아이콘 아래)
     if (isBoss) {
       const bossTag = document.createElement('div');
-      bossTag.style.cssText = 'font-size:9px;font-weight:900;color:#ff4444;letter-spacing:2px;margin-bottom:2px;text-shadow:1px 1px 0 #000;';
+      bossTag.className = 'boss-tag';
       bossTag.textContent = '⚠ BOSS';
       div.appendChild(bossTag);
     }
 
-    const circle = document.createElement('div');
-    circle.className = 'node-circle';
-    circle.textContent = node.emoji;
-
-    if (status === 'cleared') {
-      const check = document.createElement('div');
-      check.className = 'node-check';
-      check.textContent = '✓';
-      circle.appendChild(check);
-    }
-
-    const label = document.createElement('div');
-    label.className = 'node-label';
-    label.textContent = node.label;
-
-    div.appendChild(circle);
-    div.appendChild(label);
     if (status !== 'locked') div.onclick = () => openNodePopup(i);
     container.appendChild(div);
   });
@@ -498,10 +486,10 @@ function renderPaths() {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', Math.round(a.x * scaleX)); line.setAttribute('y1', Math.round(a.y * scaleY));
     line.setAttribute('x2', Math.round(b.x * scaleX)); line.setAttribute('y2', Math.round(b.y * scaleY));
-    line.setAttribute('stroke', G.nodeStatus[i + 1] === 'locked' ? '#333' : '#8a7a50');
-    line.setAttribute('stroke-width', '2.5');
-    line.setAttribute('stroke-dasharray', '7,5');
-    line.setAttribute('opacity', '0.75');
+    line.setAttribute('stroke', G.nodeStatus[i + 1] === 'locked' ? 'rgba(255,255,255,0.1)' : 'rgba(255,200,80,0.2)');
+    line.setAttribute('stroke-width', '3');
+    line.setAttribute('stroke-dasharray', 'none');
+    line.setAttribute('opacity', '1');
     svg.appendChild(line);
   }
 }
