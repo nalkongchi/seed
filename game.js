@@ -75,6 +75,28 @@ const Sound = (() => {
   function isBGMOn() { return settings.bgm; }
   function isSEOn()  { return settings.se; }
 
+  function setBGMVol(val) {
+    const v = parseInt(val) / 100;
+    settings.bgm = v > 0;
+    if (bgmEl) {
+      bgmEl.volume = v;
+      if (!settings.bgm) bgmEl.pause();
+      else bgmEl.play().catch(()=>{});
+    }
+    const el = document.getElementById('bgm-val');
+    if (el) el.textContent = val;
+    saveSettings();
+  }
+
+  function setSEVol(val) {
+    const v = parseInt(val) / 100;
+    settings.se = v > 0;
+    settings.seVolume = v;
+    const el = document.getElementById('se-val');
+    if (el) el.textContent = val;
+    saveSettings();
+  }
+
   return { playBGM, stopBGM, playSE, toggleBGM, toggleSE, isBGMOn, isSEOn, loadSettings, setBGMVol, setSEVol };
 })();
 
@@ -565,15 +587,19 @@ function closeSetting() {
 }
 
 function updateSettingUI() {
-  const bgmBtn = document.getElementById('bgm-toggle');
-  const seBtn = document.getElementById('se-toggle');
-  if (bgmBtn) {
-    bgmBtn.textContent = Sound.isBGMOn() ? 'ON' : 'OFF';
-    bgmBtn.className = 'setting-toggle' + (Sound.isBGMOn() ? ' on' : '');
+  const bgmSlider = document.getElementById('bgm-slider');
+  const seSlider  = document.getElementById('se-slider');
+  const bgmVal    = document.getElementById('bgm-val');
+  const seVal     = document.getElementById('se-val');
+  if (bgmSlider) {
+    const v = Sound.isBGMOn() ? (bgmSlider.value || 70) : 0;
+    bgmSlider.value = v;
+    if (bgmVal) bgmVal.textContent = v;
   }
-  if (seBtn) {
-    seBtn.textContent = Sound.isSEOn() ? 'ON' : 'OFF';
-    seBtn.className = 'setting-toggle' + (Sound.isSEOn() ? ' on' : '');
+  if (seSlider) {
+    const v = Sound.isSEOn() ? (seSlider.value || 70) : 0;
+    seSlider.value = v;
+    if (seVal) seVal.textContent = v;
   }
 }
 
