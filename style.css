@@ -1,114 +1,66 @@
-@font-face { font-family:'Galmuri11'; src:url('fonts/Galmuri11.ttf'); }
-@font-face { font-family:'Galmuri9';  src:url('fonts/Galmuri9.ttf');  }
-@font-face { font-family:'Galmuri7';  src:url('fonts/Galmuri7.ttf');  }
-
-/* ============================================================
-   style.css - 나는야 종자검사원
-   ============================================================ */
+/* ═══════════════════════════════════════════
+ style.css - 나는야 종자검사원
+ ═══════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@700;900&display=swap');
 
-@keyframes op-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-.op-frame-box { background:#000; padding:16px 18px 20px; position:relative; }
-.op-frame-text {
-  min-height:72px; line-height:1.95; font-size:15px;
-  white-space:pre-wrap; word-break:keep-all;
-  color:#f0ece0;
-  font-family:'Galmuri9','DotGothic16',monospace;
-}
-
-/* ═══════════════════════════════════════════
-   JRPG 픽셀 모자이크 전환 효과
-   ═══════════════════════════════════════════ */
-.op-scene-layer { position:absolute; inset:0; display:none; transform:scale(1.02); pointer-events:none; }
-.op-scene-layer.active { display:block; }
-
-.wipe-out, .wipe-in {
-  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%);
-  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%);
-  animation-duration: 0.5s;
-  animation-timing-function: steps(8);
-  animation-fill-mode: forwards;
-}
-.wipe-out { animation-name: pixelShatterOut; }
-.wipe-in  { animation-name: pixelShatterIn;  }
-
-@keyframes pixelShatterOut {
-  0%   { -webkit-mask-size: 2px 2px; opacity: 1; }
-  100% { -webkit-mask-size: 64px 64px; opacity: 0; }
-}
-@keyframes pixelShatterIn {
-  0%   { -webkit-mask-size: 64px 64px; opacity: 0; }
-  99%  { -webkit-mask-size: 2px 2px; }
-  100% { -webkit-mask-image: none; opacity: 1; }
-}
-
-.op-scene-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; image-rendering:pixelated; }
-.op-player-name { color:#e8c84a; }
-
-:root {
-  --green: #4a7c3f;
-  --gold: #e8c84a;
-  --red: #c0392b;
-  --dark: #1a1a2e;
-}
+@font-face { font-family:'Galmuri11'; src:url('fonts/Galmuri11.ttf'); }
+@font-face { font-family:'Galmuri9'; src:url('fonts/Galmuri9.ttf'); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #080808; display: flex; justify-content: center; min-height: 100vh; font-family: 'Galmuri9', sans-serif; overflow: hidden; }
+body { background: #080808; display: flex; justify-content: center; min-height: 100vh; overflow: hidden; font-family: 'Galmuri9', sans-serif; }
 #game-container { width: 100%; max-width: 480px; height: 100vh; position: relative; overflow: hidden; }
 .screen { position: absolute; inset: 0; display: none; flex-direction: column; }
 .screen.active { display: flex; }
 
-/* ═══════════════════════════════════════════
-   TITLE SCREEN
-═══════════════════════════════════════════ */
+/* ── 픽셀 모자이크 전환 ── */
+.op-scene-layer { position:absolute; inset:0; display:none; transform:scale(1.02); pointer-events:none; }
+.op-scene-layer.active { display:block; }
+.wipe-out, .wipe-in {
+ -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%);
+ mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%);
+ animation-duration: 0.5s; animation-timing-function: steps(8); animation-fill-mode: forwards;
+}
+.wipe-out { animation-name: pixelOut; }
+.wipe-in { animation-name: pixelIn; }
+@keyframes pixelOut { 0% { -webkit-mask-size: 2px 2px; opacity: 1; } 100% { -webkit-mask-size: 64px 64px; opacity: 0; } }
+@keyframes pixelIn { 0% { -webkit-mask-size: 64px 64px; opacity: 0; } 100% { -webkit-mask-size: 2px 2px; opacity: 1; } }
+
+/* ── 배틀 아레나 & 게이지바 ── */
+.dual-hp-header { display:flex; justify-content:space-between; align-items:flex-end; padding:12px 15px; background:#0a0a0a; border-bottom:2px solid #222; }
+.hp-bar-bg { width:90px; height:12px; background:#222; border:2px solid #555; border-radius:2px; overflow:hidden; }
+.hp-bar-fill { height:100%; background:linear-gradient(90deg, #4caf50, #8bc34a); transition:width 0.3s; }
+.enemy-fill { background:linear-gradient(90deg, #e53935, #ff5252); }
+
+.battle-arena-area { position:relative; flex:1; background:#1a1a1a; overflow:hidden; }
+.arena-bg { position:absolute; inset:0; background-image:url("images/battle_bg.png"); background-size:cover; opacity:0.6; }
+.arena-enemy-sprite { position:absolute; top:20%; right:10%; width:140px; height:140px; z-index:2; display:flex; align-items:flex-end; justify-content:center; }
+.arena-enemy-sprite img { width:100%; height:100%; object-fit:contain; }
+.arena-player-sprite { position:absolute; bottom:-5%; left:-5%; width:180px; height:180px; background-image:url("images/player_back.png"); background-size:contain; background-repeat:no-repeat; }
+
+/* ── 기존 원본 스타일 복구 ── */
 .title-bg { position:absolute; inset:0; background-image:url("images/title_bg.png"); background-size:cover; }
 .title-overlay { position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.9) 100%); }
-.title-logo-img { position:relative; width:96%; padding-top:24px; margin: 0 auto; z-index: 2; }
-.title-logo-img img { width:100%; }
-.title-menu-wrap { position:absolute; bottom:20px; left:0; right:0; z-index:3; padding:0 16px; }
-.title-menu-board { position:relative; }
+.title-logo-img { position:relative; z-index:2; padding-top:24px; text-align:center; }
+.title-logo-img img { width:90%; }
+.title-menu-wrap { position:absolute; bottom:20px; width:100%; padding:0 16px; }
 .title-frame-img { width:100%; display:block; }
 .title-menu-layer { position:absolute; inset:0; }
 .tmenu-item { position:absolute; left:10%; right:10%; display:flex; align-items:center; justify-content:center; cursor:pointer; transform:translateY(-50%); }
 .tmenu-main { top:21%; } .tmenu-sub1 { top:41%; } .tmenu-sub2 { top:51%; } .tmenu-sub3 { top:62%; }
 .tmenu-label { font-family:'Noto Serif KR',serif; font-size:18px; color:#ddd0a0; font-weight:700; letter-spacing:2px; }
 
-/* ═══════════════════════════════════════════
-   BATTLE ARENA (포켓몬 스타일 게이지 바)
-═══════════════════════════════════════════ */
-.dual-hp-header { display:flex; justify-content:space-between; align-items:flex-end; padding:12px 15px; background:#0a0a0a; border-bottom:2px solid #222; }
-.hp-wrapper { display:flex; align-items:center; gap:6px; flex:1; }
-.player-side { justify-content:flex-start; }
-.enemy-side { justify-content:flex-end; }
-.hp-label { font-size:11px; font-weight:900; color:#ddd; font-family:'Galmuri9'; }
-.enemy-side .hp-label { color:#ff8888; }
-.hp-bar-bg { width:90px; height:12px; background:#222; border:2px solid #555; border-radius:2px; overflow:hidden; }
-.hp-bar-fill { height:100%; transition:width 0.3s ease-out, background 0.3s ease; }
-.player-fill { background:linear-gradient(90deg, #4caf50, #8bc34a); }
-.enemy-fill { background:linear-gradient(90deg, #e53935, #ff5252); }
-.player-fill.warning { background:linear-gradient(90deg, #ff9800, #ffc107); }
-.player-fill.danger { background:linear-gradient(90deg, #d32f2f, #f44336); }
-.hp-text { font-size:10px; color:#ccc; min-width:26px; text-align:center; }
-
-.battle-arena-area { position:relative; flex:1; background:#1a1a1a; overflow:hidden; }
-.arena-bg { position:absolute; inset:0; background-image:url("images/battle_bg.png"); background-size:cover; opacity:0.6; }
-.arena-enemy-sprite { position:absolute; top:20%; right:10%; width:140px; height:140px; z-index:2; display:flex; align-items:flex-end; justify-content:center; }
-.arena-enemy-sprite img { width:100%; height:100%; object-fit:contain; }
-.arena-player-sprite { position:absolute; bottom:-5%; left:-5%; width:180px; height:180px; background-image:url("images/player_back.png"); background-size:contain; background-repeat:no-repeat; z-index:3; }
+/* 팝업 스타일 */
+#result-popup, #node-popup, #setting-popup, #exit-confirm { position:absolute; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:100; }
+.show { display:flex !important; }
+.result-box, .node-popup-box, .setting-box, .exit-box { background:#111; border:2px solid #e8c84a; padding:25px; text-align:center; width:85%; color: white;}
 
 .battle-question-area { background:#000; padding:20px; min-height:120px; border-top:2px solid #222; }
 .bubble-text { color:#e8dfc0; font-size:14px; line-height:1.8; }
 .battle-buttons { display:flex; }
-.judge-btn { flex:1; padding:16px; font-size:18px; font-weight:900; cursor:pointer; font-family:'Galmuri11'; border:none; }
-.btn-pass { background:rgba(76,175,80,0.15); border-top:2px solid #4caf50; color:#fff; }
-.btn-fail { background:rgba(239,83,80,0.15); border-top:2px solid #ef5350; color:#fff; }
+.judge-btn { flex:1; padding:16px; font-size:18px; font-weight:900; cursor:pointer; border:none; color: white; }
+.btn-pass { background:#2d4e26; border-top:2px solid #4caf50; }
+.btn-fail { background:#4d2626; border-top:2px solid #ef5350; }
 
-/* ═══════════════════════════════════════════
-   POPUPS & SHAKE
-═══════════════════════════════════════════ */
-.popup-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:100; }
-.show { display:flex !important; }
-.result-box, .node-popup-box { background:#111; border:2px solid var(--gold); padding:25px; text-align:center; width:85%; }
-.shake { animation: screen-shake 0.4s ease-out; }
-@keyframes screen-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} }
+.shake { animation: shake 0.4s; }
+@keyframes shake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-10px); } 40% { transform: translate(10px); } }
