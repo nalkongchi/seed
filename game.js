@@ -228,9 +228,75 @@ function highlightNumbers(text) {
 }
 
 function formatQuestion(text) {
-  // 문장 부호 뒤 자동 줄바꿈 (마침표/물음표/느낌표/말줄임 뒤)
   return text.replace(/([.?!~…])\s+/g, '$1\n');
 }
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+let uiModalOk = null;
+let uiModalCancel = null;
+
+function closeUIModal() {
+  const modal = document.getElementById('ui-modal');
+  if (modal) modal.classList.remove('show');
+  uiModalOk = null;
+  uiModalCancel = null;
+}
+
+function showAlertModal(title, desc, onOk) {
+  const modal = document.getElementById('ui-modal');
+  const titleEl = document.getElementById('ui-modal-title');
+  const descEl = document.getElementById('ui-modal-desc');
+  const okBtn = document.getElementById('ui-modal-ok');
+  const cancelBtn = document.getElementById('ui-modal-cancel');
+  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
+  titleEl.textContent = title;
+  descEl.innerHTML = desc;
+  cancelBtn.style.display = 'none';
+  okBtn.textContent = '확인';
+  uiModalOk = onOk || null;
+  uiModalCancel = null;
+  okBtn.onclick = () => {
+    const cb = uiModalOk;
+    closeUIModal();
+    if (cb) cb();
+  };
+  cancelBtn.onclick = closeUIModal;
+  modal.classList.add('show');
+}
+
+function showConfirmModal(title, desc, onOk, onCancel) {
+  const modal = document.getElementById('ui-modal');
+  const titleEl = document.getElementById('ui-modal-title');
+  const descEl = document.getElementById('ui-modal-desc');
+  const okBtn = document.getElementById('ui-modal-ok');
+  const cancelBtn = document.getElementById('ui-modal-cancel');
+  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
+  titleEl.textContent = title;
+  descEl.innerHTML = desc;
+  cancelBtn.style.display = 'inline-flex';
+  cancelBtn.textContent = '취소';
+  okBtn.textContent = '확인';
+  uiModalOk = onOk || null;
+  uiModalCancel = onCancel || null;
+  okBtn.onclick = () => {
+    const cb = uiModalOk;
+    closeUIModal();
+    if (cb) cb();
+  };
+  cancelBtn.onclick = () => {
+    const cb = uiModalCancel;
+    closeUIModal();
+    if (cb) cb();
+  };
+  modal.classList.add('show');
+}
+
 
 // ==============================
 // TITLE
@@ -263,8 +329,12 @@ function goBackToTitle() {
 
 function confirmName() {
   const val = document.getElementById('player-name-input').value.trim();
+  if (val.length > 7) {
+    showAlertModal('이름 입력', '이름은 7글자 이하로 입력해주세요');
+    return;
+  }
   resetWholeGame();
-  G.playerName = val || '미확인종자원';
+  G.playerName = val || '용사';
   saveGame();
   startOpening();
 }
@@ -272,7 +342,7 @@ function confirmName() {
 function continueGame() {
   const saved = loadSave();
   if (!saved) return;
-  G.playerName = saved.playerName;
+  G.playerName = saved.playerName || '용사';
   G.nodeStatus = saved.nodeStatus;
   G.totalCorrect = saved.totalCorrect || 0;
   G.totalWrong = saved.totalWrong || 0;
@@ -290,11 +360,15 @@ function goTitle() {
 }
 
 function confirmGoTitle() {
-  if (confirm('타이틀로 돌아가시겠습니까?\n현재 진행 상황은 저장되어 있습니다.')) {
-    Sound.stopBGM();
-    initTitle();
-    showScreen('title-screen');
-  }
+  showConfirmModal(
+    '타이틀로 돌아가기',
+    '현재 진행 상황은 저장되어 있습니다.<br>타이틀로 돌아가시겠습니까?',
+    () => {
+      Sound.stopBGM();
+      initTitle();
+      showScreen('title-screen');
+    }
+  );
 }
 
 // ==============================
@@ -306,18 +380,18 @@ const OP_SCENES = [
     '기준 미달 종자와 혼입 종자,\n그리고 거짓된 판정이 왕국을 뒤덮었다.'
   ]},
   { image: 'images/scene2.png', lightning: false, lines: [
-    '세상의 균형을 바로잡는 자,',
-    '그들이 바로 종자검사원이다.'
+    '무너진 종자 왕국,\n이 세상의 균형을 바로잡는 자,',
+    '그들이 바로...\n종자검사원이다.'
   ]},
   { image: 'images/scene3.png', lightning: false, lines: [
-    '아직은 지망생에 불과한 당신은\n정식 검사원이 되기 위해',
+    '아직은 지망생에 불과한 당신은\n정식 종자검사원이 되기 위해',
     '들판, 평원, 연금실, 성소, 협곡,\n그리고 심판의 성을 향해 떠난다.'
   ]},
   { image: 'images/scene4.png', lightning: true, lines: [
-    '하지만 왕국의 끝에는',
-    '우량종자 공급을 방해하는\n최종 보스가 기다리고 있다.',
+    '하지만 왕국 너머,\n그 긴긴 길의 끝에는',
+    '우량종자 공급을 방해하는\n최종 보스가 기다리고 있다고 전해진다.',
     '당신의 올바른 판단만이 세상을 구할 수 있다.',
-    '__NAME__의 모험이 시작된다.'
+    '지금부터... __NAME__의 모험이 시작된다.'
   ]}
 ];
 
@@ -469,6 +543,8 @@ function renderMap() {
   renderPaths();
   const cleared = G.nodeStatus.filter(s => s === 'cleared').length;
   document.getElementById('map-progress-text').textContent = '정화된 구역: ' + cleared + ' / ' + NODES.length;
+  const journey = document.getElementById('map-player-journey');
+  if (journey) journey.innerHTML = '<strong>' + escapeHtml(G.playerName || '용사') + '</strong>님의 모험';
 }
 
 function renderNodes() {
@@ -671,6 +747,7 @@ function startActualBattle() {
   const isBoss = node.type === 'boss';
 
   document.getElementById('battle-enemy-name').textContent = node.enemy;
+  document.getElementById('battle-player-name').textContent = G.playerName || '용사';
   document.getElementById('battle-name-badge').textContent = node.enemy;
 
   const sprite = document.getElementById('battle-card-img');
@@ -679,6 +756,11 @@ function startActualBattle() {
     sprite.innerHTML = '<img src="' + spriteSrc + '" alt="' + node.enemy + '">';
   } else {
     sprite.innerHTML = '<div class="arena-fallback-enemy">' + node.enemy + '</div>';
+  }
+
+  const playerSprite = document.getElementById('arena-player-sprite');
+  if (playerSprite) {
+    playerSprite.innerHTML = '<img src="images/player_back.png" alt="' + (G.playerName || '용사') + '">';
   }
 
   const bossLabel = document.getElementById('boss-label');
@@ -900,3 +982,13 @@ function showEnding() {
 // ==============================
 Sound.loadSettings();
 initTitle();
+
+
+(() => {
+  const modal = document.getElementById('ui-modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeUIModal();
+    });
+  }
+})();

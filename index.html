@@ -53,7 +53,7 @@
  <div class="name-title">검사원 지망생 등록</div>
  <div class="name-title-sub">INSPECTOR REGISTRATION</div>
  <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
- <input class="name-input" id="player-name-input" type="text" maxlength="8" placeholder="이름을 입력하세요">
+ <input class="name-input" id="player-name-input" type="text" maxlength="7" placeholder="이름을 입력하세요 (최대 7글자)">
  <button class="name-confirm-btn" onclick="confirmName()">S T A R T</button>
  <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
  </div>
@@ -71,7 +71,7 @@
  <button id="op-tap" style="position:absolute;inset:0;z-index:10;background:transparent;border:none;padding:0;cursor:pointer;pointer-events:none;" aria-label="다음"></button>
  <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
  <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;">
- <div style="padding:12px 12px 20px;pointer-events:auto;">
+ <div style="padding:0;pointer-events:auto;">
  <div id="op-box" class="op-frame-box">
  <div id="op-text" class="op-frame-text"></div>
  <div style="margin-top:10px;display:flex;align-items:center;">
@@ -88,6 +88,7 @@
  ═══════════════════════════════════════════ -->
  <div id="map-screen" class="screen">
  <div class="map-header">
+ <div class="map-player-journey" id="map-player-journey"><strong>용사</strong>님의 모험</div>
  <div class="map-title">MAP</div>
  <div class="map-progress" id="map-progress-text">정화된 구역: 0 / 6</div>
  </div>
@@ -111,7 +112,7 @@
  NODE POPUP
  ═══════════════════════════════════════════ -->
  <div id="node-popup" class="popup-overlay">
- <div class="node-popup-box">
+ <div class="node-popup-box popup-panel">
  <div class="popup-enemy-name" id="popup-enemy"></div>
  <div class="popup-desc" id="popup-desc"></div>
  <div class="popup-hp-info" id="popup-hp"></div>
@@ -126,19 +127,21 @@
  WRONGNOTE POPUP
  ═══════════════════════════════════════════ -->
  <div id="wrongnote-popup" class="popup-overlay">
+ <div class="wrongnote-panel popup-panel">
  <div class="wrongnote-header">
- <div class="wrongnote-title"> 오답노트</div>
- <button class="wrongnote-close" onclick="closeWrongnote()"> 닫기</button>
+ <div class="wrongnote-title">오답노트</div>
+ <button class="wrongnote-close" onclick="closeWrongnote()">닫기</button>
  </div>
  <div class="wrongnote-body" id="wrongnote-body"></div>
- <button class="wrongnote-clear-btn" onclick="clearWrongnote()"> 오답노트 초기화</button>
+ <button class="wrongnote-clear-btn" onclick="clearWrongnote()">오답노트 초기화</button>
+ </div>
  </div>
 
  <!-- ═══════════════════════════════════════════
  SETTING POPUP
  ═══════════════════════════════════════════ -->
  <div id="setting-popup" class="popup-overlay">
- <div class="setting-box">
+ <div class="setting-box popup-panel">
  <div class="setting-title">BGM</div>
  <div class="setting-row">
  <div class="setting-label">배경음악</div>
@@ -180,16 +183,20 @@
  ═══════════════════════════════════════════ -->
  <div id="battle-screen" class="screen">
  <div class="battle-header dual-hp-header">
- <div class="hp-wrapper player-side">
- <div class="hp-label">나의 멘탈</div>
+ <div class="hp-side player-side">
+ <div class="hp-row">
  <div class="hp-bar-bg"><div id="player-hp-fill" class="hp-bar-fill player-fill"></div></div>
  <div id="player-hp-text" class="hp-text">3 / 3</div>
  </div>
+ <div id="battle-player-name" class="battle-side-name">용사</div>
+ </div>
  <button class="battle-exit-btn" onclick="showExitConfirm()">포기</button>
- <div class="hp-wrapper enemy-side">
+ <div class="hp-side enemy-side">
+ <div class="hp-row">
  <div id="enemy-hp-text" class="hp-text">3 / 3</div>
  <div class="hp-bar-bg"><div id="enemy-hp-fill" class="hp-bar-fill enemy-fill"></div></div>
- <div id="battle-enemy-name" class="hp-label">적</div>
+ </div>
+ <div id="battle-enemy-name" class="battle-side-name">적</div>
  </div>
  </div>
  <div class="battle-arena-area" id="battle-arena-area">
@@ -198,11 +205,11 @@
  <div class="arena-player-sprite" id="arena-player-sprite"></div>
  <div class="q-counter" id="q-counter">문제 1</div>
  <div class="boss-label" id="boss-label" style="display:none">BOSS</div>
- </div>
+ <div class="arena-enemy-dialogue" id="arena-enemy-dialogue">
  <div class="battle-name-badge" id="battle-name-badge"></div>
- <div class="battle-question-area">
  <div class="speech-bubble" id="speech-bubble">
  <div class="bubble-text" id="battle-question"></div>
+ </div>
  </div>
  </div>
  <div class="battle-buttons">
@@ -215,7 +222,7 @@
  EXIT CONFIRM
  ═══════════════════════════════════════════ -->
  <div id="exit-confirm">
- <div class="exit-box">
+ <div class="exit-box popup-panel">
  <div class="exit-title"> 전투를 포기하시겠습니까?</div>
  <div class="exit-desc">지금 나가면 이 전투의 진행이 취소되고<br>스테이지가 재도전 상태로 돌아갑니다.</div>
  <div class="exit-btns">
@@ -229,7 +236,7 @@
  RESULT POPUP
  ═══════════════════════════════════════════ -->
  <div id="result-popup" class="popup-overlay">
- <div class="result-box" id="result-box">
+ <div class="result-box popup-panel" id="result-box">
  <div class="stamp-effect" id="stamp-effect"></div>
  <div class="result-badge" id="result-badge">결과</div>
  <div class="result-title" id="result-title">정답!</div>
@@ -291,6 +298,20 @@
  <div class="cert-stamp"></div>
  </div>
  <button class="ending-btn" onclick="goTitle()"> 타이틀로</button>
+ </div>
+ </div>
+
+ <!-- ═══════════════════════════════════════════
+ INTERNAL UI MODAL
+ ═══════════════════════════════════════════ -->
+ <div id="ui-modal" class="popup-overlay">
+ <div class="modal-box popup-panel">
+ <div class="modal-title" id="ui-modal-title">알림</div>
+ <div class="modal-desc" id="ui-modal-desc"></div>
+ <div class="modal-btns">
+ <button id="ui-modal-cancel" class="modal-cancel" style="display:none">취소</button>
+ <button id="ui-modal-ok" class="modal-ok">확인</button>
+ </div>
  </div>
  </div>
 
