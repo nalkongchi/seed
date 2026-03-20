@@ -53,7 +53,7 @@
  <div class="name-title">검사원 지망생 등록</div>
  <div class="name-title-sub">INSPECTOR REGISTRATION</div>
  <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
- <input class="name-input" id="player-name-input" type="text" maxlength="7" placeholder="이름을 입력하세요 (최대 7글자)">
+ <input class="name-input" id="player-name-input" type="text" placeholder="이름을 입력해주세요">
  <button class="name-confirm-btn" onclick="confirmName()">S T A R T</button>
  <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
  </div>
@@ -77,7 +77,7 @@
  <div style="margin-top:10px;display:flex;align-items:center;">
  <div id="op-arrow" style="font-size:14px;color:rgba(255,255,255,0.7);animation:op-blink 1s ease-in-out infinite;">▶</div>
  </div>
- <button id="op-end-btn" style="display:none;width:100%;margin-top:12px;background:#2d4e26;border:3px solid #e8c84a;color:#fff;font-family:'Galmuri9','DotGothic16',monospace;font-size:14px;padding:13px;cursor:pointer;box-shadow:3px 3px 0 #000;letter-spacing:2px;"> 모험을 시작하라!</button>
+ <button id="op-end-btn" style="display:none;">모험을 시작하라!</button>
  </div>
  </div>
  </div>
@@ -203,6 +203,7 @@
  <div class="arena-bg" id="arena-bg"></div>
  <div class="arena-enemy-sprite" id="battle-card-img"></div>
  <div class="arena-player-sprite" id="arena-player-sprite"></div>
+ <div class="battle-player-badge" id="battle-player-badge">용사</div>
  <div class="q-counter" id="q-counter">문제 1</div>
  <div class="boss-label" id="boss-label" style="display:none">BOSS</div>
  <div class="arena-enemy-dialogue" id="arena-enemy-dialogue">

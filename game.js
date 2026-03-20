@@ -22,7 +22,8 @@ const SOUND_FILES = {
 // ==============================
 const Sound = (() => {
   let bgmEl = null;
-  const settings = { bgm: true, se: true };
+  let currentBgmKey = null;
+  const settings = { bgm: true, se: true, bgmVolume: 0.5, seVolume: 0.7 };
 
   function loadSettings() {
     try {
@@ -36,32 +37,48 @@ const Sound = (() => {
   }
 
   function playBGM(key) {
+    if (!key) return;
+    currentBgmKey = key;
     if (!settings.bgm) return;
-    if (bgmEl) { bgmEl.pause(); bgmEl = null; }
+    if (bgmEl && bgmEl.dataset && bgmEl.dataset.key === key) {
+      bgmEl.volume = settings.bgmVolume ?? 0.5;
+      if (bgmEl.paused) bgmEl.play().catch(()=>{});
+      return;
+    }
+    if (bgmEl) {
+      bgmEl.pause();
+      bgmEl = null;
+    }
     try {
       bgmEl = new Audio(SOUND_FILES[key]);
       bgmEl.loop = true;
-      bgmEl.volume = 0.5;
+      bgmEl.volume = settings.bgmVolume ?? 0.5;
+      bgmEl.dataset.key = key;
       bgmEl.play().catch(()=>{});
     } catch(e) {}
   }
 
   function stopBGM() {
-    if (bgmEl) { bgmEl.pause(); bgmEl = null; }
+    if (bgmEl) bgmEl.pause();
+    bgmEl = null;
   }
 
   function playSE(key) {
     if (!settings.se) return;
     try {
       const a = new Audio(SOUND_FILES[key]);
-      a.volume = 0.7;
+      a.volume = settings.seVolume ?? 0.7;
       a.play().catch(()=>{});
     } catch(e) {}
   }
 
   function toggleBGM() {
     settings.bgm = !settings.bgm;
-    if (!settings.bgm) stopBGM();
+    if (!settings.bgm) {
+      stopBGM();
+    } else if (currentBgmKey) {
+      playBGM(currentBgmKey);
+    }
     saveSettings();
     return settings.bgm;
   }
@@ -76,12 +93,15 @@ const Sound = (() => {
   function isSEOn()  { return settings.se; }
 
   function setBGMVol(val) {
-    const v = parseInt(val) / 100;
+    const v = parseInt(val, 10) / 100;
+    settings.bgmVolume = v;
     settings.bgm = v > 0;
     if (bgmEl) {
       bgmEl.volume = v;
       if (!settings.bgm) bgmEl.pause();
       else bgmEl.play().catch(()=>{});
+    } else if (settings.bgm && currentBgmKey) {
+      playBGM(currentBgmKey);
     }
     const el = document.getElementById('bgm-val');
     if (el) el.textContent = val;
@@ -89,7 +109,7 @@ const Sound = (() => {
   }
 
   function setSEVol(val) {
-    const v = parseInt(val) / 100;
+    const v = parseInt(val, 10) / 100;
     settings.se = v > 0;
     settings.seVolume = v;
     const el = document.getElementById('se-val');
@@ -431,20 +451,25 @@ function opSetScene(idx) {
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
         bg.style.animation = 'none'; void bg.offsetWidth;
-        bg.style.animation = 'op-slow-pan 9s ease-in-out forwards';
+        bg.style.animation = 'op-slow-pan 12s ease-in-out forwards';
       }
     } else if (el.classList.contains('active')) {
       el.classList.add('wipe-out');
       el.classList.remove('wipe-in');
-      setTimeout(() => el.classList.remove('active'), 520);
+      setTimeout(() => el.classList.remove('active'), 980);
     }
   });
   if (OP_SCENES[idx].lightning) {
     const flash = opSceneEls[idx].querySelector('.op-flash');
-    setTimeout(() => {
-      flash.classList.add('active');
-      setTimeout(() => flash.classList.remove('active'), 600);
-    }, 900);
+    const burst = (delay, duration = 280) => {
+      setTimeout(() => {
+        flash.classList.add('active');
+        setTimeout(() => flash.classList.remove('active'), duration);
+      }, delay);
+    };
+    burst(700, 240);
+    burst(1180, 180);
+    burst(1620, 360);
   }
 }
 
@@ -476,7 +501,7 @@ function opFinish() {
   document.getElementById('op-end-btn').style.display = 'block';
   document.getElementById('op-tap').disabled = true;
   document.getElementById('op-tap').style.pointerEvents = 'none';
-  document.getElementById('op-skip').style.display = 'none';
+  document.getElementById('op-skip').style.display = 'block';
 }
 
 function opSkipAll() {
@@ -567,7 +592,7 @@ function renderNodes() {
 
     // 스프라이트 아이콘
     const icon = document.createElement('div');
-    icon.className = 'node-icon';
+    icon.className = 'node-icon' + (isBoss ? ' boss-wide-icon' : '');
     div.appendChild(icon);
 
     // 보스 태그 (아이콘 아래)
@@ -655,10 +680,14 @@ function closeWrongnote() {
 }
 
 function clearWrongnote() {
-  if (confirm('오답노트를 모두 지우시겠습니까?')) {
-    WrongNote.clear();
-    showWrongnote();
-  }
+  showConfirmModal(
+    '오답노트 초기화',
+    '오답노트를 모두 지우시겠습니까?',
+    () => {
+      WrongNote.clear();
+      showWrongnote();
+    }
+  );
 }
 
 // ==============================
@@ -692,7 +721,6 @@ function updateSettingUI() {
 
 function toggleBGM() {
   Sound.toggleBGM();
-  if (Sound.isBGMOn()) Sound.playBGM('bgm_title');
   updateSettingUI();
 }
 
@@ -749,6 +777,8 @@ function startActualBattle() {
   document.getElementById('battle-enemy-name').textContent = node.enemy;
   document.getElementById('battle-player-name').textContent = G.playerName || '용사';
   document.getElementById('battle-name-badge').textContent = node.enemy;
+  const playerBadge = document.getElementById('battle-player-badge');
+  if (playerBadge) playerBadge.textContent = G.playerName || '용사';
 
   const sprite = document.getElementById('battle-card-img');
   const spriteSrc = node.enemySprite || node.enemyImage;
