@@ -381,7 +381,6 @@ function opSkipAll() {
 }
 
 function startOpening() {
-  Sound.stopBGM();
   showScreen('opening-screen');
 
   // 씬 요소 생성
@@ -434,7 +433,7 @@ function renderMap() {
   renderNodes();
   renderPaths();
   const cleared = G.nodeStatus.filter(s => s === 'cleared').length;
-  document.getElementById('map-progress-text').textContent = cleared + ' / ' + NODES.length + ' 스테이지 클리어';
+  document.getElementById('map-progress-text').textContent = '정화된 구역: ' + cleared + ' / ' + NODES.length;
 }
 
 function renderNodes() {
