@@ -10,10 +10,8 @@ var NODES = [
   // ──────────────────────────────────────────────
   {
     id: 0,
-    label: '새싹의\n들판',
-    emoji: '🌱',
+    label: '새싹 가득\n들판',
     enemy: '수상한 씨앗지기',
-    enemyEmoji: '🧑‍🌾',
     enemyImage: 'images/enemy_01.png',
     desc: '씨앗지기가 자신의 수확물을 통과시켜 달라고 요구하고 있다...',
     maxHp: 3,
@@ -66,9 +64,7 @@ var NODES = [
   {
     id: 1,
     label: '황금 물결\n평원',
-    emoji: '🌻',
     enemy: '황금들판의 장로',
-    enemyEmoji: '👴',
     enemyImage: 'images/enemy_02.png',
     desc: '황금들판의 장로가 풍요의 수확을 인정해 달라고 요구한다...',
     maxHp: 3,
@@ -115,18 +111,16 @@ var NODES = [
   },
 
   // ──────────────────────────────────────────────
-  // 스테이지 3. 혼돈의 연금실
+  // 스테이지 3. 혼돈의 연구실
   // 설명: 보급종 종자검사 기준 (발아율/순도/이물/피해립/수분)
   // ──────────────────────────────────────────────
   {
     id: 2,
-    label: '혼돈의\n연금실',
-    emoji: '⚗️',
+    label: '혼돈의\n연구실',
     enemy: '혼합의 연금술사',
-    enemyEmoji: '🧙',
     enemyImage: 'images/enemy_03.png',
     desc: '연금술사가 뒤섞인 시료로 당신의 판정을 흐리려 한다...',
-    maxHp: 2,
+    maxHp: 3,
     type: 'normal',
     x: 195, y: 428,
     bossLine: null,
@@ -176,12 +170,10 @@ var NODES = [
   {
     id: 3,
     label: '혈통의\n성소',
-    emoji: '🛡️',
     enemy: '순계의 수호자',
-    enemyEmoji: '⚔️',
     enemyImage: 'images/enemy_04.png',
     desc: '순수한 혈통의 기준을 증명할 수 있는지 시험받게 된다...',
-    maxHp: 2,
+    maxHp: 5,
     type: 'normal',
     x: 195, y: 323,
     bossLine: null,
@@ -231,12 +223,10 @@ var NODES = [
   {
     id: 4,
     label: '규율의\n협곡',
-    emoji: '⚖️',
     enemy: '규율의 감시자',
-    enemyEmoji: '👁️',
     enemyImage: 'images/enemy_05.png',
     desc: '조심해! 규율의 감시자가 당신의 판정을 지켜보고 있다!',
-    maxHp: 2,
+    maxHp: 5,
     type: 'normal',
     x: 195, y: 210,
     bossLine: null,
@@ -286,12 +276,10 @@ var NODES = [
   {
     id: 5,
     label: '심판의 성',
-    emoji: '👑',
     enemy: '기준왜곡 대심판관',
-    enemyEmoji: '😈',
     enemyImage: 'images/enemy_06.png',
     desc: '최후의 심판이 시작된다. 왜곡된 기준을 바로잡아라!',
-    maxHp: 1,
+    maxHp: 7,
     type: 'boss',
     x: 195, y: 90,
     bossLine: '진정한 검사원인지... 마지막으로 시험하겠다. 모든 기준을 꿰뚫어 보아라!',
