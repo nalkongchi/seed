@@ -684,17 +684,15 @@ function startActualBattle() {
 
   // 카드형 적 이미지 영역
   const cardImg = document.getElementById('battle-card-img');
-  const cardFade = document.getElementById('battle-card-fade');
+  // --- 이 부분부터 덮어씌우세요 ---
   if (node.enemyImage) {
     cardImg.innerHTML = '<img src="' + node.enemyImage + '" alt="' + node.enemy + '">';
-    cardImg.className = 'battle-card-img';
-    cardFade.style.display = 'block';
+    cardImg.className = 'desk-enemy'; // 클래스 변경됨
   } else {
-    // 이미지 없으면 이모지 폴백
     cardImg.innerHTML = node.enemyEmoji;
-    cardImg.className = 'battle-card-img emoji-mode' + (isBoss ? ' boss-bg' : '');
-    cardFade.style.display = 'none';
+    cardImg.className = 'desk-enemy emoji-mode' + (isBoss ? ' boss-bg' : ''); // 클래스 변경됨
   }
+  // ---------------------------------
 
   // 보스 전용 UI
   const bossLabel = document.getElementById('boss-label');
@@ -719,23 +717,22 @@ function startActualBattle() {
 // ==============================
 function renderHp() {
   const node = NODES[G.currentNode];
-  const el = document.getElementById('battle-hp');
-  el.innerHTML = '';
-  for (let i = 0; i < node.maxHp; i++) {
-    const span = document.createElement('span');
-    span.className = 'hp-icon' + (i >= G.hp ? ' empty' : '');
-    span.id = 'hp-icon-' + i;
-    span.textContent = '🌾';
-    el.appendChild(span);
-  }
-}
+  const maxHp = node.maxHp;
+  const currentHp = G.hp;
+  
+  const fill = document.getElementById('hp-bar-fill');
+  const text = document.getElementById('hp-text');
+  
+  if (!fill || !text) return;
 
-function animateHpBreak(idx) {
-  const el = document.getElementById('hp-icon-' + idx);
-  if (el) {
-    el.classList.add('breaking');
-    setTimeout(() => el.classList.remove('breaking'), 500);
-  }
+  const pct = Math.max(0, (currentHp / maxHp) * 100);
+  fill.style.width = pct + '%';
+  text.textContent = currentHp + ' / ' + maxHp;
+
+  // 체력이 깎이면 색상이 노랑 -> 빨강으로 변함
+  fill.className = 'hp-bar-fill';
+  if (pct <= 35) fill.classList.add('danger');
+  else if (pct <= 65) fill.classList.add('warning');
 }
 
 // ==============================
@@ -782,7 +779,7 @@ function answer(choice) {
     // 오답노트에 저장
     WrongNote.add(q);
     // 체력 감소 + 애니메이션
-    animateHpBreak(G.hp - 1);
+    animateHpBreak();  
     G.hp--;
     setTimeout(renderHp, 400);
     // 화면 흔들림
