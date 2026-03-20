@@ -417,40 +417,49 @@ body {
 .boss-intro-text { font-size:13px; color:#ffaaaa; line-height:1.8; margin-bottom:12px; }
 
 /* ═══════════════════════════════════════════
-   BATTLE SCREEN
+   BATTLE SCREEN (심사대 리뉴얼)
 ═══════════════════════════════════════════ */
 #battle-screen { background:#0d1117; }
 #battle-screen.shake { animation:screen-shake 0.4s ease-out; }
-.battle-header { background:#0a0a0a; border-bottom:1px solid #1a1a1a; padding:8px 15px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+
+.battle-header { background:#0a0a0a; border-bottom:1px solid #1a1a1a; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
 .battle-header-left { display:flex; align-items:center; gap:10px; }
 .battle-exit-btn { background:#1a1a1a; border:2px solid #555; color:#888; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:11px; padding:5px 10px; cursor:pointer; }
-.battle-exit-btn:hover { border-color:#aaa; color:#ccc; }
-.battle-enemy-name { font-size:13px; font-weight:700; color:#ff8888;
-  font-family:'Galmuri11','Noto Sans KR',sans-serif;}
-.battle-hp { display:flex; gap:5px; align-items:center; }
-.hp-icon { font-size:18px; transition:all 0.3s; }
-.hp-icon.empty { filter:grayscale(1) opacity(0.3); transform:scale(0.8); }
-.hp-icon.breaking { animation:hp-break 0.4s ease-out forwards; }
+.battle-enemy-name { font-size:13px; font-weight:700; color:#ff8888; font-family:'Galmuri11','Noto Sans KR',sans-serif; }
 
-/* 카드형 적 영역 */
-.battle-card-area { position:relative; flex:0 0 65%; overflow:hidden; background:#000; }
-.battle-card-img { position:absolute; inset:0; background-size:cover; background-position:center top; }
-.battle-card-img.emoji-mode { display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#0a1a0a 0%,#1a2a0a 100%); font-size:90px; filter:drop-shadow(0 5px 15px rgba(0,0,0,0.8)); animation:enemy-idle 2s ease-in-out infinite; }
-.battle-card-img.emoji-mode.boss-bg { background:linear-gradient(180deg,#1a0000 0%,#2a0a0a 100%); animation:boss-entrance 0.8s ease-out, enemy-idle 2s ease-in-out 0.8s infinite; }
-.battle-card-img.emoji-mode.shake { animation:enemy-shake 0.5s ease-out; }
-.battle-card-fade { position:absolute; inset:0; background:linear-gradient(180deg, transparent 35%, rgba(13,17,23,0.75) 72%, #0d1117 100%); pointer-events:none; }
-.battle-card-bottom { position:absolute; bottom:0; left:0; right:0; height:20px; background:#0d1117; }
-.q-counter { position:absolute; top:10px; right:12px; font-size:11px; color:#ccc; background:rgba(0,0,0,0.7); padding:4px 8px; border:1px solid #444; z-index:2;
-  font-family:'Galmuri9','Noto Sans KR',sans-serif;}
-.boss-label { position:absolute; top:10px; left:12px; font-size:11px; color:#ff4444; background:rgba(0,0,0,0.8); padding:4px 8px; border:1px solid #ff4444; letter-spacing:1px; font-weight:700; z-index:2;
-  font-family:'Galmuri9','Noto Sans KR',sans-serif;}
+/* 🔴 체력바 스타일 */
+.battle-hp-container { display:flex; align-items:center; gap:8px; }
+.battle-hp-container.shake { animation:screen-shake 0.3s ease-out; }
+.hp-bar-bg { width:100px; height:14px; background:#222; border:2px solid #555; border-radius:3px; box-shadow:inset 0 2px 4px rgba(0,0,0,0.8); }
+.hp-bar-fill { height:100%; width:100%; background:linear-gradient(90deg, #4caf50, #8bc34a); transition:width 0.3s ease, background 0.3s ease; }
+/* 피가 깎일 때 변하는 색상 */
+.hp-bar-fill.warning { background:linear-gradient(90deg, #ff9800, #ffc107); }
+.hp-bar-fill.danger { background:linear-gradient(90deg, #f44336, #e57373); }
+.hp-text { font-size:11px; color:#fff; font-family:'Galmuri9','Noto Sans KR',sans-serif; min-width:32px; text-align:right; }
 
-/* 적 이름 배지 */
-.battle-name-badge { background:rgba(0,0,0,0.9); border:2px solid #ff4444; padding:5px 14px; font-size:12px; font-weight:900; color:#ff8888; letter-spacing:1px; text-align:center; margin:0 20px 6px; flex-shrink:0; position:relative; z-index:1;
-  font-family:'Galmuri9','Noto Sans KR',sans-serif;}
+/* 🪑 심사대 영역 (거대 사진 대체) */
+.inspection-desk-area { position:relative; flex:0 0 45%; background:#1a1a1a; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
+/* 심사대 뒷벽 텍스처 */
+.desk-wall { position:absolute; inset:0; background:linear-gradient(180deg, #050505 0%, #1a1a1a 100%); background-image:repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 40px); z-index:1; }
 
-.battle-question-area { flex:0; padding:0; display:flex; flex-direction:column; justify-content:flex-start; background:#000; }
-.speech-bubble { background:#000; padding:14px 18px 10px; position:relative; }
+/* 🧍 책상 앞의 적 (아담한 도트/이모지로 축소!) */
+.desk-enemy { position:relative; z-index:2; width:130px; height:130px; margin-bottom:-10px; /* 책상 뒤로 살짝 숨김 */ filter:drop-shadow(0 4px 6px rgba(0,0,0,0.6)); animation:enemy-idle 2.5s ease-in-out infinite; display:flex; align-items:flex-end; justify-content:center; }
+.desk-enemy img { width:100%; height:100%; object-fit:contain; object-position:bottom; }
+.desk-enemy.emoji-mode { font-size:80px; text-shadow:0 5px 15px rgba(0,0,0,0.8); }
+.desk-enemy.boss-bg { filter:drop-shadow(0 0 15px rgba(255,0,0,0.6)); transform:scale(1.2); }
+.desk-enemy.shake { animation:enemy-shake 0.5s ease-out; }
+
+/* 🪵 심사 책상 */
+.desk-fg { position:relative; z-index:3; width:100%; height:45px; background:#3e2723; border-top:3px solid #5d4037; display:flex; justify-content:center; align-items:flex-start; box-shadow:0 -4px 15px rgba(0,0,0,0.7); }
+
+/* 책상 위 명패 (기존 뱃지 재활용) */
+.desk-fg .battle-name-badge { transform:translateY(-40%); background:#2d1a11; border:2px solid #a1887f; padding:6px 18px; box-shadow:2px 2px 0 #000; color:#e0ccb8; font-size:12px; font-weight:900; letter-spacing:1px; margin:0; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
+.desk-fg .boss-label { position:absolute; top:-25px; left:15px; font-size:11px; color:#ff4444; background:rgba(0,0,0,0.8); padding:4px 8px; border:1px solid #ff4444; font-weight:700; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
+.desk-fg .q-counter { position:absolute; top:-25px; right:15px; font-size:11px; color:#ccc; background:rgba(0,0,0,0.8); padding:4px 8px; border:1px solid #444; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
+
+/* 말풍선 & 버튼은 기존 코드와 유사 (위치 맞춤) */
+.battle-question-area { flex:1; padding:0; display:flex; flex-direction:column; justify-content:flex-start; background:#000; border-top:2px solid #1a1a1a; }
+.speech-bubble { background:#000; padding:18px 20px; }
 .speech-bubble.boss-bubble { background:#0a0000; }
 .bubble-text { font-size:14px; color:#e8dfc0; line-height:1.9; white-space:pre-line; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
 .bubble-text .highlight { color:var(--gold); font-weight:700; }
@@ -459,9 +468,9 @@ body {
 .judge-btn { flex:1; padding:16px 10px; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:18px; font-weight:900; cursor:pointer; border:3px solid; box-shadow:4px 4px 0 #000; transition:all 0.1s; letter-spacing:2px; }
 .judge-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #000; clip-path:polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px); }
 .judge-btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; box-shadow:2px 2px 0 #000; filter:grayscale(0.6); }
-.btn-pass { background:rgba(76,175,80,0.15); border:none; border-top:2px solid #4caf50; color:#e0e0e0; font-family:'Galmuri11','Noto Sans KR',sans-serif; letter-spacing:4px; padding:16px 10px; font-size:15px; font-weight:900; cursor:pointer; transition:all 0.15s; }
+.btn-pass { background:rgba(76,175,80,0.15); border:none; border-top:2px solid #4caf50; color:#e0e0e0; letter-spacing:4px; }
 .btn-pass:not(:disabled):hover { background:rgba(76,175,80,0.25); color:#fff; }
-.btn-fail { background:rgba(239,83,80,0.15); border:none; border-top:2px solid #ef5350; color:#e0e0e0; font-family:'Galmuri11','Noto Sans KR',sans-serif; letter-spacing:2px; padding:16px 10px; font-size:15px; font-weight:900; cursor:pointer; transition:all 0.15s; }
+.btn-fail { background:rgba(239,83,80,0.15); border:none; border-top:2px solid #ef5350; color:#e0e0e0; letter-spacing:2px; }
 .btn-fail:not(:disabled):hover { background:rgba(239,83,80,0.25); color:#fff; }
 
 /* ═══════════════════════════════════════════
