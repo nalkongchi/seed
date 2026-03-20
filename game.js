@@ -485,7 +485,7 @@ function renderNodes() {
     if (isBoss) {
       const bossTag = document.createElement('div');
       bossTag.className = 'boss-tag';
-      bossTag.textContent = '⚠ BOSS';
+      bossTag.textContent = 'BOSS';
       div.appendChild(bossTag);
     }
 

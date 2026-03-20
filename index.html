@@ -9,288 +9,288 @@
 <body>
 <div id="game-container">
 
-  <!-- ═══════════════════════════════════════════
-       TITLE SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="title-screen" class="screen active">
-    <div class="title-bg"></div>
-    <div class="title-overlay"></div>
-    <div class="title-logo-img">
-      <img src="images/title_logo.png" alt="종자검사원">
-    </div>
-    <div class="title-menu-wrap">
-      <div class="title-menu-board">
-        <img class="title-frame-img" src="images/title_frame.png" alt="메뉴판">
-        <div class="title-menu-layer">
-          <div class="tmenu-item tmenu-main" onclick="goToNameInput()">
-            <span class="tmenu-icon">▶</span>
-            <span class="tmenu-label">모험 시작</span>
-          </div>
-          <div class="tmenu-item tmenu-sub1" id="continue-btn" onclick="continueGame()">
-            <span class="tmenu-icon">▶</span>
-            <span class="tmenu-label">이어하기</span>
-          </div>
-          <div class="tmenu-item tmenu-sub2" onclick="showWrongnote()">
-            <span class="tmenu-icon">▶</span>
-            <span class="tmenu-label">오답노트</span>
-          </div>
-          <div class="tmenu-item tmenu-sub3" onclick="showSetting()">
-            <span class="tmenu-icon">▶</span>
-            <span class="tmenu-label">설정</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="title-footer-new">© National Seed RPG · v0.4</div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ TITLE SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="title-screen" class="screen active">
+ <div class="title-bg"></div>
+ <div class="title-overlay"></div>
+ <div class="title-logo-img">
+ <img src="images/title_logo.png" alt="종자검사원">
+ </div>
+ <div class="title-menu-wrap">
+ <div class="title-menu-board">
+ <img class="title-frame-img" src="images/title_frame.png" alt="메뉴판">
+ <div class="title-menu-layer">
+ <div class="tmenu-item tmenu-main" onclick="goToNameInput()">
+ <span class="tmenu-icon">▶</span>
+ <span class="tmenu-label">모험 시작</span>
+ </div>
+ <div class="tmenu-item tmenu-sub1" id="continue-btn" onclick="continueGame()">
+ <span class="tmenu-icon">▶</span>
+ <span class="tmenu-label">이어하기</span>
+ </div>
+ <div class="tmenu-item tmenu-sub2" onclick="showWrongnote()">
+ <span class="tmenu-icon">▶</span>
+ <span class="tmenu-label">오답노트</span>
+ </div>
+ <div class="tmenu-item tmenu-sub3" onclick="showSetting()">
+ <span class="tmenu-icon">▶</span>
+ <span class="tmenu-label">설정</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ <div class="title-footer-new">© National Seed RPG · v0.4</div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       NAME INPUT SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="name-screen" class="screen">
-    <div class="name-box">
-      <div class="name-glow"></div>
-      <div class="name-title">검사원 지망생 등록</div>
-      <div class="name-title-sub">INSPECTOR REGISTRATION</div>
-      <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
-      <input class="name-input" id="player-name-input" type="text" maxlength="8" placeholder="이름을 입력하세요">
-      <button class="name-confirm-btn" onclick="confirmName()">S T A R T</button>
-      <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ NAME INPUT SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="name-screen" class="screen">
+ <div class="name-box">
+ <div class="name-glow"></div>
+ <div class="name-title">검사원 지망생 등록</div>
+ <div class="name-title-sub">INSPECTOR REGISTRATION</div>
+ <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
+ <input class="name-input" id="player-name-input" type="text" maxlength="8" placeholder="이름을 입력하세요">
+ <button class="name-confirm-btn" onclick="confirmName()">S T A R T</button>
+ <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       OPENING SCREEN
-  ═══════════════════════════════════════════ -->
-  <!-- ═══════════════════════════════════════════
-       OPENING SCREEN (컷신)
-  ═══════════════════════════════════════════ -->
-  <div id="opening-screen" class="screen">
-    <div id="op-scene-container"></div>
-    <div id="op-fade-black" style="position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity 480ms ease;z-index:20;"></div>
-    <button id="op-tap" style="position:absolute;inset:0;z-index:10;background:transparent;border:none;padding:0;cursor:pointer;pointer-events:none;" aria-label="다음"></button>
-    <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
-    <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;">
-      <div style="padding:12px 12px 20px;pointer-events:auto;">
-        <div id="op-box" class="op-frame-box">
-          <div id="op-text" class="op-frame-text"></div>
-          <div style="margin-top:10px;display:flex;align-items:center;">
-            <div id="op-arrow" style="font-size:14px;color:rgba(255,255,255,0.7);animation:op-blink 1s ease-in-out infinite;">▶</div>
-          </div>
-          <button id="op-end-btn" style="display:none;width:100%;margin-top:12px;background:#2d4e26;border:3px solid #e8c84a;color:#fff;font-family:'Galmuri9','DotGothic16',monospace;font-size:14px;padding:13px;cursor:pointer;box-shadow:3px 3px 0 #000;letter-spacing:2px;">⚔️ 모험을 시작하라!</button>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ OPENING SCREEN
+ ═══════════════════════════════════════════ -->
+ <!-- ═══════════════════════════════════════════
+ OPENING SCREEN (컷신)
+ ═══════════════════════════════════════════ -->
+ <div id="opening-screen" class="screen">
+ <div id="op-scene-container"></div>
+ <div id="op-fade-black" style="position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity 480ms ease;z-index:20;"></div>
+ <button id="op-tap" style="position:absolute;inset:0;z-index:10;background:transparent;border:none;padding:0;cursor:pointer;pointer-events:none;" aria-label="다음"></button>
+ <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
+ <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;">
+ <div style="padding:12px 12px 20px;pointer-events:auto;">
+ <div id="op-box" class="op-frame-box">
+ <div id="op-text" class="op-frame-text"></div>
+ <div style="margin-top:10px;display:flex;align-items:center;">
+ <div id="op-arrow" style="font-size:14px;color:rgba(255,255,255,0.7);animation:op-blink 1s ease-in-out infinite;">▶</div>
+ </div>
+ <button id="op-end-btn" style="display:none;width:100%;margin-top:12px;background:#2d4e26;border:3px solid #e8c84a;color:#fff;font-family:'Galmuri9','DotGothic16',monospace;font-size:14px;padding:13px;cursor:pointer;box-shadow:3px 3px 0 #000;letter-spacing:2px;"> 모험을 시작하라!</button>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       MAP SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="map-screen" class="screen">
-    <div class="map-header">
-      <div class="map-title">MAP</div>
-      <div class="map-progress" id="map-progress-text">정화된 구역: 0 / 6</div>
-    </div>
-    <div class="map-area">
-      <div class="map-bg">
-        <div class="map-overlay"></div>
-      </div>
-      <!-- 연결선 SVG (JS 렌더링) -->
-      <svg id="path-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg>
-      <!-- 스테이지 컨테이너 (JS 렌더링) -->
-      <div id="nodes-container"></div>
-    </div>
-    <div class="map-footer">
-      <button class="footer-home-btn" onclick="confirmGoTitle()">Home</button>
-      <div class="footer-logo">© National Seed RPG</div>
-      <button class="footer-setting-btn" onclick="showSetting()">BGM</button>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ MAP SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="map-screen" class="screen">
+ <div class="map-header">
+ <div class="map-title">MAP</div>
+ <div class="map-progress" id="map-progress-text">정화된 구역: 0 / 6</div>
+ </div>
+ <div class="map-area">
+ <div class="map-bg">
+ <div class="map-overlay"></div>
+ </div>
+ <!-- 연결선 SVG (JS 렌더링) -->
+ <svg id="path-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg>
+ <!-- 스테이지 컨테이너 (JS 렌더링) -->
+ <div id="nodes-container"></div>
+ </div>
+ <div class="map-footer">
+ <button class="footer-home-btn" onclick="confirmGoTitle()">Home</button>
+ <div class="footer-logo">© National Seed RPG</div>
+ <button class="footer-setting-btn" onclick="showSetting()">BGM</button>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       NODE POPUP
-  ═══════════════════════════════════════════ -->
-  <div id="node-popup">
-    <div class="node-popup-box">
-      <div class="popup-emoji" id="popup-emoji">🌾</div>
-      <div class="popup-enemy-name" id="popup-enemy"></div>
-      <div class="popup-desc" id="popup-desc"></div>
-      <div class="popup-hp-info" id="popup-hp"></div>
-      <div class="popup-btns">
-        <button class="popup-cancel" onclick="closeNodePopup()">← 돌아가기</button>
-        <button class="popup-start" onclick="startBattle()">⚔️ 전투 시작!</button>
-      </div>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ NODE POPUP
+ ═══════════════════════════════════════════ -->
+ <div id="node-popup">
+ <div class="node-popup-box">
+ <div class="popup-emoji" id="popup-emoji"></div>
+ <div class="popup-enemy-name" id="popup-enemy"></div>
+ <div class="popup-desc" id="popup-desc"></div>
+ <div class="popup-hp-info" id="popup-hp"></div>
+ <div class="popup-btns">
+ <button class="popup-cancel" onclick="closeNodePopup()">← 돌아가기</button>
+ <button class="popup-start" onclick="startBattle()"> 전투 시작!</button>
+ </div>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       WRONGNOTE POPUP
-  ═══════════════════════════════════════════ -->
-  <div id="wrongnote-popup">
-    <div class="wrongnote-header">
-      <div class="wrongnote-title">📝 오답노트</div>
-      <button class="wrongnote-close" onclick="closeWrongnote()">✕ 닫기</button>
-    </div>
-    <div class="wrongnote-body" id="wrongnote-body"></div>
-    <button class="wrongnote-clear-btn" onclick="clearWrongnote()">🗑️ 오답노트 초기화</button>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ WRONGNOTE POPUP
+ ═══════════════════════════════════════════ -->
+ <div id="wrongnote-popup">
+ <div class="wrongnote-header">
+ <div class="wrongnote-title"> 오답노트</div>
+ <button class="wrongnote-close" onclick="closeWrongnote()"> 닫기</button>
+ </div>
+ <div class="wrongnote-body" id="wrongnote-body"></div>
+ <button class="wrongnote-clear-btn" onclick="clearWrongnote()"> 오답노트 초기화</button>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       SETTING POPUP
-  ═══════════════════════════════════════════ -->
-  <div id="setting-popup">
-    <div class="setting-box">
-      <div class="setting-title">BGM</div>
-      <div class="setting-row">
-        <div class="setting-label">🎵 배경음악</div>
-        <div class="setting-slider-wrap">
-          <input class="setting-slider" id="bgm-slider" type="range" min="0" max="100" value="70" oninput="Sound.setBGMVol(this.value)">
-          <span class="setting-slider-val" id="bgm-val">70</span>
-        </div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-label">🔊 효과음</div>
-        <div class="setting-slider-wrap">
-          <input class="setting-slider" id="se-slider" type="range" min="0" max="100" value="70" oninput="Sound.setSEVol(this.value)">
-          <span class="setting-slider-val" id="se-val">70</span>
-        </div>
-      </div>
-      <button class="setting-close" onclick="closeSetting()">✅ 확인</button>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ SETTING POPUP
+ ═══════════════════════════════════════════ -->
+ <div id="setting-popup">
+ <div class="setting-box">
+ <div class="setting-title">BGM</div>
+ <div class="setting-row">
+ <div class="setting-label">🎵 배경음악</div>
+ <div class="setting-slider-wrap">
+ <input class="setting-slider" id="bgm-slider" type="range" min="0" max="100" value="70" oninput="Sound.setBGMVol(this.value)">
+ <span class="setting-slider-val" id="bgm-val">70</span>
+ </div>
+ </div>
+ <div class="setting-row">
+ <div class="setting-label">🔊 효과음</div>
+ <div class="setting-slider-wrap">
+ <input class="setting-slider" id="se-slider" type="range" min="0" max="100" value="70" oninput="Sound.setSEVol(this.value)">
+ <span class="setting-slider-val" id="se-val">70</span>
+ </div>
+ </div>
+ <button class="setting-close" onclick="closeSetting()"> 확인</button>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       ENCOUNTER SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="encounter-screen" class="screen">
-    <div class="encounter-bg" id="encounter-bg"></div>
-    <div class="encounter-enemy-img" id="enc-enemy-img"></div>
-    <div class="encounter-content">
-      <div class="encounter-text">적이 나타났다!</div>
-      <div class="encounter-name" id="enc-name"></div>
-      <button class="encounter-btn" id="enc-battle-btn" onclick="startActualBattle()">⚔️ 전투!</button>
-    </div>
-    <!-- 보스 등장 대사창 -->
-    <div class="boss-intro-box" id="boss-intro-box" style="display:none">
-      <div class="boss-intro-text" id="boss-intro-text"></div>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ ENCOUNTER SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="encounter-screen" class="screen">
+ <div class="encounter-bg" id="encounter-bg"></div>
+ <div class="encounter-enemy-img" id="enc-enemy-img"></div>
+ <div class="encounter-content">
+ <div class="encounter-text">적이 나타났다!</div>
+ <div class="encounter-name" id="enc-name"></div>
+ <button class="encounter-btn" id="enc-battle-btn" onclick="startActualBattle()"> 전투!</button>
+ </div>
+ <!-- 보스 등장 대사창 -->
+ <div class="boss-intro-box" id="boss-intro-box" style="display:none">
+ <div class="boss-intro-text" id="boss-intro-text"></div>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       BATTLE SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="battle-screen" class="screen">
-    <div class="battle-header">
-      <div class="battle-header-left">
-        <button class="battle-exit-btn" onclick="showExitConfirm()">← 나가기</button>
-        <div class="battle-enemy-name" id="battle-enemy-name"></div>
-      </div>
-      <div class="battle-hp" id="battle-hp"></div>
-    </div>
-    <!-- 카드형 적 배경 -->
-    <div class="battle-card-area" id="battle-card-area">
-      <div class="battle-card-img" id="battle-card-img"></div>
-      <div class="battle-card-fade" id="battle-card-fade"></div>
-      <div class="battle-card-bottom"></div>
-      <div class="q-counter" id="q-counter">1 / 5</div>
-      <div class="boss-label" id="boss-label" style="display:none">⚠️ BOSS</div>
-    </div>
-    <!-- 적 이름 배지 -->
-    <div class="battle-name-badge" id="battle-name-badge"></div>
-    <!-- 말풍선 -->
-    <div class="battle-question-area">
-      <div class="speech-bubble" id="speech-bubble">
-        <div class="bubble-text" id="battle-question"></div>
-      </div>
-    </div>
-    <div class="battle-buttons">
-      <button class="judge-btn btn-pass" onclick="answer('pass')">✅ 합격</button>
-      <button class="judge-btn btn-fail" onclick="answer('fail')">❌ 불합격</button>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ BATTLE SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="battle-screen" class="screen">
+ <div class="battle-header">
+ <div class="battle-header-left">
+ <button class="battle-exit-btn" onclick="showExitConfirm()">← 나가기</button>
+ <div class="battle-enemy-name" id="battle-enemy-name"></div>
+ </div>
+ <div class="battle-hp" id="battle-hp"></div>
+ </div>
+ <!-- 카드형 적 배경 -->
+ <div class="battle-card-area" id="battle-card-area">
+ <div class="battle-card-img" id="battle-card-img"></div>
+ <div class="battle-card-fade" id="battle-card-fade"></div>
+ <div class="battle-card-bottom"></div>
+ <div class="q-counter" id="q-counter">1 / 5</div>
+ <div class="boss-label" id="boss-label" style="display:none"> BOSS</div>
+ </div>
+ <!-- 적 이름 배지 -->
+ <div class="battle-name-badge" id="battle-name-badge"></div>
+ <!-- 말풍선 -->
+ <div class="battle-question-area">
+ <div class="speech-bubble" id="speech-bubble">
+ <div class="bubble-text" id="battle-question"></div>
+ </div>
+ </div>
+ <div class="battle-buttons">
+ <button class="judge-btn btn-pass" onclick="answer('pass')"> 합격</button>
+ <button class="judge-btn btn-fail" onclick="answer('fail')"> 불합격</button>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       EXIT CONFIRM
-  ═══════════════════════════════════════════ -->
-  <div id="exit-confirm">
-    <div class="exit-box">
-      <div class="exit-title">⚠️ 전투를 포기하시겠습니까?</div>
-      <div class="exit-desc">지금 나가면 이 전투의 진행이 취소되고<br>스테이지가 재도전 상태로 돌아갑니다.</div>
-      <div class="exit-btns">
-        <button class="exit-cancel" onclick="hideExitConfirm()">계속 싸우기</button>
-        <button class="exit-ok" onclick="exitToMap()">나가기</button>
-      </div>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ EXIT CONFIRM
+ ═══════════════════════════════════════════ -->
+ <div id="exit-confirm">
+ <div class="exit-box">
+ <div class="exit-title"> 전투를 포기하시겠습니까?</div>
+ <div class="exit-desc">지금 나가면 이 전투의 진행이 취소되고<br>스테이지가 재도전 상태로 돌아갑니다.</div>
+ <div class="exit-btns">
+ <button class="exit-cancel" onclick="hideExitConfirm()">계속 싸우기</button>
+ <button class="exit-ok" onclick="exitToMap()">나가기</button>
+ </div>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       RESULT POPUP
-  ═══════════════════════════════════════════ -->
-  <div id="result-popup">
-    <div class="result-box" id="result-box">
-      <div class="stamp-effect" id="stamp-effect"></div>
-      <div class="result-badge" id="result-badge">✅</div>
-      <div class="result-title" id="result-title">정답!</div>
-      <div class="result-answer" id="result-answer"></div>
-      <div class="result-reason" id="result-reason"></div>
-      <button class="result-next-btn" onclick="nextQuestion()">다음으로 →</button>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ RESULT POPUP
+ ═══════════════════════════════════════════ -->
+ <div id="result-popup">
+ <div class="result-box" id="result-box">
+ <div class="stamp-effect" id="stamp-effect"></div>
+ <div class="result-badge" id="result-badge"></div>
+ <div class="result-title" id="result-title">정답!</div>
+ <div class="result-answer" id="result-answer"></div>
+ <div class="result-reason" id="result-reason"></div>
+ <button class="result-next-btn" onclick="nextQuestion()">다음으로 →</button>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       CLEAR SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="clear-screen" class="screen">
-    <div class="clear-content">
-      <div class="clear-icon">🏆</div>
-      <div class="clear-title" id="clear-title">클리어!</div>
-      <div class="clear-sub" id="clear-sub"></div>
-      <div class="clear-stats">
-        <div class="stat-row"><span>정답</span><span id="cs-correct">5개</span></div>
-        <div class="stat-row"><span>오답</span><span id="cs-wrong">0개</span></div>
-        <div class="stat-row"><span>남은 체력</span><span id="cs-hp">🌾🌾🌾</span></div>
-      </div>
-      <button class="clear-btn" onclick="afterClear()">🗺️ 지도로 돌아가기</button>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ CLEAR SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="clear-screen" class="screen">
+ <div class="clear-content">
+ <div class="clear-icon"></div>
+ <div class="clear-title" id="clear-title">클리어!</div>
+ <div class="clear-sub" id="clear-sub"></div>
+ <div class="clear-stats">
+ <div class="stat-row"><span>정답</span><span id="cs-correct">5개</span></div>
+ <div class="stat-row"><span>오답</span><span id="cs-wrong">0개</span></div>
+ <div class="stat-row"><span>남은 체력</span><span id="cs-hp"></span></div>
+ </div>
+ <button class="clear-btn" onclick="afterClear()"> 지도로 돌아가기</button>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       GAME OVER SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="gameover-screen" class="screen">
-    <div class="gameover-content">
-      <div class="gameover-icon">💀</div>
-      <div class="gameover-title">검사원 실격!</div>
-      <div class="gameover-sub">아직 수련이 더 필요합니다.<br>기준을 다시 살펴보고 도전하세요!</div>
-      <div class="gameover-btns">
-        <button class="gameover-btn" onclick="retryNode()">🔄 다시 도전</button>
-        <button class="gameover-btn secondary" onclick="goTitle()">🏠 타이틀로</button>
-      </div>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ GAME OVER SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="gameover-screen" class="screen">
+ <div class="gameover-content">
+ <div class="gameover-icon"></div>
+ <div class="gameover-title">검사원 실격!</div>
+ <div class="gameover-sub">아직 수련이 더 필요합니다.<br>기준을 다시 살펴보고 도전하세요!</div>
+ <div class="gameover-btns">
+ <button class="gameover-btn" onclick="retryNode()"> 다시 도전</button>
+ <button class="gameover-btn secondary" onclick="goTitle()"> 타이틀로</button>
+ </div>
+ </div>
+ </div>
 
-  <!-- ═══════════════════════════════════════════
-       ENDING SCREEN
-  ═══════════════════════════════════════════ -->
-  <div id="ending-screen" class="screen">
-    <div class="particles" id="ending-particles"></div>
-    <div class="ending-content">
-      <div class="ending-icon">🏅</div>
-      <div class="ending-title">축하합니다!<br>정식 종자검사원 임명!</div>
-      <div class="ending-sub" id="ending-sub"></div>
-      <div class="rank-badge" id="ending-rank">🥇 S랭크 완벽한 판정관</div>
-      <div class="certificate">
-        <div class="cert-title">🌾 종자검사원 임명장</div>
-        <div class="cert-body">
-          위 용사는 종자왕국의 모든 시련을 통과하여<br>
-          <div class="cert-name" id="cert-player-name">용사</div>
-          정식 종자검사원으로 임명함을 증명합니다.
-        </div>
-        <div class="cert-stamp">📛</div>
-      </div>
-      <button class="ending-btn" onclick="goTitle()">🏠 타이틀로</button>
-    </div>
-  </div>
+ <!-- ═══════════════════════════════════════════
+ ENDING SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="ending-screen" class="screen">
+ <div class="particles" id="ending-particles"></div>
+ <div class="ending-content">
+ <div class="ending-icon"></div>
+ <div class="ending-title">축하합니다!<br>정식 종자검사원 임명!</div>
+ <div class="ending-sub" id="ending-sub"></div>
+ <div class="rank-badge" id="ending-rank"> S랭크 완벽한 판정관</div>
+ <div class="certificate">
+ <div class="cert-title"> 종자검사원 임명장</div>
+ <div class="cert-body">
+ 위 용사는 종자왕국의 모든 시련을 통과하여<br>
+ <div class="cert-name" id="cert-player-name">용사</div>
+ 정식 종자검사원으로 임명함을 증명합니다.
+ </div>
+ <div class="cert-stamp"></div>
+ </div>
+ <button class="ending-btn" onclick="goTitle()"> 타이틀로</button>
+ </div>
+ </div>
 
 </div>
 

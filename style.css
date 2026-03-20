@@ -10,14 +10,14 @@
 
 @keyframes op-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 .op-frame-box {
-  border-image:url("images/frame.png") 76 55 fill / 38px 28px stretch;
-  padding:40px 50px;
+  background:#000;
+  padding:20px 20px 16px;
   position:relative;
 }
 .op-frame-text {
   min-height:72px; line-height:1.95; font-size:15px;
   white-space:pre-wrap; word-break:keep-all;
-  color:#f0ece0; text-shadow:1px 1px 0 rgba(0,0,0,0.8);
+  color:#f0ece0;
   font-family:'Galmuri9','DotGothic16',monospace;
 }
 
@@ -32,7 +32,7 @@
   0%   { transform:scale(1.0) translateY(0); }
   100% { transform:scale(1.03) translateY(-6px); }
 }
-.op-scene-overlay { position:absolute; inset:0;
+.op-scene-overlay { position:absolute; top:65%; bottom:0; left:0; right:0;
   background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.6) 100%);
   pointer-events:none; }
 .op-flash { position:absolute; inset:0; background:rgba(255,255,255,0.18);
@@ -56,7 +56,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: #0d1117;
+  background: #080808;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -71,7 +71,7 @@ body {
   max-width: 480px;
   height: 100vh;
   height: 100dvh;
-  background: var(--dark);
+  background: #0a0a0a;
   position: relative;
   overflow: hidden;
   border: none;
@@ -239,7 +239,7 @@ body {
    MAP SCREEN
 ═══════════════════════════════════════════ */
 #map-screen { background:#1a3a1a; }
-.map-header { background:#060e06; border-bottom:4px solid var(--gold); box-shadow:0 2px 0 #8a6010, inset 0 -1px 0 rgba(200,160,32,0.3); padding:12px 15px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+.map-header { background:#0a0a0a; border-bottom:3px solid #3a2e10; padding:12px 15px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
 .map-title { font-size:13px; font-weight:700; color:var(--gold); letter-spacing:1px; font-family:'Galmuri11','Noto Sans KR',sans-serif; text-shadow:1px 1px 0 rgba(0,0,0,0.8); }
 .map-progress { font-size:10px; color:#c8a030; font-family:'Galmuri9','Noto Sans KR',sans-serif; letter-spacing:0.5px; }
 .footer-home-btn { background:#1a2a1a; border:2px solid #3a5a3a; color:#7ab648; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:12px; font-weight:700; padding:5px 12px; cursor:pointer; letter-spacing:1px; transition:all 0.1s; }
@@ -253,7 +253,7 @@ body {
     rgba(0,0,0,0.25) 0%, transparent 15%,
     transparent 85%, rgba(0,0,0,0.3) 100%);
   pointer-events:none; }
-.map-footer { background:#060e06; border-top:4px solid var(--gold); box-shadow:0 -2px 0 #8a6010, inset 0 1px 0 rgba(200,160,32,0.3); padding:8px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; z-index:10; height:52px; }
+.map-footer { background:#0a0a0a; border-top:1px solid #222; padding:8px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; z-index:10; height:52px; }
 .footer-logo { font-size:10px; color:#555; text-align:center; letter-spacing:1px;
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 .footer-setting-btn { background:#1a2a1a; border:2px solid #3a5a3a; color:#7ab648; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:11px; font-weight:700; padding:5px 10px; cursor:pointer; transition:all 0.1s; }
@@ -400,9 +400,9 @@ body {
 .hp-icon.breaking { animation:hp-break 0.4s ease-out forwards; }
 
 /* 카드형 적 영역 */
-.battle-card-area { position:relative; flex:1; min-height:0; overflow:hidden; }
+.battle-card-area { position:relative; flex:0 0 65%; overflow:hidden; background:#000; }
 .battle-card-img { position:absolute; inset:0; background-size:cover; background-position:top center; background-repeat:no-repeat; }
-.battle-card-img img { width:100%; height:100%; object-fit:cover; object-position:center; }
+.battle-card-img { position:absolute; inset:0; background-size:cover; background-position:center top; }
 .battle-card-img.emoji-mode { display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#0a1a0a 0%,#1a2a0a 100%); font-size:90px; filter:drop-shadow(0 5px 15px rgba(0,0,0,0.8)); animation:enemy-idle 2s ease-in-out infinite; }
 .battle-card-img.emoji-mode.boss-bg { background:linear-gradient(180deg,#1a0000 0%,#2a0a0a 100%); animation:boss-entrance 0.8s ease-out, enemy-idle 2s ease-in-out 0.8s infinite; }
 .battle-card-img.emoji-mode.shake { animation:enemy-shake 0.5s ease-out; }
@@ -417,17 +417,17 @@ body {
 .battle-name-badge { background:rgba(0,0,0,0.9); border:2px solid #ff4444; padding:5px 14px; font-size:12px; font-weight:900; color:#ff8888; letter-spacing:1px; text-align:center; margin:0 20px 6px; flex-shrink:0; position:relative; z-index:1;
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 
-.battle-question-area { flex:0; padding:6px 15px 6px; display:flex; flex-direction:column; justify-content:flex-start; }
+.battle-question-area { flex:0; padding:0 15px 6px; display:flex; flex-direction:column; justify-content:flex-start; background:#000; }
 .speech-bubble {
   position:relative;
-  border-image:url("images/frame.png") 76 55 fill / 38px 28px stretch;
-  padding:40px 50px;
+  background:#000;
+  padding:20px 20px 16px;
 }
-.speech-bubble.boss-bubble { filter:hue-rotate(330deg) saturate(1.2); }
+.speech-bubble.boss-bubble { background:#0a0000; }
 .bubble-text { font-size:14px; color:#e8dfc0; line-height:1.9; white-space:pre-line; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
 .bubble-text .highlight { color:var(--gold); font-weight:700; }
 
-.battle-buttons { display:flex; gap:10px; padding:0 15px 10px; flex-shrink:0; }
+.battle-buttons { display:flex; gap:10px; padding:0 15px 10px; flex-shrink:0; background:#000; }
 .judge-btn { flex:1; padding:16px 10px; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:18px; font-weight:900; cursor:pointer; border:3px solid; box-shadow:4px 4px 0 #000; transition:all 0.1s; letter-spacing:2px; }
 .judge-btn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #000; clip-path:polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px); }
 .judge-btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; box-shadow:2px 2px 0 #000; filter:grayscale(0.6); }
