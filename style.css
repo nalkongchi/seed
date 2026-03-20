@@ -172,7 +172,7 @@ body {
   text-shadow:0 1px 2px rgba(0,0,0,0.6), 0 0 10px rgba(210,185,90,0.4);
 }
 .title-footer-new {
-  position:absolute; bottom:6px; left:0; right:0; z-index:4;
+  position:absolute; bottom:28px; left:0; right:0; z-index:4;
   text-align:center; color:rgba(180,140,40,0.3);
   font-size:9px; letter-spacing:2px; font-family:sans-serif;
 }
@@ -223,7 +223,7 @@ body {
 /* 스테이지 */
 /* 노드 - 스프라이트 아이콘 방식 */
 .map-node { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:10; transform:translate(-50%,-50%); transition:transform 0.12s; }
-.map-node:hover { transform:translate(-50%,-50%) scale(1.08); }
+.map-node:not(.locked):hover { transform:translate(-50%,-50%) scale(1.08); }
 .map-node:active { transform:translate(-50%,-50%) scale(0.95); }
 .map-node.locked { cursor:not-allowed; opacity:0.85; }
 .node-icon { width:80px; height:80px; background-image:url("images/node_icons.png"); background-size:424px 636px; background-repeat:no-repeat; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.9)) drop-shadow(0 0 4px rgba(0,0,0,0.6)); }
