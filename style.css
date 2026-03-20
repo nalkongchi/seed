@@ -9,6 +9,17 @@
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;700;900&display=swap');
 
 @keyframes op-blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.op-frame-box {
+  border-image:url("images/frame.png") 76 55 fill / 38px 28px stretch;
+  padding:40px 50px;
+  position:relative;
+}
+.op-frame-text {
+  min-height:72px; line-height:1.95; font-size:15px;
+  white-space:pre-wrap; word-break:keep-all;
+  color:#f0ece0; text-shadow:1px 1px 0 rgba(0,0,0,0.8);
+  font-family:'Galmuri9','DotGothic16',monospace;
+}
 
 /* 오프닝 컷신 씬 레이어 */
 .op-scene-layer { position:absolute; inset:0; opacity:0; transform:scale(1.02);
@@ -333,12 +344,38 @@ body {
 /* ═══════════════════════════════════════════
    ENCOUNTER SCREEN
 ═══════════════════════════════════════════ */
-#encounter-screen { background:#0d1a0d; align-items:center; justify-content:center; }
-.encounter-bg { position:absolute; inset:0; background:linear-gradient(180deg,#0a0a1a 0%,#1a0a0a 100%); animation:encounter-flash 0.5s ease-out; }
-.encounter-content { z-index:1; text-align:center; padding:30px; }
-.encounter-enemy { font-size:80px; animation:enemy-appear 0.5s ease-out; margin-bottom:20px; filter:drop-shadow(0 0 20px rgba(255,100,100,0.8)); }
-.encounter-text { font-size:20px; font-weight:900; color:#fff; text-shadow:2px 2px 0 #000; margin-bottom:10px; animation:blink-text 1s ease-in-out infinite; }
-.encounter-name { font-size:14px; color:var(--gold); margin-bottom:30px; }
+#encounter-screen { background:#080810; align-items:center; justify-content:flex-end; padding-bottom:60px; }
+.encounter-bg {
+  position:absolute; inset:0;
+  background:linear-gradient(180deg,#080810 0%,#120808 100%);
+  animation:encounter-flash 0.5s ease-out;
+}
+.encounter-enemy-img {
+  position:absolute; inset:0;
+  background-size:cover;
+  background-position:center top;
+  opacity:0;
+  animation:enemy-img-appear 0.6s ease-out 0.1s forwards;
+}
+.encounter-enemy-img::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(180deg,
+    transparent 40%,
+    rgba(0,0,0,0.5) 70%,
+    rgba(0,0,0,0.85) 100%);
+}
+@keyframes enemy-img-appear {
+  0%   { opacity:0; transform:scale(1.05); }
+  100% { opacity:1; transform:scale(1); }
+}
+.encounter-content {
+  position:relative; z-index:2;
+  text-align:center; padding:30px;
+  margin-top:auto;
+}
+.encounter-text { font-size:20px; font-weight:900; color:#fff; text-shadow:2px 2px 0 #000; margin-bottom:10px; animation:blink-text 1s ease-in-out infinite; font-family:'Galmuri11','Noto Sans KR',sans-serif; }
+.encounter-name { font-size:13px; color:var(--gold); margin-bottom:30px; font-family:'Galmuri9','Noto Sans KR',sans-serif; letter-spacing:1px; }
 .encounter-btn { background:var(--red); border:3px solid #ff8888; color:#fff; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:16px; font-weight:700; padding:14px 40px; cursor:pointer; box-shadow:4px 4px 0 #000; letter-spacing:2px; }
 
 /* 보스 등장 대사창 */
@@ -381,13 +418,13 @@ body {
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 
 .battle-question-area { flex:0; padding:6px 15px 6px; display:flex; flex-direction:column; justify-content:flex-start; }
-.speech-bubble { background:rgba(20,36,20,0.97); border:2px solid var(--green); padding:14px; position:relative; box-shadow:3px 3px 0 #000; }
-.speech-bubble.boss-bubble { border-color:#ff4444; background:rgba(30,0,0,0.97); }
-.speech-bubble::before { content:''; position:absolute; top:-10px; left:20px; border:6px solid transparent; border-bottom-color:var(--green); }
-.speech-bubble::after  { content:''; position:absolute; top:-6px;  left:22px; border:5px solid transparent; border-bottom-color:rgba(20,36,20,0.97); }
-.speech-bubble.boss-bubble::before { border-bottom-color:#ff4444; }
-.speech-bubble.boss-bubble::after  { border-bottom-color:rgba(30,0,0,0.97); }
-.bubble-text { font-size:14px; color:#ddd; line-height:1.9; white-space:pre-line; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
+.speech-bubble {
+  position:relative;
+  border-image:url("images/frame.png") 76 55 fill / 38px 28px stretch;
+  padding:40px 50px;
+}
+.speech-bubble.boss-bubble { filter:hue-rotate(330deg) saturate(1.2); }
+.bubble-text { font-size:14px; color:#e8dfc0; line-height:1.9; white-space:pre-line; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
 .bubble-text .highlight { color:var(--gold); font-weight:700; }
 
 .battle-buttons { display:flex; gap:10px; padding:0 15px 10px; flex-shrink:0; }

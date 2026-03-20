@@ -72,8 +72,8 @@
     <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
     <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;">
       <div style="padding:12px 12px 20px;pointer-events:auto;">
-        <div id="op-box" style="background:rgba(0,0,0,0.58);border:2px solid rgba(0,0,0,0.85);box-shadow:3px 3px 0 rgba(0,0,0,0.7);padding:16px 16px 14px;backdrop-filter:blur(4px);">
-          <div id="op-text" style="min-height:72px;line-height:1.95;font-size:15px;white-space:pre-wrap;word-break:keep-all;color:#f0ece0;text-shadow:1px 1px 0 rgba(0,0,0,0.8);font-family:'Galmuri9','DotGothic16',monospace;"></div>
+        <div id="op-box" class="op-frame-box">
+          <div id="op-text" class="op-frame-text"></div>
           <div style="margin-top:10px;display:flex;align-items:center;">
             <div id="op-arrow" style="font-size:14px;color:rgba(255,255,255,0.7);animation:op-blink 1s ease-in-out infinite;">▶</div>
           </div>
@@ -163,9 +163,9 @@
        ENCOUNTER SCREEN
   ═══════════════════════════════════════════ -->
   <div id="encounter-screen" class="screen">
-    <div class="encounter-bg"></div>
+    <div class="encounter-bg" id="encounter-bg"></div>
+    <div class="encounter-enemy-img" id="enc-enemy-img"></div>
     <div class="encounter-content">
-      <div class="encounter-enemy" id="enc-emoji">🧑‍🌾</div>
       <div class="encounter-text">적이 나타났다!</div>
       <div class="encounter-name" id="enc-name"></div>
       <button class="encounter-btn" id="enc-battle-btn" onclick="startActualBattle()">⚔️ 전투!</button>

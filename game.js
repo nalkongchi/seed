@@ -622,7 +622,8 @@ function startBattle() {
   const node = NODES[G.currentNode];
   const isBoss = node.type === 'boss';
 
-  document.getElementById('enc-emoji').textContent = node.enemyEmoji;
+  const encImg = document.getElementById('enc-enemy-img');
+  if (encImg) encImg.style.backgroundImage = 'url(' + node.enemyImage + ')';
   document.getElementById('enc-name').textContent = node.enemy;
 
   // 보스 등장 대사
