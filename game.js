@@ -595,9 +595,19 @@ function startActualBattle() {
   document.getElementById('battle-enemy-name').textContent = node.enemy;
   document.getElementById('battle-name-badge').textContent = node.enemy;
   const cardImg = document.getElementById('battle-card-img');
-  if (node.enemyImage) {
-    cardImg.innerHTML = '<img src="' + node.enemyImage + '" alt="' + node.enemy + '">';
+
+  // ════ 이미지 호출 로직 수정 ════
+  // 1순위: 전투용 도트(enemySprite)가 있으면 그것을 출력
+  // 2순위: 도트가 없으면 일러스트(enemyImage)를 예비용으로 출력
+  
+  const battleImgPath = node.enemySprite || node.enemyImage;
+  
+  if (battleImgPath) {
+    cardImg.innerHTML = '<img src="' + battleImgPath + '" alt="' + node.enemy + '">';
+  } else {
+    cardImg.innerHTML = ''; // 이미지 없을 경우 비움
   }
+
   const bossLabel = document.getElementById('boss-label');
   const bubble = document.getElementById('speech-bubble');
   if (isBoss) {
@@ -607,6 +617,7 @@ function startActualBattle() {
     bossLabel.style.display = 'none';
     bubble.classList.remove('boss-bubble');
   }
+  
   renderHp();
   loadQuestion();
   showScreen('battle-screen');
