@@ -49,11 +49,13 @@
   ═══════════════════════════════════════════ -->
   <div id="name-screen" class="screen">
     <div class="name-box">
-        <div class="name-title">🌾 검사원 지망생 등록</div>
-        <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
-        <input class="name-input" id="player-name-input" type="text" maxlength="8" placeholder="이름을 입력하세요">
-        <button class="name-confirm-btn" onclick="confirmName()">✅ 등록하고 출발!</button>
-        <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
+      <div class="name-glow"></div>
+      <div class="name-title">검사원 지망생 등록</div>
+      <div class="name-title-sub">INSPECTOR REGISTRATION</div>
+      <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
+      <input class="name-input" id="player-name-input" type="text" maxlength="8" placeholder="이름을 입력하세요">
+      <button class="name-confirm-btn" onclick="confirmName()">S T A R T</button>
+      <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
     </div>
   </div>
 
@@ -67,15 +69,15 @@
     <div id="op-scene-container"></div>
     <div id="op-fade-black" style="position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity 480ms ease;z-index:20;"></div>
     <button id="op-tap" style="position:absolute;inset:0;z-index:10;background:transparent;border:none;padding:0;cursor:pointer;pointer-events:none;" aria-label="다음"></button>
-    <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
+    <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
     <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;">
       <div style="padding:12px 12px 20px;pointer-events:auto;">
         <div id="op-box" style="background:rgba(0,0,0,0.58);border:2px solid rgba(0,0,0,0.85);box-shadow:3px 3px 0 rgba(0,0,0,0.7);padding:16px 16px 14px;backdrop-filter:blur(4px);">
-          <div id="op-text" style="min-height:72px;line-height:1.95;font-size:15px;white-space:pre-wrap;word-break:keep-all;color:#f0ece0;text-shadow:1px 1px 0 rgba(0,0,0,0.8);font-family:'DotGothic16',monospace;"></div>
+          <div id="op-text" style="min-height:72px;line-height:1.95;font-size:15px;white-space:pre-wrap;word-break:keep-all;color:#f0ece0;text-shadow:1px 1px 0 rgba(0,0,0,0.8);font-family:'Galmuri9','DotGothic16',monospace;"></div>
           <div style="margin-top:10px;display:flex;align-items:center;">
             <div id="op-arrow" style="font-size:14px;color:rgba(255,255,255,0.7);animation:op-blink 1s ease-in-out infinite;">▶</div>
           </div>
-          <button id="op-end-btn" style="display:none;width:100%;margin-top:12px;background:#2d4e26;border:3px solid #e8c84a;color:#fff;font-family:'DotGothic16',monospace;font-size:14px;padding:13px;cursor:pointer;box-shadow:3px 3px 0 #000;letter-spacing:2px;">⚔️ 모험을 시작하라!</button>
+          <button id="op-end-btn" style="display:none;width:100%;margin-top:12px;background:#2d4e26;border:3px solid #e8c84a;color:#fff;font-family:'Galmuri9','DotGothic16',monospace;font-size:14px;padding:13px;cursor:pointer;box-shadow:3px 3px 0 #000;letter-spacing:2px;">⚔️ 모험을 시작하라!</button>
         </div>
       </div>
     </div>
@@ -86,7 +88,7 @@
   ═══════════════════════════════════════════ -->
   <div id="map-screen" class="screen">
     <div class="map-header">
-      <div class="map-title">🗺️ 종자왕국 지도</div>
+      <div class="map-title">MAP</div>
       <div class="map-progress" id="map-progress-text">정화된 구역: 0 / 6</div>
     </div>
     <div class="map-area">
@@ -99,9 +101,9 @@
       <div id="nodes-container"></div>
     </div>
     <div class="map-footer">
-      <button class="footer-home-btn" onclick="confirmGoTitle()">🏠 홈</button>
+      <button class="footer-home-btn" onclick="confirmGoTitle()">Home</button>
       <div class="footer-logo">© National Seed RPG</div>
-      <button class="footer-setting-btn" onclick="showSetting()">⚙️ 설정</button>
+      <button class="footer-setting-btn" onclick="showSetting()">BGM</button>
     </div>
   </div>
 
@@ -138,14 +140,20 @@
   ═══════════════════════════════════════════ -->
   <div id="setting-popup">
     <div class="setting-box">
-      <div class="setting-title">⚙️ 설정</div>
+      <div class="setting-title">BGM</div>
       <div class="setting-row">
-        <div class="setting-label">🎵 배경음악 (BGM)</div>
-        <button class="setting-toggle on" id="bgm-toggle" onclick="toggleBGM()">ON</button>
+        <div class="setting-label">🎵 배경음악</div>
+        <div class="setting-slider-wrap">
+          <input class="setting-slider" id="bgm-slider" type="range" min="0" max="100" value="70" oninput="Sound.setBGMVol(this.value)">
+          <span class="setting-slider-val" id="bgm-val">70</span>
+        </div>
       </div>
       <div class="setting-row">
-        <div class="setting-label">🔊 효과음 (SE)</div>
-        <button class="setting-toggle on" id="se-toggle" onclick="toggleSE()">ON</button>
+        <div class="setting-label">🔊 효과음</div>
+        <div class="setting-slider-wrap">
+          <input class="setting-slider" id="se-slider" type="range" min="0" max="100" value="70" oninput="Sound.setSEVol(this.value)">
+          <span class="setting-slider-val" id="se-val">70</span>
+        </div>
       </div>
       <button class="setting-close" onclick="closeSetting()">✅ 확인</button>
     </div>

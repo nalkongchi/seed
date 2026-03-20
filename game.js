@@ -75,7 +75,7 @@ const Sound = (() => {
   function isBGMOn() { return settings.bgm; }
   function isSEOn()  { return settings.se; }
 
-  return { playBGM, stopBGM, playSE, toggleBGM, toggleSE, isBGMOn, isSEOn, loadSettings };
+  return { playBGM, stopBGM, playSE, toggleBGM, toggleSE, isBGMOn, isSEOn, loadSettings, setBGMVol, setSEVol };
 })();
 
 // ==============================
