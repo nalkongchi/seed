@@ -827,7 +827,7 @@ function startBattle() {
 function showStage1TutorialAndStart(onComplete) {
   showAlertModal(
     '전투 안내',
-    '상대의 주장을 확인한 뒤 판정하세요.<br>기준에 맞으면 <strong>합격</strong>, 문제가 있으면 <strong>불합격</strong>입니다.<br>정답이면 적 체력이 줄고, 오답이면 내 체력이 줄어듭니다.',
+    '상대의 주장을 확인한 뒤 판정하세요.<br>기준에 맞으면 <span class="tut-good">합격</span>, 문제가 있으면 <span class="tut-bad">불합격</span>입니다.<br><span class="tut-good">정답</span>이면 적 체력이 줄고,<br><span class="tut-bad">오답</span>이면 내 체력이 줄어듭니다.',
     () => {
       G.stage1TutorialShown = true;
       saveGame();
@@ -955,8 +955,13 @@ function answer(choice) {
     stamp.classList.remove('show');
     requestAnimationFrame(() => stamp.classList.add('show'));
     const sprite = document.getElementById('battle-card-img');
-    sprite.classList.add('shake');
-    setTimeout(() => sprite.classList.remove('shake'), 500);
+    const arena = document.getElementById('battle-arena-area');
+    sprite.classList.add('shake', 'hit-slam');
+    if (arena) arena.classList.add('enemy-hit-flash');
+    setTimeout(() => {
+      sprite.classList.remove('shake', 'hit-slam');
+      if (arena) arena.classList.remove('enemy-hit-flash');
+    }, 460);
     Sound.playSE('se_correct');
     Sound.playSE('se_stamp');
   } else {
@@ -964,8 +969,16 @@ function answer(choice) {
     WrongNote.add(q);
     G.hp = Math.max(0, G.hp - 1);
     const screen = document.getElementById('battle-screen');
+    const playerSprite = document.getElementById('arena-player-sprite');
+    const arena = document.getElementById('battle-arena-area');
     screen.classList.add('shake');
-    setTimeout(() => screen.classList.remove('shake'), 400);
+    if (playerSprite) playerSprite.classList.add('hit-slam');
+    if (arena) arena.classList.add('player-hit-flash');
+    setTimeout(() => {
+      screen.classList.remove('shake');
+      if (playerSprite) playerSprite.classList.remove('hit-slam');
+      if (arena) arena.classList.remove('player-hit-flash');
+    }, 420);
     Sound.playSE('se_wrong');
   }
 

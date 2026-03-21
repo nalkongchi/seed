@@ -1511,3 +1511,214 @@ body {
 .footer-setting-btn:hover .footer-btn-icon {
   color: rgba(214,196,144,0.72);
 }
+
+/* ═══════════════════════════════════════════
+   FINAL PATCH v7
+═══════════════════════════════════════════ */
+#opening-screen .op-frame-box {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 6px 18px 18px !important; /* top only reduced */
+  background: rgba(0,0,0,0.94) !important;
+}
+#op-bottom-wrap {
+  padding: 0 !important;
+}
+.op-frame-text {
+  min-height: calc(1.68em * 3) !important;
+  line-height: 1.68 !important;
+}
+.op-player-name {
+  color: #e8c84a !important;
+}
+.op-keyword-fail {
+  color: #d85858 !important;
+  font-weight: 800;
+  text-shadow: none !important;
+  background: none !important;
+}
+.op-keyword-inspector {
+  color: #d6b554 !important;
+  font-weight: 800;
+  text-shadow: none !important;
+  background: none !important;
+  filter: none !important;
+}
+#op-end-btn {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 32 !important;
+  margin: 0 !important;
+}
+
+/* BGM popup tone to match title-return popup */
+.setting-box {
+  background: #080808 !important;
+  border: 2px solid #6a5a2a !important;
+  box-shadow: 5px 5px 0 #000 !important;
+}
+.setting-title {
+  color: #f1e2bf !important;
+  border-bottom: 0 !important;
+}
+.setting-label,
+.setting-slider-val {
+  color: #cfc4a6 !important;
+}
+.setting-close {
+  background: #8c251d !important;
+  border: 2px solid #d85145 !important;
+  color: #fff !important;
+}
+
+/* Node popup spacing/copy rhythm */
+.popup-enemy-name {
+  margin-bottom: 18px !important;
+}
+.popup-desc {
+  margin-bottom: 12px !important;
+  line-height: 1.75 !important;
+  word-break: keep-all !important;
+}
+.popup-hp-info {
+  margin-bottom: 14px !important;
+}
+
+/* Tutorial popup colors */
+.tut-good {
+  color: #59cc67;
+  font-weight: 800;
+}
+.tut-bad {
+  color: #e76464;
+  font-weight: 800;
+}
+
+/* Battle layout: Pokémon-like opposition */
+#battle-screen .battle-header.dual-hp-header {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  grid-template-areas: "enemy exit player" !important;
+  align-items: start !important;
+  gap: 10px !important;
+}
+.enemy-side {
+  grid-area: enemy !important;
+  align-items: flex-start !important;
+}
+.player-side {
+  grid-area: player !important;
+  align-items: flex-end !important;
+}
+.battle-exit-btn {
+  grid-area: exit !important;
+}
+.enemy-side .hp-row {
+  justify-content: flex-start !important;
+}
+.player-side .hp-row {
+  justify-content: flex-end !important;
+}
+.hp-bar-bg {
+  width: 128px !important;
+  min-width: 128px !important;
+  max-width: 128px !important;
+}
+.enemy-side .battle-side-name {
+  width: 100% !important;
+  text-align: left !important;
+}
+.player-side .battle-side-name {
+  width: 100% !important;
+  text-align: right !important;
+}
+
+.arena-enemy-sprite {
+  top: 46px !important;
+  right: 14px !important;
+}
+.arena-enemy-dialogue {
+  left: 16px !important;
+  right: auto !important;
+  top: 72px !important;
+  width: min(252px, calc(100% - 170px)) !important;
+  align-items: flex-start !important;
+}
+.battle-name-badge {
+  align-self: flex-start !important;
+  text-align: left !important;
+}
+.speech-bubble {
+  min-height: 102px !important;
+}
+
+.arena-player-sprite {
+  left: 16px !important;
+  bottom: 118px !important;
+}
+.arena-player-dialogue {
+  left: auto !important;
+  right: 16px !important;
+  bottom: 48px !important;
+  width: min(188px, calc(100% - 168px)) !important;
+  align-items: flex-end !important;
+}
+.battle-player-badge {
+  align-self: flex-end !important;
+  text-align: right !important;
+  font-weight: 900 !important;
+}
+.player-speech-bubble {
+  min-height: 72px !important;
+}
+#battle-player-line {
+  text-align: left !important;
+}
+
+/* Bigger judge buttons */
+.battle-buttons {
+  gap: 12px !important;
+  padding: 10px 12px 14px !important;
+}
+.judge-btn,
+.btn-pass,
+.btn-fail {
+  min-height: 118px !important;
+  font-size: 27px !important;
+  letter-spacing: 0.26em !important;
+}
+
+/* Stronger hit feedback */
+@keyframes hit-slam {
+  0% { transform: translate(0,0) scale(1); filter: drop-shadow(0 8px 10px rgba(0,0,0,0.55)); }
+  20% { transform: translate(-3px,1px) scale(1.05); }
+  45% { transform: translate(4px,-2px) scale(0.98); }
+  70% { transform: translate(-2px,2px) scale(1.03); }
+  100% { transform: translate(0,0) scale(1); filter: drop-shadow(0 8px 10px rgba(0,0,0,0.55)); }
+}
+.hit-slam {
+  animation: hit-slam 0.42s ease-out;
+}
+#battle-arena-area.enemy-hit-flash::after,
+#battle-arena-area.player-hit-flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+#battle-arena-area.enemy-hit-flash::after {
+  background: radial-gradient(circle at 78% 26%, rgba(255,245,210,0.34) 0%, rgba(255,110,110,0.14) 18%, rgba(255,255,255,0) 42%);
+  animation: arena-hit-flash 0.42s ease-out;
+}
+#battle-arena-area.player-hit-flash::after {
+  background: radial-gradient(circle at 22% 70%, rgba(255,190,190,0.32) 0%, rgba(255,72,72,0.16) 20%, rgba(255,255,255,0) 44%);
+  animation: arena-hit-flash 0.42s ease-out;
+}
+@keyframes arena-hit-flash {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
