@@ -2642,3 +2642,95 @@ body {
   99%  { -webkit-mask-size: 2px 2px; mask-size: 2px 2px; }
   100% { -webkit-mask-image:none; mask-image:none; opacity: 1; }
 }
+
+
+/* ═══════════════════════════════════════════
+   VER13 PLUS PATCH
+═══════════════════════════════════════════ */
+/* Title menu spacing equalized */
+.tmenu-sub1 { top: 38.5% !important; }
+.tmenu-sub2 { top: 47.0% !important; }
+.tmenu-sub3 { top: 55.5% !important; }
+.tmenu-sub4 { top: 64.0% !important; }
+#wrongnote-btn .tmenu-label { letter-spacing: 1.6px !important; }
+
+/* Study screen cleanup */
+.study-question-stage { display:none !important; }
+.study-header {
+  position: relative !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  min-height: 56px !important;
+}
+.study-header-main {
+  position: absolute !important;
+  left: 50% !important;
+  top: 13px !important;
+  transform: translateX(-50%) !important;
+  width: max-content !important;
+  text-align: center !important;
+  pointer-events: none !important;
+}
+.study-stats-inline {
+  position: relative !important;
+  z-index: 1 !important;
+  max-width: 124px !important;
+  text-align: right !important;
+  font-size: 10px !important;
+  line-height: 1.45 !important;
+}
+.study-exit-btn { position: relative !important; z-index: 1 !important; }
+
+/* Ending rank: prettier contrast + particles */
+#ending-rank-modal.ending-rank-standalone {
+  background: rgba(0,0,0,0.97) !important;
+}
+#ending-rank-modal.ending-rank-standalone .ending-rank-box {
+  background: rgba(16,13,10,0.94) !important;
+  border: 1px solid rgba(200,160,48,0.24) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.84), 0 0 0 1px rgba(33,25,15,0.9) inset !important;
+}
+#ending-rank-modal.ending-rank-standalone .ending-rank-stats {
+  background: rgba(7,5,4,0.88) !important;
+  border: 1px solid rgba(200,160,48,0.18) !important;
+}
+#ending-rank-modal.ending-rank-standalone .ending-btn {
+  background: #0f0d0b !important;
+  color: #e7d39b !important;
+  border-color: rgba(200,160,48,0.46) !important;
+}
+.ending-rank-bg-particle {
+  background: rgba(232,200,74,0.9) !important;
+  box-shadow: 0 0 12px rgba(232,200,74,0.45) !important;
+}
+
+/* Mobile battle HUD safety */
+@media (max-width: 480px) {
+  #battle-screen .battle-header.dual-hp-header {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    column-gap: 8px !important;
+  }
+  .hp-bar-bg {
+    width: 118px !important;
+    min-width: 118px !important;
+    max-width: 118px !important;
+  }
+  .hp-text {
+    min-width: 30px !important;
+    font-size: 9px !important;
+  }
+  .player-side .hp-row { justify-content: flex-start !important; }
+  .enemy-side .hp-row { justify-content: flex-end !important; }
+  .map-node.boss { margin-top: -16px !important; }
+  .map-node.boss .boss-tag { margin-top: 3px !important; }
+}
+@media (max-width: 390px) {
+  .hp-bar-bg {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+  }
+  .hp-text { min-width: 28px !important; }
+}

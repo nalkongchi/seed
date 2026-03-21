@@ -10,6 +10,8 @@ const SOUND_FILES = {
   bgm_title:   'sounds/bgm_title.mp3',
   bgm_battle:  'sounds/bgm_battle.mp3',
   bgm_boss:    'sounds/bgm_boss.mp3',
+  bgm_ending:  'sounds/bgm_ending.mp3',
+  bgm_study:   'sounds/bgm_study.mp3',
   se_correct:  'sounds/se_correct.wav',
   se_wrong:    'sounds/se_wrong.wav',
   se_stamp:    'sounds/se_stamp.wav',
@@ -349,7 +351,8 @@ function showStudyQuestion() {
   }
   STUDY.current = STUDY.pool[STUDY.idx++];
   document.getElementById('study-counter').textContent = '문제 ' + STUDY.turn;
-  document.getElementById('study-question-stage').textContent = `${STUDY.current._nodeLabel} · ${STUDY.current._enemy}`;
+  const stageEl = document.getElementById('study-question-stage');
+  if (stageEl) stageEl.textContent = '';
   document.getElementById('study-question').innerHTML = highlightNumbers(formatQuestion(cleanStudyText(STUDY.current.text)));
   document.getElementById('study-result-box').classList.remove('show', 'correct', 'wrong');
   document.getElementById('study-pass-btn').disabled = false;
@@ -368,7 +371,7 @@ function startStudyMode() {
   STUDY.current = null;
   showScreen('study-screen');
   showStudyQuestion();
-  Sound.playBGM('bgm_title');
+  Sound.playBGM('bgm_study');
 }
 
 function exitStudyMode() {
@@ -550,16 +553,16 @@ function initTitle() {
     restartBtn.style.display = 'flex';
     applyTop(primaryBtn, '21%');
     applyTop(restartBtn, '38.5%');
-    applyTop(studyBtn, '47.2%');
-    applyTop(wrongBtn, '55.9%');
-    applyTop(settingBtn, '64.6%');
+    applyTop(studyBtn, '47.0%');
+    applyTop(wrongBtn, '55.5%');
+    applyTop(settingBtn, '64.0%');
   } else {
     primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
     restartBtn.style.display = 'none';
     applyTop(primaryBtn, '24%');
-    applyTop(studyBtn, '44.5%');
-    applyTop(wrongBtn, '53.5%');
-    applyTop(settingBtn, '62.5%');
+    applyTop(studyBtn, '44.0%');
+    applyTop(wrongBtn, '52.5%');
+    applyTop(settingBtn, '61.0%');
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
@@ -1436,7 +1439,7 @@ function buildEndingRankParticles() {
   const wrap = document.getElementById('ending-rank-particles');
   if (wrap) {
     wrap.innerHTML = '';
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 18; i++) {
       const p = document.createElement('div');
       p.className = 'ending-rank-particle';
       p.style.left = (8 + Math.random() * 84) + '%';
@@ -1456,7 +1459,7 @@ function buildEndingRankParticles() {
     modal.prepend(bg);
   }
   bg.innerHTML = '';
-  for (let i = 0; i < 56; i++) {
+  for (let i = 0; i < 92; i++) {
     const p = document.createElement('div');
     p.className = 'ending-rank-bg-particle';
     p.style.left = (Math.random() * 100) + '%';
@@ -1576,7 +1579,7 @@ function showEnding() {
   setEndingBackground(0);
   showScreen('ending-screen');
   endingShowLine();
-  Sound.playBGM('bgm_title');
+  Sound.playBGM('bgm_ending');
   const wrap = document.getElementById('ending-scene-wrap');
   if (wrap) wrap.onclick = endingNextStep;
 }
