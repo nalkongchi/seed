@@ -892,7 +892,7 @@ function startBattle() {
     encImg.style.animation = 'enemy-img-appear 0.6s ease-out 0.1s forwards';
   }
   document.getElementById('enc-name').textContent = node.enemy;
-  encBtn.style.display = 'none';
+  encBtn.classList.remove('show');
 
   const revealBattleButton = () => {
     if (isBoss && node.bossLine) {
@@ -900,11 +900,11 @@ function startBattle() {
       introBox.style.display = 'block';
       setTimeout(() => {
         introBox.style.display = 'none';
-        encBtn.style.display = 'inline-block';
+        encBtn.classList.add('show');
       }, 3000);
     } else {
       introBox.style.display = 'none';
-      encBtn.style.display = 'inline-block';
+      encBtn.classList.add('show');
     }
   };
 

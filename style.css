@@ -1852,3 +1852,116 @@ body {
   text-align: center !important;
   margin-top: 5px !important;
 }
+
+
+/* ═══════════════════════════════════════════
+   FINAL PATCH v10
+═══════════════════════════════════════════ */
+
+/* 1) Name screen: keep current design, but place the back link inside the box */
+#name-screen .name-box {
+  padding-bottom: 22px !important;
+}
+#name-screen .name-confirm-btn {
+  margin-bottom: 10px !important;
+}
+#name-screen .name-back-btn {
+  width: auto !important;
+  display: inline-block !important;
+  margin: 2px auto 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.16) !important;
+  font-size: 11px !important;
+  letter-spacing: 1px !important;
+  line-height: 1.2 !important;
+}
+#name-screen .name-back-btn:hover {
+  color: rgba(255,255,255,0.34) !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+/* 2) Opening HOME/SKIP buttons: visually symmetrical using fixed spans */
+#op-home, #op-skip {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+#op-home .op-nav-arrow,
+#op-skip .op-nav-arrow {
+  display: inline-block;
+  width: 10px;
+  text-align: center;
+  flex: 0 0 10px;
+}
+#op-home .op-nav-text,
+#op-skip .op-nav-text {
+  display: inline-block;
+  min-width: 30px;
+  text-align: center;
+  flex: 0 0 30px;
+}
+
+/* 3) Map boss label: keep it fixed and visually aligned relative to the boss node */
+.map-node.boss {
+  padding-top: 0 !important;
+}
+.map-node.boss .boss-tag {
+  position: absolute !important;
+  top: 104px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin-top: 0 !important;
+  z-index: 3 !important;
+  white-space: nowrap;
+}
+
+/* 4) Center battle names under the HP bar itself, not the bar + HP text combo */
+.player-side .battle-side-name,
+.enemy-side .battle-side-name {
+  width: 146px !important;
+  margin-top: 5px !important;
+  text-align: center !important;
+}
+.player-side .battle-side-name {
+  align-self: flex-start !important;
+}
+.enemy-side .battle-side-name {
+  align-self: flex-end !important;
+}
+
+/* 5) Encounter title/subtitle should not jump when the battle button appears */
+#encounter-screen {
+  justify-content: flex-end !important;
+}
+.encounter-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  min-height: 176px !important;
+  gap: 0 !important;
+}
+.encounter-text {
+  margin-bottom: 10px !important;
+}
+.encounter-name {
+  margin-bottom: 18px !important;
+}
+.encounter-btn {
+  display: inline-block !important;
+  min-width: 134px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+.encounter-btn.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
