@@ -7,14 +7,17 @@
 // 나중에 파일 첨부 시 경로 변경하세요.
 // ==============================
 const SOUND_FILES = {
-  bgm_title:  'sounds/bgm_title.mp3',
-  bgm_battle: 'sounds/bgm_battle.mp3',
-  bgm_boss:   'sounds/bgm_boss.mp3',
-  se_correct: 'sounds/se_correct.mp3',
-  se_wrong:   'sounds/se_wrong.mp3',
-  se_stamp:   'sounds/se_stamp.mp3',
-  se_clear:   'sounds/se_clear.mp3',
-  se_gameover:'sounds/se_gameover.mp3',
+  bgm_title:   'sounds/bgm_title.mp3',
+  bgm_battle:  'sounds/bgm_battle.mp3',
+  bgm_boss:    'sounds/bgm_boss.mp3',
+  se_correct:  'sounds/se_correct.wav',
+  se_wrong:    'sounds/se_wrong.wav',
+  se_stamp:    'sounds/se_stamp.wav',
+  se_clear:    'sounds/se_clear.wav',
+  se_gameover: 'sounds/se_gameover.wav',
+  se_click:    'sounds/se_click.wav',
+  se_node:     'sounds/se_node.wav',
+  se_hit:      'sounds/se_hit.wav',
 };
 
 // ==============================
@@ -166,7 +169,9 @@ let G = {
   wrong: 0,
   totalCorrect: 0,
   totalWrong: 0,
-  stage1TutorialShown: false
+  stage1TutorialShown: false,
+  pendingDamage: false,
+  damageTimer: null
 };
 G.nodeStatus[0] = 'available';
 
@@ -207,12 +212,19 @@ function resetWholeGame() {
     wrong: 0,
     totalCorrect: 0,
     totalWrong: 0,
-    stage1TutorialShown: false
+    stage1TutorialShown: false,
+    pendingDamage: false,
+    damageTimer: null
   };
   G.nodeStatus[0] = 'available';
 }
 
 function resetNodeBattle(idx) {
+  if (G.damageTimer) {
+    clearTimeout(G.damageTimer);
+    G.damageTimer = null;
+  }
+  G.pendingDamage = false;
   G.currentNode = idx;
   G.currentQ = 0;
   G.questionTurn = 1;
@@ -283,6 +295,54 @@ function closeUIModal() {
   uiModalCancel = null;
 }
 
+function playUIClick() {
+  Sound.playSE('se_click');
+}
+
+function disableResultNext(disabled) {
+  const nextBtn = document.querySelector('.result-next-btn');
+  if (nextBtn) nextBtn.disabled = !!disabled;
+}
+
+function applyBattleDamageEffects(correct) {
+  const stamp = document.getElementById('stamp-effect');
+  const arena = document.getElementById('battle-arena-area');
+  if (correct) {
+    G.enemyHp = Math.max(0, G.enemyHp - 1);
+    if (stamp) {
+      stamp.textContent = '정답';
+      stamp.classList.remove('show');
+      requestAnimationFrame(() => stamp.classList.add('show'));
+    }
+    const sprite = document.getElementById('battle-card-img');
+    if (sprite) sprite.classList.add('shake', 'hit-slam');
+    if (arena) arena.classList.add('enemy-hit-flash');
+    Sound.playSE('se_hit');
+    Sound.playSE('se_stamp');
+    setTimeout(() => {
+      if (sprite) sprite.classList.remove('shake', 'hit-slam');
+      if (arena) arena.classList.remove('enemy-hit-flash');
+    }, 460);
+  } else {
+    G.hp = Math.max(0, G.hp - 1);
+    const screen = document.getElementById('battle-screen');
+    const playerSprite = document.getElementById('arena-player-sprite');
+    if (screen) screen.classList.add('shake');
+    if (playerSprite) playerSprite.classList.add('hit-slam');
+    if (arena) arena.classList.add('player-hit-flash');
+    Sound.playSE('se_hit');
+    setTimeout(() => {
+      if (screen) screen.classList.remove('shake');
+      if (playerSprite) playerSprite.classList.remove('hit-slam');
+      if (arena) arena.classList.remove('player-hit-flash');
+    }, 420);
+  }
+  renderHp();
+  G.pendingDamage = false;
+  G.damageTimer = null;
+  disableResultNext(false);
+}
+
 function showAlertModal(title, desc, onOk) {
   const modal = document.getElementById('ui-modal');
   const titleEl = document.getElementById('ui-modal-title');
@@ -297,11 +357,15 @@ function showAlertModal(title, desc, onOk) {
   uiModalOk = onOk || null;
   uiModalCancel = null;
   okBtn.onclick = () => {
+    playUIClick();
     const cb = uiModalOk;
     closeUIModal();
     if (cb) cb();
   };
-  cancelBtn.onclick = closeUIModal;
+  cancelBtn.onclick = () => {
+    playUIClick();
+    closeUIModal();
+  };
   modal.classList.add('show');
 }
 
@@ -320,11 +384,13 @@ function showConfirmModal(title, desc, onOk, onCancel) {
   uiModalOk = onOk || null;
   uiModalCancel = onCancel || null;
   okBtn.onclick = () => {
+    playUIClick();
     const cb = uiModalOk;
     closeUIModal();
     if (cb) cb();
   };
   cancelBtn.onclick = () => {
+    playUIClick();
     const cb = uiModalCancel;
     closeUIModal();
     if (cb) cb();
@@ -353,16 +419,19 @@ function initTitle() {
 }
 
 function goToNameInput() {
+  playUIClick();
   document.getElementById('player-name-input').value = '';
   showScreen('name-screen');
 }
 
 function goBackToTitle() {
+  playUIClick();
   showScreen('title-screen');
   initTitle();
 }
 
 function confirmName() {
+  playUIClick();
   const val = document.getElementById('player-name-input').value.trim();
   if (val.length > 7) {
     showAlertModal('이름 입력', '이름은 7글자 이하로 입력해주세요');
@@ -375,6 +444,7 @@ function confirmName() {
 }
 
 function continueGame() {
+  playUIClick();
   const saved = loadSave();
   if (!saved) return;
   G.playerName = saved.playerName || '용사';
@@ -396,6 +466,7 @@ function goTitle() {
 }
 
 function confirmGoTitle() {
+  playUIClick();
   showConfirmModal(
     '타이틀로 돌아가기',
     '현재 진행 상황은 저장되어 있습니다.<br>타이틀로 돌아가시겠습니까?',
@@ -532,6 +603,7 @@ function opFinish() {
 }
 
 function opSkipAll() {
+  playUIClick();
   clearTimeout(opTypingTimer);
   opSceneIdx = OP_SCENES.length - 1;
   opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
@@ -580,6 +652,7 @@ function startOpening() {
 }
 
 function startGame() {
+  playUIClick();
   showScreen('map-screen');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     renderMap();
@@ -675,6 +748,7 @@ function renderPaths() {
 // ==============================
 function openNodePopup(idx) {
   if (G.nodeStatus[idx] === 'locked') return;
+  Sound.playSE('se_node');
   G.currentNode = idx;
   const node = NODES[idx];
   document.getElementById('popup-enemy').textContent = node.enemy;
@@ -684,6 +758,7 @@ function openNodePopup(idx) {
 }
 
 function closeNodePopup() {
+  playUIClick();
   document.getElementById('node-popup').classList.remove('show');
 }
 
@@ -695,6 +770,7 @@ function closeNodePopup() {
 // 오답노트
 // ==============================
 function showWrongnote() {
+  playUIClick();
   const list = WrongNote.load();
   const body = document.getElementById('wrongnote-body');
   body.innerHTML = '';
@@ -716,10 +792,12 @@ function showWrongnote() {
 }
 
 function closeWrongnote() {
+  playUIClick();
   document.getElementById('wrongnote-popup').classList.remove('show');
 }
 
 function clearWrongnote() {
+  playUIClick();
   showConfirmModal(
     '오답노트 초기화',
     '오답노트를 모두 지우시겠습니까?',
@@ -734,11 +812,13 @@ function clearWrongnote() {
 // 설정
 // ==============================
 function showSetting() {
+  playUIClick();
   updateSettingUI();
   document.getElementById('setting-popup').classList.add('show');
 }
 
 function closeSetting() {
+  playUIClick();
   document.getElementById('setting-popup').classList.remove('show');
 }
 
@@ -773,7 +853,8 @@ function toggleSE() {
 // BATTLE START
 // ==============================
 function startBattle() {
-  closeNodePopup();
+  playUIClick();
+  document.getElementById('node-popup').classList.remove('show');
   const node = NODES[G.currentNode];
   const isBoss = node.type === 'boss';
   const encImg = document.getElementById('enc-enemy-img');
@@ -879,6 +960,7 @@ function doStartActualBattle() {
 }
 
 function startActualBattle() {
+  playUIClick();
   if (G.currentNode === 0 && !G.stage1TutorialShown) {
     showStage1TutorialAndStart(doStartActualBattle);
     return;
@@ -936,57 +1018,40 @@ function loadQuestion() {
 // ANSWER
 // ==============================
 function answer(choice) {
+  playUIClick();
+  if (G.pendingDamage) return;
+  disableResultNext(true);
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = true);
   const q = G.shuffledQ[G.currentQ];
   const correct = choice === q.answer;
 
   const box = document.getElementById('result-box');
-  const stamp = document.getElementById('stamp-effect');
   box.className = 'result-box ' + (correct ? 'correct' : 'wrong');
   document.getElementById('result-badge').textContent = correct ? 'PASS' : 'FAIL';
   document.getElementById('result-title').textContent = correct ? '정답!' : '오답!';
   document.getElementById('result-answer').textContent = '판정: ' + (q.answer === 'pass' ? '합격' : '불합격');
   document.getElementById('result-reason').textContent = q.reason;
+  document.getElementById('result-popup').classList.add('show');
 
+  G.pendingDamage = true;
   if (correct) {
     G.correct++; G.totalCorrect++;
-    G.enemyHp = Math.max(0, G.enemyHp - 1);
-    stamp.textContent = '정답';
-    stamp.classList.remove('show');
-    requestAnimationFrame(() => stamp.classList.add('show'));
-    const sprite = document.getElementById('battle-card-img');
-    const arena = document.getElementById('battle-arena-area');
-    sprite.classList.add('shake', 'hit-slam');
-    if (arena) arena.classList.add('enemy-hit-flash');
-    setTimeout(() => {
-      sprite.classList.remove('shake', 'hit-slam');
-      if (arena) arena.classList.remove('enemy-hit-flash');
-    }, 460);
     Sound.playSE('se_correct');
-    Sound.playSE('se_stamp');
   } else {
     G.wrong++; G.totalWrong++;
     WrongNote.add(q);
-    G.hp = Math.max(0, G.hp - 1);
-    const screen = document.getElementById('battle-screen');
-    const playerSprite = document.getElementById('arena-player-sprite');
-    const arena = document.getElementById('battle-arena-area');
-    screen.classList.add('shake');
-    if (playerSprite) playerSprite.classList.add('hit-slam');
-    if (arena) arena.classList.add('player-hit-flash');
-    setTimeout(() => {
-      screen.classList.remove('shake');
-      if (playerSprite) playerSprite.classList.remove('hit-slam');
-      if (arena) arena.classList.remove('player-hit-flash');
-    }, 420);
     Sound.playSE('se_wrong');
   }
 
-  renderHp();
-  document.getElementById('result-popup').classList.add('show');
+  if (G.damageTimer) clearTimeout(G.damageTimer);
+  G.damageTimer = setTimeout(() => {
+    applyBattleDamageEffects(correct);
+  }, 180);
 }
 
 function nextQuestion() {
+  if (G.pendingDamage) return;
+  playUIClick();
   document.getElementById('result-popup').classList.remove('show');
   if (G.hp <= 0) {
     Sound.playSE('se_gameover');
@@ -1011,11 +1076,12 @@ function nextQuestion() {
 // ==============================
 // EXIT
 // ==============================
-function showExitConfirm() { document.getElementById('exit-confirm').classList.add('show'); }
-function hideExitConfirm() { document.getElementById('exit-confirm').classList.remove('show'); }
+function showExitConfirm() { playUIClick(); document.getElementById('exit-confirm').classList.add('show'); }
+function hideExitConfirm() { playUIClick(); document.getElementById('exit-confirm').classList.remove('show'); }
 
 function exitToMap() {
-  hideExitConfirm();
+  playUIClick();
+  document.getElementById('exit-confirm').classList.remove('show');
   document.getElementById('result-popup').classList.remove('show');
   Sound.stopBGM();
   Sound.playBGM('bgm_title');
@@ -1029,6 +1095,8 @@ function exitToMap() {
 // STAGE CLEAR
 // ==============================
 function stageClear() {
+  if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
+  G.pendingDamage = false;
   G.nodeStatus[G.currentNode] = 'cleared';
   if (G.currentNode + 1 < NODES.length) G.nodeStatus[G.currentNode + 1] = 'available';
   saveGame();
@@ -1046,6 +1114,7 @@ function stageClear() {
 }
 
 function afterClear() {
+  playUIClick();
   if (G.currentNode === NODES.length - 1) showEnding();
   else {
     showScreen('map-screen');
@@ -1060,6 +1129,7 @@ function afterClear() {
 // GAME OVER
 // ==============================
 function retryNode() {
+  playUIClick();
   showScreen('map-screen');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     renderMap();
@@ -1071,6 +1141,9 @@ function retryNode() {
 // ENDING
 // ==============================
 function showEnding() {
+  if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
+  G.pendingDamage = false;
+
   const total = G.totalCorrect + G.totalWrong;
   const rate = total > 0 ? G.totalCorrect / total : 0;
   let rank = '📜 B랭크 성장형 검사원';
