@@ -2439,3 +2439,72 @@ body {
   width:min(224px,100%) !important;
   margin:0 auto 14px !important;
 }
+
+
+/* ═══════════════════════════════════════════
+   VER13 STABILIZATION PATCH
+═══════════════════════════════════════════ */
+/* Title menu: unify all secondary labels and tighten spacing for 5-row layout */
+.tmenu-sub1 .tmenu-label,
+.tmenu-sub2 .tmenu-label,
+.tmenu-sub3 .tmenu-label,
+.tmenu-sub4 .tmenu-label {
+  font-family:'Noto Serif KR',serif !important;
+  font-size:14px !important;
+  font-weight:600 !important;
+  color:#b09060 !important;
+  letter-spacing:2px !important;
+  text-shadow:0 1px 2px rgba(0,0,0,0.6) !important;
+}
+.tmenu-main .tmenu-label {
+  font-family:'Noto Serif KR',serif !important;
+}
+.tmenu-item {
+  left:11% !important;
+  right:11% !important;
+}
+.tmenu-sub4 { top:68.5% !important; }
+.title-menu-wrap {
+  bottom: 22px !important;
+}
+.title-footer-new {
+  bottom: 14px !important;
+}
+
+/* Name screen: stable active/inactive behavior and internal link layout */
+#name-screen {
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+#name-screen.active {
+  display: flex !important;
+}
+#name-screen .name-box {
+  width: min(330px, calc(100% - 28px)) !important;
+  padding: 34px 28px 20px !important;
+}
+#name-screen .name-confirm-btn {
+  margin-bottom: 12px !important;
+}
+#name-screen .name-back-btn,
+#name-screen .name-screen-back {
+  width: auto !important;
+  display: inline-block !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.16) !important;
+  font-family:'Galmuri9','Noto Sans KR',sans-serif !important;
+  font-size: 11px !important;
+  letter-spacing: 1px !important;
+  line-height: 1.2 !important;
+}
+#name-screen .name-back-btn:hover,
+#name-screen .name-screen-back:hover {
+  color: rgba(255,255,255,0.34) !important;
+  background: transparent !important;
+  border: 0 !important;
+}

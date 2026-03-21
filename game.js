@@ -543,21 +543,23 @@ function initTitle() {
   const wrongBtn = document.getElementById('wrongnote-btn');
   const settingBtn = document.getElementById('setting-btn');
 
+  const applyTop = (el, value) => { if (el) el.style.top = value; };
+
   if (saved && saved.playerName) {
     primaryBtn.querySelector('.tmenu-label').textContent = '이어하기';
     restartBtn.style.display = 'flex';
-    primaryBtn.style.top = '21%';
-    restartBtn.style.top = '41%';
-    studyBtn.style.top = '53%';
-    wrongBtn.style.top = '63%';
-    settingBtn.style.top = '73%';
+    applyTop(primaryBtn, '21%');
+    applyTop(restartBtn, '38.5%');
+    applyTop(studyBtn, '49.5%');
+    applyTop(wrongBtn, '59.5%');
+    applyTop(settingBtn, '68.5%');
   } else {
     primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
     restartBtn.style.display = 'none';
-    primaryBtn.style.top = '25%';
-    studyBtn.style.top = '46%';
-    wrongBtn.style.top = '58%';
-    settingBtn.style.top = '70%';
+    applyTop(primaryBtn, '24%');
+    applyTop(studyBtn, '45%');
+    applyTop(wrongBtn, '56%');
+    applyTop(settingBtn, '66%');
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
