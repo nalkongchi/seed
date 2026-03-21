@@ -75,7 +75,7 @@
  <div id="op-bottom-wrap" style="padding:0;pointer-events:auto;">
  <div id="op-box" class="op-frame-box">
  <div id="op-text" class="op-frame-text"></div>
- <div style="margin-top:10px;display:flex;align-items:center;">
+ <div id="op-arrow-row" style="margin-top:10px;display:flex;align-items:center;height:16px;">
  <div id="op-arrow" style="font-size:14px;color:rgba(255,255,255,0.7);animation:op-blink 1s ease-in-out infinite;">▶</div>
  </div>
  </div>
@@ -103,9 +103,9 @@
  <div id="nodes-container"></div>
  </div>
  <div class="map-footer">
- <button class="footer-home-btn" onclick="confirmGoTitle()">Home</button>
+ <button class="footer-home-btn" onclick="confirmGoTitle()"><span class="footer-btn-icon">⌂</span><span class="footer-btn-label">HOME</span></button>
  <div class="footer-logo">© National Seed RPG</div>
- <button class="footer-setting-btn" onclick="showSetting()">BGM</button>
+ <button class="footer-setting-btn" onclick="showSetting()"><span class="footer-btn-icon">♪</span><span class="footer-btn-label">BGM</span></button>
  </div>
  </div>
 
@@ -204,7 +204,10 @@
  <div class="arena-bg" id="arena-bg"></div>
  <div class="arena-enemy-sprite" id="battle-card-img"></div>
  <div class="arena-player-sprite" id="arena-player-sprite"></div>
+ <div class="arena-player-dialogue" id="arena-player-dialogue">
  <div class="battle-player-badge" id="battle-player-badge">용사</div>
+ <div class="player-speech-bubble" id="player-speech-bubble"><div class="bubble-text" id="battle-player-line"></div></div>
+ </div>
  <div class="q-counter" id="q-counter">문제 1</div>
  <div class="boss-label" id="boss-label" style="display:none">BOSS</div>
  <div class="arena-enemy-dialogue" id="arena-enemy-dialogue">

@@ -16,7 +16,7 @@ var NODES = [
     enemyEmoji: '',
     enemyImage: 'images/enemy_01.png',
     enemySprite: 'images/enemy_01_dot.png',
-    desc: '씨앗지기가 자신의 수확물을 통과시켜 달라고 요구하고 있다...',
+    desc: '씨앗지기가 수확물을 통과시켜 달라고 요구한다.',
     maxHp: 3,
     type: 'normal',
     x: 195, y: 638,
@@ -301,6 +301,8 @@ var NODES = [
     type: 'boss',
     x: 195, y: 90,
     bossLine: '진정한 검사원인지... 마지막으로 시험하겠다. 모든 기준을 꿰뚫어 보아라!',
+    bossOpenIcon: 'images/node_06_open.png',
+    bossClearIcon: 'images/node_06_clear.png',
     questions: [
       {
         text: '"벼 원원종: 발아율 90%, 피해립 2.0%, 이물 0.2%, 수분 13%. 판정하라!"',

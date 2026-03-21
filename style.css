@@ -37,6 +37,9 @@
 @keyframes op-bolt { 0%{opacity:0} 10%{opacity:0.28} 25%{opacity:0.04} 45%{opacity:0.22} 100%{opacity:0} }
 .op-player-name { color:#e8c84a; }
 
+.op-keyword-fail { color: #c44b4b; font-weight: 800; }
+.op-keyword-inspector { color: var(--gold-light); font-weight: 800; }
+
 :root {
   --green: #4a7c3f;
   --green-light: #7ab648;
@@ -1326,4 +1329,185 @@ body {
 .name-back-btn:hover {
   border-color: #777 !important;
   color: #ddd !important;
+}
+
+
+/* ═══════════════════════════════════════════
+   FINAL PATCH v5
+═══════════════════════════════════════════ */
+#opening-screen .op-frame-box {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 6px 18px 20px !important;
+  background: rgba(0, 0, 0, 0.94) !important;
+}
+#op-bottom-wrap {
+  padding: 0 !important;
+}
+#op-arrow-row {
+  height: 16px;
+}
+#op-end-btn {
+  top: 50% !important;
+}
+.setting-box {
+  background:#0b0b0b !important;
+  border:2px solid #5f4f2b !important;
+  color:#bfb7a2 !important;
+}
+.setting-title {
+  color:#f0d1af !important;
+  border-bottom-width:0 !important;
+}
+.setting-label,
+.setting-slider-val {
+  color:#bfb7a2 !important;
+}
+.setting-slider {
+  background:#2d2d2d !important;
+}
+.setting-close {
+  background:#7a1f17 !important;
+  border:2px solid #d85044 !important;
+  color:#fff !important;
+}
+.popup-enemy-name {
+  margin-bottom: 12px !important;
+}
+.popup-desc {
+  line-height: 1.7 !important;
+  margin-bottom: 8px !important;
+  word-break: keep-all;
+}
+.popup-hp-info {
+  margin-bottom: 15px !important;
+}
+.custom-boss-icon {
+  background-image: none;
+}
+.battle-side-name {
+  font-size: 12px;
+  color: #efe5c6;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+.enemy-side .battle-side-name {
+  text-align: right;
+}
+.player-side .battle-side-name {
+  text-align: left;
+}
+.q-counter {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  min-width: 252px;
+  text-align: center;
+}
+.arena-enemy-dialogue {
+  right: 10px !important;
+  width: min(296px, calc(100% - 28px)) !important;
+  align-items: flex-end;
+}
+.battle-name-badge {
+  align-self: flex-end;
+  text-align: right !important;
+}
+.speech-bubble {
+  min-height: 108px;
+  width: 100%;
+}
+.arena-player-dialogue {
+  position: absolute;
+  left: 16px;
+  bottom: 42px;
+  width: min(170px, calc(100% - 215px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  z-index: 3;
+}
+.battle-player-badge {
+  position: static !important;
+  left: auto !important;
+  bottom: auto !important;
+  font-weight: 900 !important;
+  text-align: left !important;
+  align-self: flex-start;
+}
+.player-speech-bubble {
+  width: 100%;
+  min-height: 70px;
+  background: rgba(0,0,0,0.92);
+  border: 2px solid rgba(138,122,80,0.95);
+  padding: 12px 14px 10px;
+  box-shadow: 4px 4px 0 #000;
+}
+#battle-player-line {
+  color:#f2e6bf;
+  line-height: 1.6;
+}
+.arena-player-sprite {
+  bottom: 116px !important;
+}
+.battle-buttons {
+  gap: 10px !important;
+  padding: 10px 12px 14px;
+  background:#000;
+}
+.judge-btn,
+.btn-pass,
+.btn-fail {
+  min-height: 110px !important;
+  border: 2px solid !important;
+  box-shadow: 4px 4px 0 #000 !important;
+  font-size: 26px !important;
+  letter-spacing: 0.28em !important;
+  padding: 12px 10px !important;
+}
+.btn-pass {
+  background: rgba(23,78,32,0.95) !important;
+  border-color: #4caf50 !important;
+  color: #f4f0e5 !important;
+}
+.btn-pass:not(:disabled):hover {
+  background: rgba(30,96,40,0.98) !important;
+}
+.btn-fail {
+  background: rgba(77,8,8,0.95) !important;
+  border-color: #ef5350 !important;
+  color: #f4f0e5 !important;
+}
+.btn-fail:not(:disabled):hover {
+  background: rgba(92,12,12,0.98) !important;
+}
+.footer-home-btn,
+.footer-setting-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-width:72px;
+  justify-content:center;
+  background:rgba(8,8,8,0.92) !important;
+  border:1px solid rgba(111,95,55,0.55) !important;
+  color:#e6dbc0 !important;
+  padding:7px 12px !important;
+}
+.footer-btn-icon {
+  color: rgba(214,196,144,0.48);
+  font-size: 11px;
+  line-height: 1;
+}
+.footer-btn-label {
+  letter-spacing: 0.04em;
+}
+.footer-home-btn:hover,
+.footer-setting-btn:hover {
+  border-color: rgba(214,181,84,0.72) !important;
+  color:#f2e8c8 !important;
+}
+.footer-home-btn:hover .footer-btn-icon,
+.footer-setting-btn:hover .footer-btn-icon {
+  color: rgba(214,196,144,0.72);
 }

@@ -165,7 +165,8 @@ let G = {
   correct: 0,
   wrong: 0,
   totalCorrect: 0,
-  totalWrong: 0
+  totalWrong: 0,
+  stage1TutorialShown: false
 };
 G.nodeStatus[0] = 'available';
 
@@ -178,7 +179,8 @@ function saveGame() {
       playerName: G.playerName,
       nodeStatus: G.nodeStatus,
       totalCorrect: G.totalCorrect,
-      totalWrong: G.totalWrong
+      totalWrong: G.totalWrong,
+      stage1TutorialShown: G.stage1TutorialShown
     }));
   } catch(e) {}
 }
@@ -204,7 +206,8 @@ function resetWholeGame() {
     correct: 0,
     wrong: 0,
     totalCorrect: 0,
-    totalWrong: 0
+    totalWrong: 0,
+    stage1TutorialShown: false
   };
   G.nodeStatus[0] = 'available';
 }
@@ -249,6 +252,18 @@ function highlightNumbers(text) {
 
 function formatQuestion(text) {
   return text.replace(/([.?!~…])\s+/g, '$1\n');
+}
+
+
+const PLAYER_FLAVOR_LINES = ['........', '.....네?', '확인해 볼게요.', '뭐라구요?'];
+
+function getRandomPlayerFlavor() {
+  return PLAYER_FLAVOR_LINES[Math.floor(Math.random() * PLAYER_FLAVOR_LINES.length)];
+}
+
+function updatePlayerFlavorLine() {
+  const lineEl = document.getElementById('battle-player-line');
+  if (lineEl) lineEl.textContent = getRandomPlayerFlavor();
 }
 
 function escapeHtml(s) {
@@ -366,6 +381,7 @@ function continueGame() {
   G.nodeStatus = saved.nodeStatus;
   G.totalCorrect = saved.totalCorrect || 0;
   G.totalWrong = saved.totalWrong || 0;
+  G.stage1TutorialShown = !!saved.stage1TutorialShown;
   showScreen('map-screen');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     renderMap();
@@ -397,20 +413,23 @@ function confirmGoTitle() {
 const OP_SCENES = [
   { image: 'images/scene1.png', lightning: false, lines: [
     '오래전, 종자 왕국의 질서가 무너졌다.',
-    '기준 미달 종자와 혼입 종자,\n그리고 거짓된 판정이 왕국을 뒤덮었다.'
+    '태초에 생명의 계약을 맺었던 비옥한 땅은\n이제 저주받은 듯 숨을 죽였다.',
+    '어리석은 자들은 풍요를 탐하며\n검증되지 않은 씨앗을 심었고,\n대지는 그 거짓된 생명을 받아들이지 않았다.'
   ]},
   { image: 'images/scene2.png', lightning: false, lines: [
-    '무너진 종자 왕국,\n이 세상의 균형을 바로잡는 자,',
-    '그들이 바로...\n종자검사원이다.'
+    '그러나 거짓을 가려낼 눈이\n완전히 사라진 것은 아니었다.',
+    '모든 질서가 무너진 지금,\n거짓 속의 진실을 꿰뚫어 볼 수 있는 자들...',
+    '뒤엉킨 생명의 근원을 바로잡고,\n타락한 종자에 ‘불합격’의 심판을 내릴 존재.',
+    '사람들은 그들을\n‘종자검사원’이라 불렀다.'
   ]},
   { image: 'images/scene3.png', lightning: false, lines: [
-    '아직은 지망생에 불과한 당신은\n정식 종자검사원이 되기 위해',
-    '들판, 평원, 연금실, 성소, 협곡,\n그리고 심판의 성을 향해 떠난다.'
+    '아직은 수습생에 불과한 당신은\n정식 종자검사원이 되기 위해\n긴 여정에 오른다.',
+    '죽어가는 들판, 낯선 성소,\n그리고 모든 악의 근원이 기다리는\n심판의 성을 향해.'
   ]},
   { image: 'images/scene4.png', lightning: true, lines: [
-    '하지만 왕국 너머,\n그 긴긴 길의 끝에는',
-    '우량종자 공급을 방해하는\n최종 보스가 기다리고 있다고 전해진다.',
-    '당신의 올바른 판단만이 세상을 구할 수 있다.',
+    '왕국의 끝, 안개 너머에서는\n거짓의 세상을 지키려는 최종 보스가\n당신의 의지를 시험하려 기다리고 있다.',
+    '당신의 날카로운 감각과\n올바른 판단만이\n이 세상을 구할 수 있다.',
+    '두려워하지 마라.',
     '지금부터... __NAME__의 모험이 시작된다.'
   ]}
 ];
@@ -420,8 +439,16 @@ let opTyping = false, opFullLine = '', opTypingTimer = null;
 let opSceneEls = [];
 
 function opRenderLine(line) {
-  const safe = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return safe.replace(/__NAME__/g, '<span class="op-player-name">' + G.playerName + '</span>');
+  const safe = line
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+
+  return safe
+    .replace(/__NAME__/g, '<span class="op-player-name">' + G.playerName + '</span>')
+    .replace(/불합격/g, '<span class="op-keyword-fail">불합격</span>')
+    .replace(/종자검사원/g, '<span class="op-keyword-inspector">종자검사원</span>');
 }
 
 function opTypeLine(line) {
@@ -497,7 +524,7 @@ function opNextStep() {
 }
 
 function opFinish() {
-  document.getElementById('op-arrow').style.display = 'none';
+  document.getElementById('op-arrow').style.visibility = 'hidden';
   document.getElementById('op-end-btn').style.display = 'block';
   document.getElementById('op-tap').disabled = true;
   document.getElementById('op-tap').style.pointerEvents = 'none';
@@ -533,7 +560,7 @@ function startOpening() {
 
   // 상태 초기화
   opSceneIdx = 0; opLineIdx = 0; opTyping = false;
-  document.getElementById('op-arrow').style.display = 'block';
+  document.getElementById('op-arrow').style.visibility = 'visible';
   document.getElementById('op-end-btn').style.display = 'none';
   document.getElementById('op-skip').style.display = 'block';
   document.getElementById('op-tap').disabled = false;
@@ -590,12 +617,25 @@ function renderNodes() {
     div.style.top  = Math.round(node.y * scaleY) + 'px';
     div.id = 'node-' + i;
 
-    // 스프라이트 아이콘
     const icon = document.createElement('div');
     icon.className = 'node-icon' + (isBoss ? ' boss-wide-icon' : '');
     div.appendChild(icon);
 
-    // 보스 태그 (아이콘 아래)
+    if (isBoss) {
+      const customIcon = status === 'available' ? node.bossOpenIcon : status === 'cleared' ? node.bossClearIcon : '';
+      if (customIcon) {
+        const preload = new Image();
+        preload.onload = () => {
+          icon.classList.add('custom-boss-icon');
+          icon.style.backgroundImage = 'url(' + customIcon + ')';
+          icon.style.backgroundPosition = 'center';
+          icon.style.backgroundSize = 'contain';
+          icon.style.backgroundRepeat = 'no-repeat';
+        };
+        preload.src = customIcon;
+      }
+    }
+
     if (isBoss) {
       const bossTag = document.createElement('div');
       bossTag.className = 'boss-tag';
@@ -609,6 +649,7 @@ function renderNodes() {
 }
 
 function renderPaths() {
+
   const svg = document.getElementById('path-svg');
   svg.innerHTML = '';
   const mapArea = svg.parentElement;
@@ -636,10 +677,9 @@ function openNodePopup(idx) {
   if (G.nodeStatus[idx] === 'locked') return;
   G.currentNode = idx;
   const node = NODES[idx];
-  const typeLabel = node.type === 'boss' ? '보스전' : idx === 0 ? '초심자 구역' : '일반 구역';
   document.getElementById('popup-enemy').textContent = node.enemy;
   document.getElementById('popup-desc').textContent = node.desc;
-  document.getElementById('popup-hp').textContent = '내 체력 3 · 적 체력 ' + node.maxHp + ' · ' + typeLabel + ' · 문제 제한 없음';
+  document.getElementById('popup-hp').textContent = '내 체력 3 · 적 체력 ' + node.maxHp;
   document.getElementById('node-popup').classList.add('show');
 }
 
@@ -736,40 +776,67 @@ function startBattle() {
   closeNodePopup();
   const node = NODES[G.currentNode];
   const isBoss = node.type === 'boss';
-
   const encImg = document.getElementById('enc-enemy-img');
-  if (encImg) encImg.style.backgroundImage = 'url(' + node.enemyImage + ')';
-  document.getElementById('enc-name').textContent = node.enemy;
-
-  // 보스 등장 대사
+  const encBtn = document.getElementById('enc-battle-btn');
   const introBox = document.getElementById('boss-intro-box');
-  if (isBoss && node.bossLine) {
-    document.getElementById('boss-intro-text').textContent = node.bossLine;
-    introBox.style.display = 'block';
-    document.getElementById('enc-battle-btn').style.display = 'none';
-    setTimeout(() => {
+
+  if (encImg) {
+    encImg.style.animation = 'none';
+    encImg.offsetWidth;
+    encImg.style.backgroundImage = 'url(' + node.enemyImage + ')';
+    encImg.style.animation = 'enemy-img-appear 0.6s ease-out 0.1s forwards';
+  }
+  document.getElementById('enc-name').textContent = node.enemy;
+  encBtn.style.display = 'none';
+
+  const revealBattleButton = () => {
+    if (isBoss && node.bossLine) {
+      document.getElementById('boss-intro-text').textContent = node.bossLine;
+      introBox.style.display = 'block';
+      setTimeout(() => {
+        introBox.style.display = 'none';
+        encBtn.style.display = 'inline-block';
+      }, 3000);
+    } else {
       introBox.style.display = 'none';
-      document.getElementById('enc-battle-btn').style.display = 'inline-block';
-    }, 3000);
+      encBtn.style.display = 'inline-block';
+    }
+  };
+
+  if (encImg) {
+    const onAppearDone = () => {
+      encImg.removeEventListener('animationend', onAppearDone);
+      revealBattleButton();
+    };
+    encImg.addEventListener('animationend', onAppearDone);
   } else {
-    introBox.style.display = 'none';
-    document.getElementById('enc-battle-btn').style.display = 'inline-block';
+    revealBattleButton();
   }
 
   showScreen('encounter-screen');
 
-  // 화면 흔들림
   const ec = document.getElementById('encounter-screen');
   ec.style.animation = 'none';
   requestAnimationFrame(() => {
     ec.style.animation = 'screen-shake 0.4s ease-out';
   });
 
-  // BGM
   Sound.playBGM(isBoss ? 'bgm_boss' : 'bgm_battle');
 }
 
-function startActualBattle() {
+function showStage1TutorialAndStart(onComplete) {
+  showAlertModal(
+    '전투 안내',
+    '상대의 주장을 확인한 뒤 판정하세요.<br>기준에 맞으면 <strong>합격</strong>, 문제가 있으면 <strong>불합격</strong>입니다.<br>정답이면 적 체력이 줄고, 오답이면 내 체력이 줄어듭니다.',
+    () => {
+      G.stage1TutorialShown = true;
+      saveGame();
+      if (onComplete) onComplete();
+    }
+  );
+}
+
+function doStartActualBattle() {
   resetNodeBattle(G.currentNode);
   const node = NODES[G.currentNode];
   const isBoss = node.type === 'boss';
@@ -805,9 +872,18 @@ function startActualBattle() {
     document.getElementById('battle-name-badge').style.borderColor = '#8a7a50';
   }
 
+  updatePlayerFlavorLine();
   renderHp();
   loadQuestion();
   showScreen('battle-screen');
+}
+
+function startActualBattle() {
+  if (G.currentNode === 0 && !G.stage1TutorialShown) {
+    showStage1TutorialAndStart(doStartActualBattle);
+    return;
+  }
+  doStartActualBattle();
 }
 
 // ==============================
@@ -852,6 +928,7 @@ function loadQuestion() {
   const formatted = formatQuestion(q.text);
   document.getElementById('battle-question').innerHTML = highlightNumbers(formatted);
   document.getElementById('q-counter').textContent = '문제 ' + G.questionTurn;
+  updatePlayerFlavorLine();
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);
 }
 
