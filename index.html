@@ -22,19 +22,23 @@
  <div class="title-menu-board">
  <img class="title-frame-img" src="images/title_frame.png" alt="메뉴판">
  <div class="title-menu-layer">
- <div class="tmenu-item tmenu-main" onclick="goToNameInput()">
+ <div class="tmenu-item tmenu-main" id="primary-btn" onclick="handlePrimaryAction()">
  <span class="tmenu-icon">▶</span>
  <span class="tmenu-label">모험 시작</span>
  </div>
- <div class="tmenu-item tmenu-sub1" id="continue-btn" onclick="continueGame()">
+ <div class="tmenu-item tmenu-sub1" id="restart-btn" onclick="goToNameInput()">
  <span class="tmenu-icon">▶</span>
- <span class="tmenu-label">이어하기</span>
+ <span class="tmenu-label">다시 시작</span>
  </div>
- <div class="tmenu-item tmenu-sub2" onclick="showWrongnote()">
+ <div class="tmenu-item tmenu-sub2" id="study-btn" onclick="startStudyMode()">
+ <span class="tmenu-icon">▶</span>
+ <span class="tmenu-label">집중 공부</span>
+ </div>
+ <div class="tmenu-item tmenu-sub3" id="wrongnote-btn" onclick="showWrongnote()">
  <span class="tmenu-icon">▶</span>
  <span class="tmenu-label">오답노트</span>
  </div>
- <div class="tmenu-item tmenu-sub3" onclick="showSetting()">
+ <div class="tmenu-item tmenu-sub4" id="setting-btn" onclick="showSetting()">
  <span class="tmenu-icon">▶</span>
  <span class="tmenu-label">설정</span>
  </div>
@@ -106,6 +110,41 @@
  <button class="footer-home-btn" onclick="confirmGoTitle()"><span class="footer-btn-icon">⌂</span><span class="footer-btn-label">HOME</span></button>
  <div class="footer-logo">© National Seed RPG</div>
  <button class="footer-setting-btn" onclick="showSetting()"><span class="footer-btn-icon">♪</span><span class="footer-btn-label">BGM</span></button>
+ </div>
+ </div>
+
+ <!-- ═══════════════════════════════════════════
+ 집중 공부 SCREEN
+ ═══════════════════════════════════════════ -->
+ <div id="study-screen" class="screen">
+ <div class="study-header">
+ <button class="study-exit-btn" onclick="exitStudyMode()">그만하기</button>
+ <div class="study-header-main">
+ <div class="study-title">집중 공부</div>
+ <div class="study-sub">전 구역 문제를 무한으로 풉니다</div>
+ </div>
+ <div class="study-stats-inline" id="study-stats-inline">정답 0 · 오답 0</div>
+ </div>
+ <div class="study-body">
+ <div class="study-meta">
+ <div class="study-range" id="study-range">출제 범위 · 전 구역</div>
+ <div class="study-counter" id="study-counter">문제 1</div>
+ </div>
+ <div class="study-prompt">다음 내용을 보고 <span class="tut-good">합격</span> 또는 <span class="tut-bad">불합격</span>을 판정하세요.</div>
+ <div class="study-question-card">
+ <div class="study-question-stage" id="study-question-stage">새싹의 들판 · 수상한 씨앗지기</div>
+ <div class="study-question-text" id="study-question"></div>
+ </div>
+ <div class="study-result-box" id="study-result-box">
+ <div class="study-result-title" id="study-result-title">정답!</div>
+ <div class="study-result-answer" id="study-result-answer"></div>
+ <div class="study-result-reason" id="study-result-reason"></div>
+ <button class="study-next-btn" id="study-next-btn" onclick="nextStudyQuestion()">다음 문제</button>
+ </div>
+ </div>
+ <div class="study-buttons">
+ <button class="judge-btn btn-pass" id="study-pass-btn" onclick="answerStudy('pass')"><span class="judge-label judge-pass-label">합격</span></button>
+ <button class="judge-btn btn-fail" id="study-fail-btn" onclick="answerStudy('fail')"><span class="judge-label judge-fail-label">불합격</span></button>
  </div>
  </div>
 

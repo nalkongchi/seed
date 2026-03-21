@@ -172,7 +172,8 @@ let G = {
   stage1TutorialShown: false,
   pendingDamage: false,
   pendingDamageOutcome: null,
-  damageTimer: null
+  damageTimer: null,
+  mode: 'story'
 };
 G.nodeStatus[0] = 'available';
 
@@ -216,7 +217,8 @@ function resetWholeGame() {
     stage1TutorialShown: false,
     pendingDamage: false,
     pendingDamageOutcome: null,
-    damageTimer: null
+    damageTimer: null,
+    mode: 'story'
   };
   G.nodeStatus[0] = 'available';
 }
@@ -305,6 +307,118 @@ function playUIClick() {
 function disableResultNext(disabled) {
   const nextBtn = document.querySelector('.result-next-btn');
   if (nextBtn) nextBtn.disabled = !!disabled;
+}
+
+
+const STUDY = {
+  active: false,
+  pool: [],
+  idx: 0,
+  turn: 1,
+  correct: 0,
+  wrong: 0,
+  current: null
+};
+
+function buildStudyPool() {
+  const all = [];
+  NODES.forEach((node, nodeIdx) => {
+    node.questions.forEach((q, qIdx) => {
+      all.push({ ...q, _nodeIdx: nodeIdx, _qIdx: qIdx, _nodeLabel: node.label.split('\n').join(' '), _enemy: node.enemy });
+    });
+  });
+  return shuffle(all);
+}
+
+function cleanStudyText(text) {
+  return String(text || '').replace(/^\s*["“”']+/, '').replace(/["“”']+\s*$/, '');
+}
+
+function updateStudyStats() {
+  const total = STUDY.correct + STUDY.wrong;
+  const statText = `정답 ${STUDY.correct} · 오답 ${STUDY.wrong}` + (total ? ` · 정답률 ${Math.round((STUDY.correct/total)*100)}%` : '');
+  const inline = document.getElementById('study-stats-inline');
+  if (inline) inline.textContent = statText;
+}
+
+function showStudyQuestion() {
+  if (!STUDY.pool.length) STUDY.pool = buildStudyPool();
+  if (STUDY.idx >= STUDY.pool.length) {
+    STUDY.pool = buildStudyPool();
+    STUDY.idx = 0;
+  }
+  STUDY.current = STUDY.pool[STUDY.idx++];
+  document.getElementById('study-counter').textContent = '문제 ' + STUDY.turn;
+  document.getElementById('study-question-stage').textContent = `${STUDY.current._nodeLabel} · ${STUDY.current._enemy}`;
+  document.getElementById('study-question').innerHTML = highlightNumbers(formatQuestion(cleanStudyText(STUDY.current.text)));
+  document.getElementById('study-result-box').classList.remove('show', 'correct', 'wrong');
+  document.getElementById('study-pass-btn').disabled = false;
+  document.getElementById('study-fail-btn').disabled = false;
+  updateStudyStats();
+}
+
+function startStudyMode() {
+  playUIClick();
+  STUDY.active = true;
+  STUDY.pool = buildStudyPool();
+  STUDY.idx = 0;
+  STUDY.turn = 1;
+  STUDY.correct = 0;
+  STUDY.wrong = 0;
+  STUDY.current = null;
+  showScreen('study-screen');
+  showStudyQuestion();
+  Sound.playBGM('bgm_title');
+}
+
+function exitStudyMode() {
+  playUIClick();
+  showConfirmModal('집중 공부 종료', '집중 공부를 종료하고 타이틀로 돌아가시겠습니까?', () => {
+    STUDY.active = false;
+    initTitle();
+    showScreen('title-screen');
+  });
+}
+
+function answerStudy(choice) {
+  playUIClick();
+  if (!STUDY.active || !STUDY.current) return;
+  document.getElementById('study-pass-btn').disabled = true;
+  document.getElementById('study-fail-btn').disabled = true;
+  const correct = choice === STUDY.current.answer;
+  const userJudge = choice === 'pass' ? '합격' : '불합격';
+  const correctJudge = STUDY.current.answer === 'pass' ? '합격' : '불합격';
+  if (correct) {
+    STUDY.correct++;
+    Sound.playSE('se_correct');
+  } else {
+    STUDY.wrong++;
+    WrongNote.add(STUDY.current);
+    Sound.playSE('se_wrong');
+  }
+  const box = document.getElementById('study-result-box');
+  box.className = 'study-result-box show ' + (correct ? 'correct' : 'wrong');
+  document.getElementById('study-result-title').textContent = correct ? '정답!' : '오답!';
+  document.getElementById('study-result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
+  let reasonText = (STUDY.current.reason || '').trim();
+  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
+  if (!reasonText) reasonText = suffix;
+  else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
+  document.getElementById('study-result-reason').textContent = reasonText;
+  updateStudyStats();
+}
+
+function nextStudyQuestion() {
+  playUIClick();
+  if (!STUDY.active) return;
+  STUDY.turn++;
+  showStudyQuestion();
+}
+
+function handlePrimaryAction() {
+  const saved = loadSave();
+  if (saved && saved.playerName) continueGame();
+  else goToNameInput();
 }
 
 function applyBattleDamageEffects(correct) {
@@ -423,15 +537,27 @@ function showConfirmModal(title, desc, onOk, onCancel) {
 // ==============================
 function initTitle() {
   const saved = loadSave();
-  const btn = document.getElementById('continue-btn');
+  const primaryBtn = document.getElementById('primary-btn');
+  const restartBtn = document.getElementById('restart-btn');
+  const studyBtn = document.getElementById('study-btn');
+  const wrongBtn = document.getElementById('wrongnote-btn');
+  const settingBtn = document.getElementById('setting-btn');
+
   if (saved && saved.playerName) {
-    btn.style.opacity = '1';
-    btn.style.pointerEvents = 'auto';
-    btn.querySelector('.tmenu-label').textContent = '이어하기 (' + saved.playerName + ')';
+    primaryBtn.querySelector('.tmenu-label').textContent = '이어하기';
+    restartBtn.style.display = 'flex';
+    primaryBtn.style.top = '21%';
+    restartBtn.style.top = '41%';
+    studyBtn.style.top = '53%';
+    wrongBtn.style.top = '63%';
+    settingBtn.style.top = '73%';
   } else {
-    btn.style.opacity = '0.4';
-    btn.style.pointerEvents = 'none';
-    btn.querySelector('.tmenu-label').textContent = '이어하기';
+    primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
+    restartBtn.style.display = 'none';
+    primaryBtn.style.top = '25%';
+    studyBtn.style.top = '46%';
+    wrongBtn.style.top = '58%';
+    settingBtn.style.top = '70%';
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
@@ -439,6 +565,7 @@ function initTitle() {
 
 function goToNameInput() {
   playUIClick();
+  G.mode = 'story';
   document.getElementById('player-name-input').value = '';
   showScreen('name-screen');
 }
@@ -457,6 +584,7 @@ function confirmName() {
     return;
   }
   resetWholeGame();
+  G.mode = 'story';
   G.playerName = val || '용사';
   saveGame();
   startOpening();
@@ -466,6 +594,7 @@ function continueGame() {
   playUIClick();
   const saved = loadSave();
   if (!saved) return;
+  G.mode = 'story';
   G.playerName = saved.playerName || '용사';
   G.nodeStatus = saved.nodeStatus;
   G.totalCorrect = saved.totalCorrect || 0;
