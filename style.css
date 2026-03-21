@@ -1182,3 +1182,148 @@ body {
 .name-input::placeholder {
   letter-spacing: 0;
 }
+
+
+/* ═══════════════════════════════════════════
+   FINAL PATCH v4
+═══════════════════════════════════════════ */
+
+/* 오프닝: 상단 HOME 추가 및 하단 빈 검은 여백 제거 */
+#op-scene-container {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+}
+#opening-screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+#op-ui-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  pointer-events: none !important;
+  z-index: 25 !important;
+}
+#op-bottom-wrap {
+  padding: 0 !important;
+  pointer-events: auto !important;
+}
+#opening-screen .op-frame-box {
+  width: 100% !important;
+  margin: 0 0 54px !important;
+  background: rgba(0, 0, 0, 0.94) !important;
+}
+.op-frame-text {
+  min-height: 64px;
+}
+.op-scene-overlay {
+  top: 72% !important;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.03) 0%,
+    rgba(0,0,0,0.10) 38%,
+    rgba(0,0,0,0.38) 100%
+  ) !important;
+}
+#op-home,
+#op-skip {
+  min-width: 76px;
+  text-align: center;
+}
+#op-home:hover,
+#op-skip:hover {
+  background: rgba(0,0,0,0.62) !important;
+  color: rgba(255,255,255,0.82) !important;
+  border-color: rgba(255,255,255,0.28) !important;
+}
+#op-end-btn {
+  position: absolute !important;
+  left: 50% !important;
+  top: 58% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 32 !important;
+  width: min(250px, calc(100% - 88px)) !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+}
+@media (max-height: 740px) {
+  #op-end-btn {
+    top: 60% !important;
+  }
+}
+
+/* 맵: 잠긴 노드는 완전 무반응, 열린 노드만 확대 */
+.map-node.locked {
+  pointer-events: none !important;
+  transform: translate(-50%, -50%) !important;
+}
+.map-node.locked:hover,
+.map-node.locked:active {
+  transform: translate(-50%, -50%) !important;
+}
+.map-node:not(.locked):hover {
+  transform: translate(-50%, -50%) scale(1.08) !important;
+}
+.map-node:not(.locked):active {
+  transform: translate(-50%, -50%) scale(0.95) !important;
+}
+
+/* 이름 입력 화면: plan-c 레이아웃 복구, 기능/문구/폰트는 유지 */
+#name-screen {
+  padding: 24px !important;
+}
+.name-box {
+  width: min(330px, calc(100% - 24px)) !important;
+  padding: 36px 28px 38px !important;
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.42) !important;
+}
+.name-glow {
+  left: 18% !important;
+  right: 18% !important;
+}
+.name-title {
+  margin-bottom: 6px !important;
+  letter-spacing: 4px !important;
+}
+.name-title-sub {
+  margin-bottom: 22px !important;
+  letter-spacing: 4px !important;
+}
+.name-sub {
+  margin-bottom: 24px !important;
+  line-height: 1.9 !important;
+}
+.name-input {
+  padding: 13px 14px !important;
+  margin-bottom: 16px !important;
+}
+.name-confirm-btn {
+  margin-top: 2px !important;
+  margin-bottom: 10px !important;
+  letter-spacing: 8px !important;
+  transition: all 0.25s ease !important;
+}
+.name-confirm-btn:hover {
+  background: rgba(200,160,48,0.08) !important;
+  border-color: rgba(200,160,48,0.6) !important;
+  color: #e8c84a !important;
+  letter-spacing: 10px !important;
+}
+.name-back-btn {
+  margin-top: 0 !important;
+  padding: 10px 12px !important;
+  background: #1a1a1a !important;
+  border: 2px solid #444 !important;
+  color: #888 !important;
+}
+.name-back-btn:hover {
+  border-color: #777 !important;
+  color: #ddd !important;
+}
