@@ -292,6 +292,8 @@
  <div class="ending-overlay"></div>
  <div class="ending-flash" id="ending-flash"></div>
  <div class="ending-particles" id="ending-particles"></div>
+ <button id="ending-home" class="ending-nav-btn ending-home-btn" onclick="confirmGoTitle()"><span class="op-nav-arrow">◀</span><span class="op-nav-text">HOME</span></button>
+ <button id="ending-skip" class="ending-nav-btn ending-skip-btn" onclick="endingSkipToRank()"><span class="op-nav-text">SKIP</span><span class="op-nav-arrow">▶</span></button>
  
  <button id="ending-rank-trigger" class="ending-final-btn" style="display:none" onclick="showEndingRankPopup()">최종 평가</button>
  
@@ -303,6 +305,7 @@
  
  <div id="ending-rank-modal" class="popup-overlay ending-rank-modal">
  <div class="ending-rank-box popup-panel">
+ <div class="ending-rank-particles" id="ending-rank-particles"></div>
  <div class="ending-rank-title">최종 평가</div>
  <div class="ending-rank-grade" id="ending-rank-grade">A</div>
  <div class="ending-rank-name" id="ending-rank-name">정식 종자검사원</div>

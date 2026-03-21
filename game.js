@@ -312,11 +312,6 @@ function applyBattleDamageEffects(correct) {
   const arena = document.getElementById('battle-arena-area');
   if (correct) {
     G.enemyHp = Math.max(0, G.enemyHp - 1);
-    if (stamp) {
-      stamp.textContent = '정답';
-      stamp.classList.remove('show');
-      requestAnimationFrame(() => stamp.classList.add('show'));
-    }
     const sprite = document.getElementById('battle-card-img');
     if (sprite) sprite.classList.add('shake', 'hit-slam');
     if (arena) arena.classList.add('enemy-hit-flash');
@@ -939,12 +934,16 @@ function startBattle() {
     if (isBoss && node.bossLine) {
       document.getElementById('boss-intro-text').textContent = node.bossLine;
       introBox.style.display = 'block';
-      setTimeout(() => {
+      introBox.style.cursor = 'pointer';
+      encBtn.classList.remove('show');
+      introBox.onclick = () => {
         introBox.style.display = 'none';
+        introBox.onclick = null;
         encBtn.classList.add('show');
-      }, 3000);
+      };
     } else {
       introBox.style.display = 'none';
+      introBox.onclick = null;
       encBtn.classList.add('show');
     }
   };
@@ -1008,14 +1007,19 @@ function doStartActualBattle() {
 
   const bossLabel = document.getElementById('boss-label');
   const bubble = document.getElementById('speech-bubble');
+  const enemyBadge = document.getElementById('battle-name-badge');
   if (isBoss) {
-    bossLabel.style.display = 'block';
+    if (bossLabel) bossLabel.style.display = 'none';
     bubble.classList.add('boss-bubble');
-    document.getElementById('battle-name-badge').style.borderColor = '#ff4444';
+    enemyBadge.style.borderColor = '#ff4444';
+    enemyBadge.classList.add('has-boss');
+    enemyBadge.innerHTML = '<span class="badge-name">' + node.enemy + '</span><span class="boss-inline-tag">BOSS</span>';
   } else {
-    bossLabel.style.display = 'none';
+    if (bossLabel) bossLabel.style.display = 'none';
     bubble.classList.remove('boss-bubble');
-    document.getElementById('battle-name-badge').style.borderColor = '#8a7a50';
+    enemyBadge.style.borderColor = '#8a7a50';
+    enemyBadge.classList.remove('has-boss');
+    enemyBadge.textContent = node.enemy;
   }
 
   updatePlayerFlavorLine();
@@ -1096,7 +1100,7 @@ function answer(choice) {
   box.className = 'result-box ' + (correct ? 'correct' : 'wrong');
   document.getElementById('result-badge').textContent = '채점 결과';
   document.getElementById('result-title').textContent = correct ? '정답!' : '오답!';
-  document.getElementById('result-answer').textContent = '당신의 판정: ' + userJudge;
+  document.getElementById('result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
 
   let reasonText = (q.reason || '').trim();
   const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
@@ -1281,6 +1285,21 @@ function buildEndingParticles() {
   }
 }
 
+function buildEndingRankParticles() {
+  const wrap = document.getElementById('ending-rank-particles');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement('div');
+    p.className = 'ending-rank-particle';
+    p.style.left = (8 + Math.random() * 84) + '%';
+    p.style.top = (4 + Math.random() * 88) + '%';
+    p.style.animationDelay = (Math.random() * 2.5) + 's';
+    p.style.animationDuration = (2.8 + Math.random() * 2.2) + 's';
+    wrap.appendChild(p);
+  }
+}
+
 function buildEndingRankData() {
   const total = G.totalCorrect + G.totalWrong;
   const rate = total > 0 ? Math.round((G.totalCorrect / total) * 100) : 0;
@@ -1308,8 +1327,22 @@ function showEndingRankPopup() {
   document.getElementById('ending-stat-wrong').textContent = `${G.totalWrong}개`;
   document.getElementById('ending-stat-rate').textContent = `${endingRankData.rate}%`;
   document.getElementById('ending-rank-desc').textContent = endingRankData.desc;
+  buildEndingRankParticles();
   if (modal) modal.classList.add('show');
   endingRankPopupShown = true;
+}
+
+function endingSkipToRank() {
+  if (!endingRankData) buildEndingRankData();
+  endingTyping = false;
+  endingAwaitingRank = false;
+  const textEl = document.getElementById('ending-text');
+  if (textEl) textEl.innerHTML = '';
+  const btn = document.getElementById('ending-rank-trigger');
+  const arrow = document.getElementById('ending-arrow');
+  if (btn) btn.style.display = 'none';
+  if (arrow) arrow.style.visibility = 'hidden';
+  showEndingRankPopup();
 }
 
 function endingFinish() {
@@ -1363,6 +1396,8 @@ function showEnding() {
   const rankBtn = document.getElementById('ending-rank-trigger');
   const arrow = document.getElementById('ending-arrow');
   if (rankModal) rankModal.classList.remove('show');
+  const rankParticles = document.getElementById('ending-rank-particles');
+  if (rankParticles) rankParticles.innerHTML = '';
   if (rankBtn) rankBtn.style.display = 'none';
   if (arrow) arrow.style.visibility = 'visible';
   setEndingBackground(0);
