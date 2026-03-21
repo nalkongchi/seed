@@ -1743,10 +1743,13 @@ body {
 /* 4) Name screen layout closer to plan-c */
 #name-screen {
   padding: 26px 24px 34px !important;
-  display: flex !important;
+  display: none !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
+}
+#name-screen.active {
+  display: flex !important;
 }
 #name-screen .name-box {
   width: min(330px, calc(100% - 24px)) !important;
