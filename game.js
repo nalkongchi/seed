@@ -171,6 +171,7 @@ let G = {
   totalWrong: 0,
   stage1TutorialShown: false,
   pendingDamage: false,
+  pendingDamageOutcome: null,
   damageTimer: null
 };
 G.nodeStatus[0] = 'available';
@@ -214,6 +215,7 @@ function resetWholeGame() {
     totalWrong: 0,
     stage1TutorialShown: false,
     pendingDamage: false,
+    pendingDamageOutcome: null,
     damageTimer: null
   };
   G.nodeStatus[0] = 'available';
@@ -225,6 +227,7 @@ function resetNodeBattle(idx) {
     G.damageTimer = null;
   }
   G.pendingDamage = false;
+  G.pendingDamageOutcome = null;
   G.currentNode = idx;
   G.currentQ = 0;
   G.questionTurn = 1;
@@ -338,9 +341,30 @@ function applyBattleDamageEffects(correct) {
     }, 420);
   }
   renderHp();
-  G.pendingDamage = false;
   G.damageTimer = null;
-  disableResultNext(false);
+}
+
+function finalizeAfterDamage() {
+  G.pendingDamage = false;
+  G.pendingDamageOutcome = null;
+  if (G.hp <= 0) {
+    Sound.playSE('se_gameover');
+    Sound.stopBGM();
+    showScreen('gameover-screen');
+    return;
+  }
+  if (G.enemyHp <= 0) {
+    stageClear();
+    return;
+  }
+
+  G.currentQ++;
+  G.questionTurn++;
+  if (G.currentQ >= G.shuffledQ.length) {
+    G.shuffledQ = shuffle([...NODES[G.currentNode].questions]);
+    G.currentQ = 0;
+  }
+  loadQuestion();
 }
 
 function showAlertModal(title, desc, onOk) {
@@ -1020,7 +1044,7 @@ function loadQuestion() {
 function answer(choice) {
   playUIClick();
   if (G.pendingDamage) return;
-  disableResultNext(true);
+  disableResultNext(false);
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = true);
   const q = G.shuffledQ[G.currentQ];
   const correct = choice === q.answer;
@@ -1034,6 +1058,7 @@ function answer(choice) {
   document.getElementById('result-popup').classList.add('show');
 
   G.pendingDamage = true;
+  G.pendingDamageOutcome = correct;
   if (correct) {
     G.correct++; G.totalCorrect++;
     Sound.playSE('se_correct');
@@ -1042,35 +1067,24 @@ function answer(choice) {
     WrongNote.add(q);
     Sound.playSE('se_wrong');
   }
+}
+
+function nextQuestion() {
+  playUIClick();
+  if (!G.pendingDamage || G.pendingDamageOutcome === null) return;
+
+  const correct = G.pendingDamageOutcome;
+  G.pendingDamageOutcome = null;
+  document.getElementById('result-popup').classList.remove('show');
+  disableResultNext(true);
 
   if (G.damageTimer) clearTimeout(G.damageTimer);
   G.damageTimer = setTimeout(() => {
     applyBattleDamageEffects(correct);
-  }, 180);
-}
-
-function nextQuestion() {
-  if (G.pendingDamage) return;
-  playUIClick();
-  document.getElementById('result-popup').classList.remove('show');
-  if (G.hp <= 0) {
-    Sound.playSE('se_gameover');
-    Sound.stopBGM();
-    showScreen('gameover-screen');
-    return;
-  }
-  if (G.enemyHp <= 0) {
-    stageClear();
-    return;
-  }
-
-  G.currentQ++;
-  G.questionTurn++;
-  if (G.currentQ >= G.shuffledQ.length) {
-    G.shuffledQ = shuffle([...NODES[G.currentNode].questions]);
-    G.currentQ = 0;
-  }
-  loadQuestion();
+    G.damageTimer = setTimeout(() => {
+      finalizeAfterDamage();
+    }, 460);
+  }, 30);
 }
 
 // ==============================

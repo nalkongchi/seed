@@ -55,8 +55,8 @@
  <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
  <input class="name-input" id="player-name-input" type="text" placeholder="이름을 입력해주세요">
  <button class="name-confirm-btn" onclick="confirmName()">S T A R T</button>
- <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
  </div>
+ <button class="name-back-btn name-screen-back" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
  </div>
 
  <!-- ═══════════════════════════════════════════
@@ -218,8 +218,8 @@
  </div>
  </div>
  <div class="battle-buttons">
- <button class="judge-btn btn-pass" onclick="answer('pass')">합격</button>
- <button class="judge-btn btn-fail" onclick="answer('fail')">불합격</button>
+ <button class="judge-btn btn-pass" onclick="answer('pass')"><span class="judge-label judge-pass-label">합격</span></button>
+ <button class="judge-btn btn-fail" onclick="answer('fail')"><span class="judge-label judge-fail-label">불합격</span></button>
  </div>
  </div>
 

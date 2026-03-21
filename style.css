@@ -1722,3 +1722,130 @@ body {
   18% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+
+/* ═══════════════════════════════════════════
+   FINAL PATCH v9
+═══════════════════════════════════════════ */
+/* 1) Boss custom icon rendering */
+.map-node.boss .node-icon.custom-boss-icon,
+.map-node.boss .boss-wide-icon.custom-boss-icon {
+  background-size: contain !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* 3) Wrongnote reset modal above wrongnote popup */
+#ui-modal {
+  z-index: 400 !important;
+}
+
+/* 4) Name screen layout closer to plan-c */
+#name-screen {
+  padding: 26px 24px 34px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+#name-screen .name-box {
+  width: min(330px, calc(100% - 24px)) !important;
+  padding: 34px 28px 30px !important;
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.42) !important;
+}
+#name-screen .name-title { margin-bottom: 6px !important; }
+#name-screen .name-title-sub { margin-bottom: 20px !important; }
+#name-screen .name-sub { margin-bottom: 22px !important; line-height: 1.85 !important; }
+#name-screen .name-input { margin-bottom: 18px !important; }
+#name-screen .name-confirm-btn { margin-bottom: 0 !important; }
+#name-screen .name-confirm-btn:hover {
+  letter-spacing: 10px !important;
+}
+#name-screen .name-screen-back {
+  width: min(330px, calc(100% - 24px)) !important;
+  margin-top: 12px !important;
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255,255,255,0.22) !important;
+  font-size: 11px !important;
+  letter-spacing: 2px !important;
+  padding: 8px 0 !important;
+}
+#name-screen .name-screen-back:hover {
+  color: rgba(255,255,255,0.45) !important;
+}
+
+/* 5) Opening dialogue box extend upward by ~10px while text start stays visually same */
+#opening-screen .op-frame-box {
+  padding-top: 16px !important;
+}
+
+/* 6) Judgement buttons centered and consistent */
+.battle-buttons {
+  gap: 12px !important;
+  padding: 10px 8px 18px !important;
+}
+.battle-buttons .judge-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 118px !important;
+  padding: 0 10px !important;
+  border-top: 3px solid currentColor !important;
+  border-left-width: 3px !important;
+  border-right-width: 3px !important;
+  border-bottom-width: 3px !important;
+  box-shadow: 4px 4px 0 #000 !important;
+  text-align: center !important;
+}
+.battle-buttons .judge-label {
+  display: inline-block !important;
+  line-height: 1 !important;
+}
+.battle-buttons .judge-pass-label {
+  letter-spacing: 0.32em !important;
+  padding-left: 0.32em !important;
+}
+.battle-buttons .judge-fail-label {
+  letter-spacing: 0.14em !important;
+  padding-left: 0.14em !important;
+}
+.btn-pass,
+.btn-fail {
+  border-top-width: 3px !important;
+}
+
+/* 7) Header layout: player left, enemy right, names centered under bars */
+#battle-screen .battle-header.dual-hp-header {
+  grid-template-columns: 1fr auto 1fr !important;
+  grid-template-areas: "player exit enemy" !important;
+  align-items: start !important;
+}
+.player-side {
+  grid-area: player !important;
+  justify-self: start !important;
+  align-items: center !important;
+}
+.enemy-side {
+  grid-area: enemy !important;
+  justify-self: end !important;
+  align-items: center !important;
+}
+.player-side .hp-row,
+.enemy-side .hp-row {
+  justify-content: center !important;
+}
+.hp-bar-bg {
+  width: 146px !important;
+  min-width: 146px !important;
+  max-width: 146px !important;
+}
+.battle-side-name,
+.player-side .battle-side-name,
+.enemy-side .battle-side-name {
+  width: 100% !important;
+  text-align: center !important;
+  margin-top: 5px !important;
+}
