@@ -529,9 +529,50 @@ const OP_SCENES = [
   ]}
 ];
 
+const ENDING_SCENES = [
+  {
+    image: 'images/ending_01.png',
+    fallback: 'radial-gradient(circle at 50% 38%, rgba(120,32,20,0.45), rgba(8,4,4,0.98) 72%)',
+    lines: [
+      '거짓의 심판은 마침내 무너졌다.',
+      '붉게 뒤엉킨 기준과 오염된 질서도\n서서히 힘을 잃기 시작했다.'
+    ]
+  },
+  {
+    image: 'images/ending_02.png',
+    fallback: 'linear-gradient(180deg, #172616 0%, #0a160a 100%)',
+    lines: [
+      '죽어가던 들판에는 다시 푸른 숨결이 깃들었다.',
+      '왕국의 대지는 올바른 생명을\n다시 받아들일 준비를 마쳤다.'
+    ]
+  },
+  {
+    image: 'images/ending_03.png',
+    fallback: 'linear-gradient(180deg, #17110a 0%, #050404 100%)',
+    lines: [
+      '당신은 거짓을 가려내고,\n타락한 종자에 올바른 심판을 내렸다.',
+      '왕국은 이제 당신을\n정식 종자검사원으로 인정한다.'
+    ]
+  },
+  {
+    image: 'images/ending_04.png',
+    fallback: 'linear-gradient(180deg, #292010 0%, #0a0906 100%)',
+    lines: [
+      '왕국의 질서는 다시 세워졌고,',
+      '정식 종자검사원 __NAME__.\n그 위대한 판정은, 이제부터가 시작이다.'
+    ]
+  }
+];
+
 let opSceneIdx = 0, opLineIdx = 0;
 let opTyping = false, opFullLine = '', opTypingTimer = null;
 let opSceneEls = [];
+
+let endingSceneIdx = 0, endingLineIdx = 0;
+let endingTyping = false, endingFullLine = '', endingTypingTimer = null;
+let endingAwaitingRank = false;
+let endingRankPopupShown = false;
+let endingRankData = null;
 
 function opRenderLine(line) {
   const safe = line
@@ -573,7 +614,7 @@ function opSetScene(idx) {
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
         bg.style.animation = 'none'; void bg.offsetWidth;
-        bg.style.animation = 'op-slow-pan 12s ease-in-out forwards';
+        bg.style.animation = 'op-breathe-pan 11s ease-in-out forwards';
       }
     } else if (el.classList.contains('active')) {
       el.classList.add('wipe-out');
@@ -589,9 +630,9 @@ function opSetScene(idx) {
         setTimeout(() => flash.classList.remove('active'), duration);
       }, delay);
     };
-    burst(700, 240);
-    burst(1180, 180);
-    burst(1620, 360);
+    burst(640, 280);
+    burst(1100, 220);
+    burst(1560, 420);
   }
 }
 
@@ -733,7 +774,7 @@ function renderNodes() {
       }
     }
 
-    if (isBoss) {
+    if (isBoss && status !== 'locked') {
       const bossTag = document.createElement('div');
       bossTag.className = 'boss-tag';
       bossTag.textContent = 'BOSS';
@@ -1048,13 +1089,20 @@ function answer(choice) {
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = true);
   const q = G.shuffledQ[G.currentQ];
   const correct = choice === q.answer;
+  const userJudge = choice === 'pass' ? '합격' : '불합격';
+  const correctJudge = q.answer === 'pass' ? '합격' : '불합격';
 
   const box = document.getElementById('result-box');
   box.className = 'result-box ' + (correct ? 'correct' : 'wrong');
-  document.getElementById('result-badge').textContent = correct ? 'PASS' : 'FAIL';
+  document.getElementById('result-badge').textContent = '채점 결과';
   document.getElementById('result-title').textContent = correct ? '정답!' : '오답!';
-  document.getElementById('result-answer').textContent = '판정: ' + (q.answer === 'pass' ? '합격' : '불합격');
-  document.getElementById('result-reason').textContent = q.reason;
+  document.getElementById('result-answer').textContent = '당신의 판정: ' + userJudge;
+
+  let reasonText = (q.reason || '').trim();
+  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
+  if (!reasonText) reasonText = suffix;
+  else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
+  document.getElementById('result-reason').textContent = reasonText;
   document.getElementById('result-popup').classList.add('show');
 
   G.pendingDamage = true;
@@ -1123,7 +1171,8 @@ function stageClear() {
   document.getElementById('clear-sub').textContent = isLast ? '왕국의 질서가 되찾아졌다!' : '다음 지역으로 나아가자!';
   document.getElementById('cs-correct').textContent = G.correct + '개';
   document.getElementById('cs-wrong').textContent = G.wrong + '개';
-  document.getElementById('cs-hp').textContent = G.hp + ' / 3';
+  const hpRow = document.getElementById('clear-hp-row');
+  if (hpRow) hpRow.style.display = 'none';
   showScreen('clear-screen');
 }
 
@@ -1154,34 +1203,174 @@ function retryNode() {
 // ==============================
 // ENDING
 // ==============================
+function endingRenderLine(line) {
+  const safe = line
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+  return safe.replace(/__NAME__/g, '<span class="ending-player-name">' + G.playerName + '</span>');
+}
+
+function endingTypeLine(line) {
+  clearTimeout(endingTypingTimer);
+  endingTyping = true;
+  endingFullLine = line;
+  const plain = line.replace(/__NAME__/g, G.playerName);
+  const textEl = document.getElementById('ending-text');
+  if (!textEl) { endingTyping = false; return; }
+  let i = 0;
+  textEl.innerHTML = '';
+  function tick() {
+    const s = plain.slice(0, i).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    textEl.innerHTML = s;
+    i++;
+    if (i <= plain.length) endingTypingTimer = setTimeout(tick, 28);
+    else {
+      textEl.innerHTML = endingRenderLine(line);
+      endingTyping = false;
+    }
+  }
+  tick();
+}
+
+function setEndingBackground(idx) {
+  const layer = document.getElementById('ending-bg-layer');
+  const flash = document.getElementById('ending-flash');
+  if (!layer) return;
+  const scene = ENDING_SCENES[idx];
+  layer.style.background = scene.fallback;
+  layer.style.backgroundSize = 'cover';
+  layer.style.backgroundPosition = 'center center';
+  layer.style.backgroundRepeat = 'no-repeat';
+  const img = new Image();
+  img.onload = () => {
+    layer.style.background = `url("${scene.image}"), ${scene.fallback}`;
+    layer.style.backgroundSize = 'cover, cover';
+    layer.style.backgroundPosition = 'center center, center center';
+    layer.style.backgroundRepeat = 'no-repeat, no-repeat';
+  };
+  img.src = scene.image;
+  if (flash && idx > 0) {
+    flash.classList.remove('show');
+    void flash.offsetWidth;
+    flash.classList.add('show');
+  }
+}
+
+function endingShowLine() {
+  endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]);
+}
+
+function buildEndingParticles() {
+  const wrap = document.getElementById('ending-particles');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'ending-particle';
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.bottom = (-20 - Math.random() * 80) + 'px';
+    p.style.animationDelay = (Math.random() * 4) + 's';
+    p.style.animationDuration = (4 + Math.random() * 5) + 's';
+    if (Math.random() > 0.7) {
+      p.style.width = '2px';
+      p.style.height = '2px';
+    }
+    wrap.appendChild(p);
+  }
+}
+
+function buildEndingRankData() {
+  const total = G.totalCorrect + G.totalWrong;
+  const rate = total > 0 ? Math.round((G.totalCorrect / total) * 100) : 0;
+  let grade = 'B';
+  let title = '성장형 검사원';
+  let desc = '왕국의 질서를 되찾았습니다.';
+  if (rate >= 100) {
+    grade = 'S';
+    title = '완벽한 판정관';
+    desc = '완벽한 판정으로 왕국의 기준을 다시 세웠습니다.';
+  } else if (rate >= 85) {
+    grade = 'A';
+    title = '우수한 검사원';
+    desc = '뛰어난 판단으로 왕국의 질서를 되찾았습니다.';
+  }
+  endingRankData = { total, rate, grade, title, desc };
+}
+
+function showEndingRankPopup() {
+  if (!endingRankData) buildEndingRankData();
+  const modal = document.getElementById('ending-rank-modal');
+  document.getElementById('ending-rank-grade').textContent = endingRankData.grade;
+  document.getElementById('ending-rank-name').textContent = `${G.playerName} · ${endingRankData.title}`;
+  document.getElementById('ending-stat-correct').textContent = `${G.totalCorrect}개`;
+  document.getElementById('ending-stat-wrong').textContent = `${G.totalWrong}개`;
+  document.getElementById('ending-stat-rate').textContent = `${endingRankData.rate}%`;
+  document.getElementById('ending-rank-desc').textContent = endingRankData.desc;
+  if (modal) modal.classList.add('show');
+  endingRankPopupShown = true;
+}
+
+function endingFinish() {
+  endingAwaitingRank = true;
+  const btn = document.getElementById('ending-rank-trigger');
+  const arrow = document.getElementById('ending-arrow');
+  if (btn) btn.style.display = 'block';
+  if (arrow) arrow.style.visibility = 'hidden';
+}
+
+function endingNextStep() {
+  if (endingRankPopupShown) return;
+  if (endingTyping) {
+    clearTimeout(endingTypingTimer);
+    const textEl = document.getElementById('ending-text');
+    if (textEl) textEl.innerHTML = endingRenderLine(endingFullLine);
+    endingTyping = false;
+    return;
+  }
+  if (endingAwaitingRank) {
+    showEndingRankPopup();
+    return;
+  }
+  const scene = ENDING_SCENES[endingSceneIdx];
+  if (endingLineIdx < scene.lines.length - 1) {
+    endingLineIdx++;
+    endingShowLine();
+    return;
+  }
+  if (endingSceneIdx < ENDING_SCENES.length - 1) {
+    endingSceneIdx++;
+    endingLineIdx = 0;
+    setEndingBackground(endingSceneIdx);
+    endingShowLine();
+    return;
+  }
+  endingFinish();
+}
+
 function showEnding() {
   if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
   G.pendingDamage = false;
-
-  const total = G.totalCorrect + G.totalWrong;
-  const rate = total > 0 ? G.totalCorrect / total : 0;
-  let rank = '📜 B랭크 성장형 검사원';
-  if (rate >= 1.0)  rank = '🥇 S랭크 완벽한 판정관';
-  else if (rate >= 0.85) rank = '🥈 A랭크 우수한 검사원';
-  document.getElementById('ending-rank').textContent = rank;
-  document.getElementById('ending-sub').textContent = G.playerName + '의 모험이 끝났다!';
-  document.getElementById('cert-player-name').textContent = G.playerName;
-
-  const p = document.getElementById('ending-particles');
-  p.innerHTML = '';
-  ['🌾','⭐','✨','🎉','🏅'].forEach(emoji => {
-    for (let i = 0; i < 5; i++) {
-      const el = document.createElement('div');
-      el.className = 'particle';
-      el.textContent = emoji;
-      el.style.left = Math.random() * 100 + '%';
-      el.style.animationDelay = Math.random() * 3 + 's';
-      el.style.animationDuration = (3 + Math.random() * 4) + 's';
-      p.appendChild(el);
-    }
-  });
-
+  endingSceneIdx = 0;
+  endingLineIdx = 0;
+  endingTyping = false;
+  endingAwaitingRank = false;
+  endingRankPopupShown = false;
+  buildEndingRankData();
+  buildEndingParticles();
+  const rankModal = document.getElementById('ending-rank-modal');
+  const rankBtn = document.getElementById('ending-rank-trigger');
+  const arrow = document.getElementById('ending-arrow');
+  if (rankModal) rankModal.classList.remove('show');
+  if (rankBtn) rankBtn.style.display = 'none';
+  if (arrow) arrow.style.visibility = 'visible';
+  setEndingBackground(0);
   showScreen('ending-screen');
+  endingShowLine();
+  Sound.playBGM('bgm_title');
+  const wrap = document.getElementById('ending-scene-wrap');
+  if (wrap) wrap.onclick = endingNextStep;
 }
 
 // ==============================

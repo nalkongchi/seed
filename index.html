@@ -262,7 +262,7 @@
  <div class="clear-stats">
  <div class="stat-row"><span>정답</span><span id="cs-correct">5개</span></div>
  <div class="stat-row"><span>오답</span><span id="cs-wrong">0개</span></div>
- <div class="stat-row"><span>남은 체력</span><span id="cs-hp"></span></div>
+ <div class="stat-row" id="clear-hp-row"><span>남은 체력</span><span id="cs-hp"></span></div>
  </div>
  <button class="clear-btn" onclick="afterClear()"> 지도로 돌아가기</button>
  </div>
@@ -287,25 +287,36 @@
  ENDING SCREEN
  ═══════════════════════════════════════════ -->
  <div id="ending-screen" class="screen">
- <div class="particles" id="ending-particles"></div>
- <div class="ending-content">
- <div class="ending-icon"></div>
- <div class="ending-title">축하합니다!<br>정식 종자검사원 임명!</div>
- <div class="ending-sub" id="ending-sub"></div>
- <div class="rank-badge" id="ending-rank"> S랭크 완벽한 판정관</div>
- <div class="certificate">
- <div class="cert-title"> 종자검사원 임명장</div>
- <div class="cert-body">
- 위 용사는 종자왕국의 모든 시련을 통과하여<br>
- <div class="cert-name" id="cert-player-name">용사</div>
- 정식 종자검사원으로 임명함을 증명합니다.
- </div>
- <div class="cert-stamp"></div>
- </div>
- <button class="ending-btn" onclick="goTitle()"> 타이틀로</button>
+ <div class="ending-scene-wrap" id="ending-scene-wrap">
+ <div class="ending-bg-layer" id="ending-bg-layer"></div>
+ <div class="ending-overlay"></div>
+ <div class="ending-flash" id="ending-flash"></div>
+ <div class="ending-particles" id="ending-particles"></div>
+ 
+ <button id="ending-rank-trigger" class="ending-final-btn" style="display:none" onclick="showEndingRankPopup()">최종 평가</button>
+ 
+ <div class="ending-bottom-box">
+ <div class="ending-text" id="ending-text"></div>
+ <div class="ending-arrow" id="ending-arrow">▶</div>
  </div>
  </div>
-
+ 
+ <div id="ending-rank-modal" class="popup-overlay ending-rank-modal">
+ <div class="ending-rank-box popup-panel">
+ <div class="ending-rank-title">최종 평가</div>
+ <div class="ending-rank-grade" id="ending-rank-grade">A</div>
+ <div class="ending-rank-name" id="ending-rank-name">정식 종자검사원</div>
+ <div class="ending-rank-stats clear-stats">
+ <div class="stat-row"><span>정답</span><span id="ending-stat-correct">0개</span></div>
+ <div class="stat-row"><span>오답</span><span id="ending-stat-wrong">0개</span></div>
+ <div class="stat-row"><span>정답률</span><span id="ending-stat-rate">0%</span></div>
+ </div>
+ <div class="ending-rank-desc" id="ending-rank-desc">왕국의 질서를 되찾았습니다.</div>
+ <button class="ending-btn" onclick="goTitle()">타이틀로 돌아가기</button>
+ </div>
+ </div>
+ </div>
+ 
  <!-- ═══════════════════════════════════════════
  INTERNAL UI MODAL
  ═══════════════════════════════════════════ -->
