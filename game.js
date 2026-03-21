@@ -550,16 +550,16 @@ function initTitle() {
     restartBtn.style.display = 'flex';
     applyTop(primaryBtn, '21%');
     applyTop(restartBtn, '38.5%');
-    applyTop(studyBtn, '49.5%');
-    applyTop(wrongBtn, '59.5%');
-    applyTop(settingBtn, '68.5%');
+    applyTop(studyBtn, '47.2%');
+    applyTop(wrongBtn, '55.9%');
+    applyTop(settingBtn, '64.6%');
   } else {
     primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
     restartBtn.style.display = 'none';
     applyTop(primaryBtn, '24%');
-    applyTop(studyBtn, '45%');
-    applyTop(wrongBtn, '56%');
-    applyTop(settingBtn, '66%');
+    applyTop(studyBtn, '44.5%');
+    applyTop(wrongBtn, '53.5%');
+    applyTop(settingBtn, '62.5%');
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
@@ -742,10 +742,24 @@ function opSetScene(idx) {
         bg.style.animation = 'none'; void bg.offsetWidth;
         bg.style.animation = 'op-breathe-pan 11s ease-in-out forwards';
       }
+      setTimeout(() => {
+        el.classList.remove('wipe-in');
+        el.style.webkitMaskImage = 'none';
+        el.style.maskImage = 'none';
+        el.style.webkitMaskSize = 'auto';
+        el.style.maskSize = 'auto';
+      }, 900);
     } else if (el.classList.contains('active')) {
       el.classList.add('wipe-out');
       el.classList.remove('wipe-in');
-      setTimeout(() => el.classList.remove('active'), 980);
+      setTimeout(() => {
+        el.classList.remove('active');
+        el.classList.remove('wipe-out');
+        el.style.webkitMaskImage = 'none';
+        el.style.maskImage = 'none';
+        el.style.webkitMaskSize = 'auto';
+        el.style.maskSize = 'auto';
+      }, 900);
     }
   });
   if (OP_SCENES[idx].lightning) {
@@ -1308,6 +1322,8 @@ function stageClear() {
   document.getElementById('cs-wrong').textContent = G.wrong + '개';
   const hpRow = document.getElementById('clear-hp-row');
   if (hpRow) hpRow.style.display = 'none';
+  const clearBtn = document.getElementById('clear-return-btn');
+  if (clearBtn) clearBtn.textContent = isLast ? '엔딩 보기' : '지도로 돌아가기';
   showScreen('clear-screen');
 }
 
@@ -1418,16 +1434,39 @@ function buildEndingParticles() {
 
 function buildEndingRankParticles() {
   const wrap = document.getElementById('ending-rank-particles');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  for (let i = 0; i < 16; i++) {
+  if (wrap) {
+    wrap.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div');
+      p.className = 'ending-rank-particle';
+      p.style.left = (8 + Math.random() * 84) + '%';
+      p.style.top = (4 + Math.random() * 88) + '%';
+      p.style.animationDelay = (Math.random() * 2.5) + 's';
+      p.style.animationDuration = (2.8 + Math.random() * 2.2) + 's';
+      wrap.appendChild(p);
+    }
+  }
+  const modal = document.getElementById('ending-rank-modal');
+  if (!modal) return;
+  let bg = document.getElementById('ending-rank-bg-particles');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = 'ending-rank-bg-particles';
+    bg.className = 'ending-rank-bg-particles';
+    modal.prepend(bg);
+  }
+  bg.innerHTML = '';
+  for (let i = 0; i < 56; i++) {
     const p = document.createElement('div');
-    p.className = 'ending-rank-particle';
-    p.style.left = (8 + Math.random() * 84) + '%';
-    p.style.top = (4 + Math.random() * 88) + '%';
-    p.style.animationDelay = (Math.random() * 2.5) + 's';
-    p.style.animationDuration = (2.8 + Math.random() * 2.2) + 's';
-    wrap.appendChild(p);
+    p.className = 'ending-rank-bg-particle';
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.top = (Math.random() * 100) + '%';
+    p.style.animationDelay = (Math.random() * 2.8) + 's';
+    p.style.animationDuration = (3.6 + Math.random() * 3.2) + 's';
+    const size = Math.random() > 0.7 ? 4 : (Math.random() > 0.35 ? 3 : 2);
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    bg.appendChild(p);
   }
 }
 
@@ -1459,7 +1498,10 @@ function showEndingRankPopup() {
   document.getElementById('ending-stat-rate').textContent = `${endingRankData.rate}%`;
   document.getElementById('ending-rank-desc').textContent = endingRankData.desc;
   buildEndingRankParticles();
-  if (modal) modal.classList.add('show');
+  if (modal) {
+    modal.classList.add('show');
+    modal.classList.add('ending-rank-standalone');
+  }
   endingRankPopupShown = true;
 }
 
