@@ -1232,15 +1232,15 @@ body {
 }
 .stage-5.locked .node-icon,
 .map-node.boss.locked .node-icon {
-  background-position: -30px -446px !important;
+  background-position: -58px -436px !important;
 }
 .stage-5.available .node-icon,
 .map-node.boss.available .node-icon {
-  background-position: -141px -446px !important;
+  background-position: -164px -436px !important;
 }
 .stage-5.cleared .node-icon,
 .map-node.boss.cleared .node-icon {
-  background-position: -252px -446px !important;
+  background-position: -274px -436px !important;
 }
 .map-node.boss .boss-tag {
   margin-top: -2px;
