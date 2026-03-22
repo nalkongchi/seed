@@ -182,11 +182,38 @@ G.nodeStatus[0] = 'available';
 // ==============================
 // 저장 / 불러오기
 // ==============================
+
+function normalizeNodeStatus(statuses) {
+  const norm = Array.isArray(statuses) ? statuses.slice(0, NODES.length) : [];
+  while (norm.length < NODES.length) norm.push('locked');
+  const progressed = new Set(['available','cleared']);
+  let furthest = -1;
+  for (let i = 0; i < norm.length; i++) {
+    if (progressed.has(norm[i])) furthest = i;
+  }
+  if (furthest < 0) {
+    norm.fill('locked');
+    norm[0] = 'available';
+    return norm;
+  }
+  for (let i = 0; i < furthest; i++) {
+    norm[i] = 'cleared';
+  }
+  if (norm[furthest] !== 'cleared') norm[furthest] = 'available';
+  for (let i = furthest + 1; i < norm.length; i++) {
+    if (norm[i] !== 'cleared') norm[i] = 'locked';
+  }
+  if (furthest === norm.length - 1 && norm[furthest] !== 'cleared') {
+    norm[furthest] = 'available';
+  }
+  return norm;
+}
+
 function saveGame() {
   try {
     localStorage.setItem('seedGame_v3', JSON.stringify({
       playerName: G.playerName,
-      nodeStatus: G.nodeStatus,
+      nodeStatus: normalizeNodeStatus(G.nodeStatus),
       totalCorrect: G.totalCorrect,
       totalWrong: G.totalWrong,
       stage1TutorialShown: G.stage1TutorialShown
@@ -637,7 +664,7 @@ function continueGame() {
   if (!saved) return;
   G.mode = 'story';
   G.playerName = saved.playerName || '용사';
-  G.nodeStatus = saved.nodeStatus;
+  G.nodeStatus = normalizeNodeStatus(saved.nodeStatus);
   G.totalCorrect = saved.totalCorrect || 0;
   G.totalWrong = saved.totalWrong || 0;
   G.stage1TutorialShown = !!saved.stage1TutorialShown;
