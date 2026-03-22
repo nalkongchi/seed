@@ -751,7 +751,7 @@ function opSetScene(idx) {
         el.style.maskImage = 'none';
         el.style.webkitMaskSize = 'auto';
         el.style.maskSize = 'auto';
-      }, 900);
+      }, 620);
     } else if (el.classList.contains('active')) {
       el.classList.add('wipe-out');
       el.classList.remove('wipe-in');
@@ -762,7 +762,7 @@ function opSetScene(idx) {
         el.style.maskImage = 'none';
         el.style.webkitMaskSize = 'auto';
         el.style.maskSize = 'auto';
-      }, 900);
+      }, 620);
     }
   });
   if (OP_SCENES[idx].lightning) {
@@ -1412,6 +1412,34 @@ function setEndingBackground(idx) {
   }
 }
 
+function endingSetScene(idx, immediate = false) {
+  const layer = document.getElementById('ending-bg-layer');
+  if (!layer) { setEndingBackground(idx); return; }
+  if (immediate) {
+    setEndingBackground(idx);
+    layer.classList.remove('wipe-in', 'wipe-out');
+    layer.style.webkitMaskImage = 'none';
+    layer.style.maskImage = 'none';
+    layer.style.webkitMaskSize = 'auto';
+    layer.style.maskSize = 'auto';
+    return;
+  }
+  layer.classList.remove('wipe-in');
+  layer.classList.add('wipe-out');
+  setTimeout(() => {
+    setEndingBackground(idx);
+    layer.classList.remove('wipe-out');
+    layer.classList.add('wipe-in');
+    setTimeout(() => {
+      layer.classList.remove('wipe-in', 'wipe-out');
+      layer.style.webkitMaskImage = 'none';
+      layer.style.maskImage = 'none';
+      layer.style.webkitMaskSize = 'auto';
+      layer.style.maskSize = 'auto';
+    }, 620);
+  }, 240);
+}
+
 function endingShowLine() {
   endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]);
 }
@@ -1551,7 +1579,7 @@ function endingNextStep() {
   if (endingSceneIdx < ENDING_SCENES.length - 1) {
     endingSceneIdx++;
     endingLineIdx = 0;
-    setEndingBackground(endingSceneIdx);
+    endingSetScene(endingSceneIdx);
     endingShowLine();
     return;
   }
@@ -1576,7 +1604,7 @@ function showEnding() {
   if (rankParticles) rankParticles.innerHTML = '';
   if (rankBtn) rankBtn.style.display = 'none';
   if (arrow) arrow.style.visibility = 'visible';
-  setEndingBackground(0);
+  endingSetScene(0, true);
   showScreen('ending-screen');
   endingShowLine();
   Sound.playBGM('bgm_ending');

@@ -2734,3 +2734,37 @@ body {
   }
   .hp-text { min-width: 28px !important; }
 }
+
+
+/* ═══════════════════════════════════════════
+   VER14 PATCH - restore original-style shard wipe cleanly
+═══════════════════════════════════════════ */
+.op-scene-layer.wipe-out,
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-out,
+.ending-bg-layer.wipe-in {
+  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  animation-duration: 0.52s !important;
+  animation-timing-function: steps(8) !important;
+  animation-fill-mode: forwards !important;
+  will-change: opacity, -webkit-mask-size, mask-size;
+}
+.op-scene-layer.wipe-out,
+.ending-bg-layer.wipe-out { animation-name: pixelOutClassic !important; }
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-in  { animation-name: pixelInClassic !important; }
+@keyframes pixelOutClassic {
+  0%   { -webkit-mask-size: 2px 2px; mask-size: 2px 2px; opacity: 1; }
+  100% { -webkit-mask-size: 64px 64px; mask-size: 64px 64px; opacity: 0; -webkit-mask-image:none; mask-image:none; }
+}
+@keyframes pixelInClassic {
+  0%   { -webkit-mask-size: 64px 64px; mask-size: 64px 64px; opacity: 0; }
+  100% { -webkit-mask-size: 2px 2px; mask-size: 2px 2px; opacity: 1; -webkit-mask-image:none; mask-image:none; }
+}
+#op-scene-container .op-scene-layer.active .op-scene-bg {
+  animation: op-slow-pan 11s ease-in-out forwards !important;
+}
+.ending-bg-layer {
+  transition: none !important;
+}
