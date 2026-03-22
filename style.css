@@ -3132,3 +3132,61 @@ body {
     mask-image: none;
   }
 }
+
+
+/* ========================================
+   VER17 TRY - port v3 style scene overlap
+   Keep current UI, swap only scene transition feel
+======================================== */
+.op-scene-layer,
+.ending-bg-layer {
+  opacity: 0;
+  transform: scale(1.02);
+  transition: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+.op-scene-layer.active,
+.ending-bg-layer.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-in {
+  animation: v3SceneFadeIn 980ms ease forwards !important;
+}
+
+.op-scene-layer.wipe-out,
+.ending-bg-layer.wipe-out {
+  animation: v3SceneFadeOut 980ms ease forwards !important;
+}
+
+@keyframes v3SceneFadeIn {
+  0% { opacity: 0; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes v3SceneFadeOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
+#ending-bg-layer,
+#ending-bg-layer-alt {
+  z-index: 0;
+}
+#ending-bg-layer-alt {
+  pointer-events: none;
+}
+.ending-overlay,
+.ending-flash,
+.ending-particles,
+#ending-home,
+#ending-skip,
+#ending-rank-trigger,
+.ending-bottom-box {
+  position: relative;
+  z-index: 1;
+}

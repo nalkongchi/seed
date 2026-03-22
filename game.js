@@ -299,7 +299,7 @@ let endingSceneIdx = 0, endingLineIdx = 0, endingTyping = false, endingFullLine 
 let endingAwaitingRank = false, endingRankPopupShown = false, endingRankData = null;
 const OPENING_WIPE_MS = 980;
 const ENDING_WIPE_MS = 980;
-const ENDING_WIPE_SWAP_DELAY = 420;
+const ENDING_WIPE_SWAP_DELAY = 0;
 
 function escapeHtml(s) {
   return String(s)
@@ -679,38 +679,32 @@ function opSetScene(idx) {
   opSceneEls.forEach((el, i) => {
     const isCurrent = i === idx;
     if (isCurrent) {
-      el.classList.add('active');
+      el.classList.add('active', 'wipe-in');
       el.classList.remove('wipe-out');
-      void el.offsetWidth;
-      el.classList.add('wipe-in');
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
         bg.style.animation = 'none';
         void bg.offsetWidth;
-        bg.style.animation = 'op-slow-pan 11s ease-in-out forwards';
+        bg.style.animation = 'op-slow-pan 12s ease-in-out forwards';
       }
-      setTimeout(() => {
-        el.classList.remove('wipe-in');
-      }, OPENING_WIPE_MS);
     } else if (el.classList.contains('active')) {
-      el.classList.remove('wipe-in');
-      void el.offsetWidth;
       el.classList.add('wipe-out');
-      setTimeout(() => {
-        el.classList.remove('active', 'wipe-out');
-      }, OPENING_WIPE_MS);
+      el.classList.remove('wipe-in');
+      setTimeout(() => el.classList.remove('active', 'wipe-out'), OPENING_WIPE_MS);
     }
   });
   if (OP_SCENES[idx].lightning) {
     const flash = opSceneEls[idx]?.querySelector('.op-flash');
-    if (flash) {
-      [640, 1100, 1560].forEach((delay, n) => {
-        setTimeout(() => {
-          flash.classList.add('active');
-          setTimeout(() => flash.classList.remove('active'), n === 2 ? 420 : 280);
-        }, delay);
-      });
-    }
+    const burst = (delay, duration = 280) => {
+      if (!flash) return;
+      setTimeout(() => {
+        flash.classList.add('active');
+        setTimeout(() => flash.classList.remove('active'), duration);
+      }, delay);
+    };
+    burst(700, 240);
+    burst(1180, 180);
+    burst(1620, 360);
   }
 }
 
@@ -1345,10 +1339,23 @@ function endingTypeLine(line) {
   tick();
 }
 
-function setEndingBackground(idx) {
-  const layer = document.getElementById('ending-bg-layer');
-  const flash = document.getElementById('ending-flash');
+function ensureEndingLayers() {
+  const wrap = document.getElementById('ending-scene-wrap');
+  const base = document.getElementById('ending-bg-layer');
+  if (!wrap || !base) return [];
+  let alt = document.getElementById('ending-bg-layer-alt');
+  if (!alt) {
+    alt = document.createElement('div');
+    alt.id = 'ending-bg-layer-alt';
+    alt.className = 'ending-bg-layer';
+    wrap.insertBefore(alt, base.nextSibling);
+  }
+  return [base, alt];
+}
+
+function setEndingBackground(layer, idx) {
   if (!layer) return;
+  const flash = document.getElementById('ending-flash');
   const scene = ENDING_SCENES[idx];
   layer.style.background = scene.fallback;
   layer.style.backgroundSize = 'cover';
@@ -1370,25 +1377,36 @@ function setEndingBackground(idx) {
 }
 
 function endingSetScene(idx, immediate = false) {
-  const layer = document.getElementById('ending-bg-layer');
-  if (!layer) { setEndingBackground(idx); return; }
+  const layers = ensureEndingLayers();
+  if (!layers.length) return;
+  const activeLayer = layers.find((layer) => layer.classList.contains('active')) || layers[0];
+  const nextLayer = immediate ? activeLayer : (activeLayer === layers[0] ? layers[1] : layers[0]);
+
   if (immediate) {
-    setEndingBackground(idx);
-    layer.classList.remove('wipe-in', 'wipe-out');
+    layers.forEach((layer, i) => {
+      layer.classList.remove('wipe-in', 'wipe-out', 'active');
+      layer.style.opacity = i === 0 ? '1' : '0';
+    });
+    setEndingBackground(layers[0], idx);
+    layers[0].classList.add('active');
     return;
   }
-  layer.classList.remove('wipe-in', 'wipe-out');
-  void layer.offsetWidth;
-  layer.classList.add('wipe-out');
-  setTimeout(() => {
-    setEndingBackground(idx);
-    layer.classList.remove('wipe-out');
-    void layer.offsetWidth;
-    layer.classList.add('wipe-in');
+
+  setEndingBackground(nextLayer, idx);
+  nextLayer.classList.remove('wipe-out');
+  nextLayer.classList.add('active', 'wipe-in');
+
+  if (activeLayer && activeLayer !== nextLayer) {
+    activeLayer.classList.remove('wipe-in');
+    activeLayer.classList.add('wipe-out');
     setTimeout(() => {
-      layer.classList.remove('wipe-in', 'wipe-out');
+      activeLayer.classList.remove('active', 'wipe-out');
     }, ENDING_WIPE_MS);
-  }, ENDING_WIPE_SWAP_DELAY);
+  }
+
+  setTimeout(() => {
+    nextLayer.classList.remove('wipe-in');
+  }, ENDING_WIPE_MS);
 }
 
 function endingShowLine() { endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]); }
