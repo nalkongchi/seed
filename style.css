@@ -3144,3 +3144,77 @@ body {
     mask-image: none;
   }
 }
+
+
+/* ═══════════════════════════════════════════
+   VER17 HOTFIX - clean original shararak restore
+   Keep only the classic small-mosaic shard wipe feel.
+   Opening/ending share one clean rule set.
+═══════════════════════════════════════════ */
+#op-scene-container .op-scene-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  display: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+#op-scene-container .op-scene-layer.active,
+#op-scene-container .op-scene-layer.wipe-in,
+#op-scene-container .op-scene-layer.wipe-out {
+  display: block !important;
+}
+#op-scene-container .op-scene-layer.active .op-scene-bg,
+#op-scene-container .op-scene-layer .op-scene-bg {
+  animation: op-breathe-pan 11s ease-in-out forwards !important;
+}
+.op-scene-layer.wipe-out,
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-out,
+.ending-bg-layer.wipe-in {
+  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  -webkit-mask-size: 2px 2px !important;
+  mask-size: 2px 2px !important;
+  -webkit-mask-position: 0 0 !important;
+  mask-position: 0 0 !important;
+  animation-duration: 0.52s !important;
+  animation-timing-function: steps(8) !important;
+  animation-fill-mode: forwards !important;
+  will-change: opacity, -webkit-mask-size, mask-size !important;
+}
+.op-scene-layer.wipe-out,
+.ending-bg-layer.wipe-out {
+  animation-name: pixelOutOriginalRestore !important;
+}
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-in {
+  animation-name: pixelInOriginalRestore !important;
+}
+@keyframes pixelOutOriginalRestore {
+  0% {
+    -webkit-mask-size: 2px 2px;
+    mask-size: 2px 2px;
+    opacity: 1;
+  }
+  100% {
+    -webkit-mask-size: 64px 64px;
+    mask-size: 64px 64px;
+    opacity: 0;
+  }
+}
+@keyframes pixelInOriginalRestore {
+  0% {
+    -webkit-mask-size: 64px 64px;
+    mask-size: 64px 64px;
+    opacity: 0;
+  }
+  100% {
+    -webkit-mask-size: 2px 2px;
+    mask-size: 2px 2px;
+    opacity: 1;
+  }
+}
