@@ -3007,3 +3007,53 @@ body {
   border:1px solid rgba(255,255,255,0.06);
   padding:10px 10px 9px;
 }
+
+
+/* ═══════════════════════════════════════════
+   VER17 PATCH - opening/ending shard wipe visibility restore
+════════════════════════════════════════════ */
+.op-scene-layer.wipe-out,
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-out,
+.ending-bg-layer.wipe-in {
+  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  -webkit-mask-repeat: repeat !important;
+  mask-repeat: repeat !important;
+  animation-duration: 0.96s !important;
+  animation-timing-function: steps(12) !important;
+  animation-fill-mode: both !important;
+  will-change: opacity, -webkit-mask-size, mask-size !important;
+}
+.op-scene-layer.wipe-out,
+.ending-bg-layer.wipe-out {
+  animation-name: pixelOutShardV17 !important;
+}
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-in {
+  animation-name: pixelInShardV17 !important;
+}
+@keyframes pixelOutShardV17 {
+  0% {
+    -webkit-mask-size: 2px 2px;
+    mask-size: 2px 2px;
+    opacity: 1;
+  }
+  100% {
+    -webkit-mask-size: 48px 48px;
+    mask-size: 48px 48px;
+    opacity: 0;
+  }
+}
+@keyframes pixelInShardV17 {
+  0% {
+    -webkit-mask-size: 48px 48px;
+    mask-size: 48px 48px;
+    opacity: 0;
+  }
+  100% {
+    -webkit-mask-size: 2px 2px;
+    mask-size: 2px 2px;
+    opacity: 1;
+  }
+}

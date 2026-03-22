@@ -297,6 +297,9 @@ const ENDING_SCENES = [
 let opSceneIdx = 0, opLineIdx = 0, opTyping = false, opFullLine = '', opTypingTimer = null, opSceneEls = [];
 let endingSceneIdx = 0, endingLineIdx = 0, endingTyping = false, endingFullLine = '', endingTypingTimer = null;
 let endingAwaitingRank = false, endingRankPopupShown = false, endingRankData = null;
+const OPENING_WIPE_MS = 980;
+const ENDING_WIPE_MS = 980;
+const ENDING_WIPE_SWAP_DELAY = 420;
 
 function escapeHtml(s) {
   return String(s)
@@ -676,8 +679,10 @@ function opSetScene(idx) {
   opSceneEls.forEach((el, i) => {
     const isCurrent = i === idx;
     if (isCurrent) {
-      el.classList.add('active', 'wipe-in');
+      el.classList.add('active');
       el.classList.remove('wipe-out');
+      void el.offsetWidth;
+      el.classList.add('wipe-in');
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
         bg.style.animation = 'none';
@@ -686,16 +691,14 @@ function opSetScene(idx) {
       }
       setTimeout(() => {
         el.classList.remove('wipe-in');
-        el.style.webkitMaskImage = 'none';
-        el.style.maskImage = 'none';
-      }, 620);
+      }, OPENING_WIPE_MS);
     } else if (el.classList.contains('active')) {
+      el.classList.remove('wipe-in');
+      void el.offsetWidth;
       el.classList.add('wipe-out');
       setTimeout(() => {
         el.classList.remove('active', 'wipe-out');
-        el.style.webkitMaskImage = 'none';
-        el.style.maskImage = 'none';
-      }, 620);
+      }, OPENING_WIPE_MS);
     }
   });
   if (OP_SCENES[idx].lightning) {
@@ -1372,22 +1375,20 @@ function endingSetScene(idx, immediate = false) {
   if (immediate) {
     setEndingBackground(idx);
     layer.classList.remove('wipe-in', 'wipe-out');
-    layer.style.webkitMaskImage = 'none';
-    layer.style.maskImage = 'none';
     return;
   }
-  layer.classList.remove('wipe-in');
+  layer.classList.remove('wipe-in', 'wipe-out');
+  void layer.offsetWidth;
   layer.classList.add('wipe-out');
   setTimeout(() => {
     setEndingBackground(idx);
     layer.classList.remove('wipe-out');
+    void layer.offsetWidth;
     layer.classList.add('wipe-in');
     setTimeout(() => {
       layer.classList.remove('wipe-in', 'wipe-out');
-      layer.style.webkitMaskImage = 'none';
-      layer.style.maskImage = 'none';
-    }, 620);
-  }, 240);
+    }, ENDING_WIPE_MS);
+  }, ENDING_WIPE_SWAP_DELAY);
 }
 
 function endingShowLine() { endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]); }
