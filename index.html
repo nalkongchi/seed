@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>종자검사원 - 종자의 질서를 되찾는 자</title>
+<title>나는야 종자검사원</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,23 +22,19 @@
  <div class="title-menu-board">
  <img class="title-frame-img" src="images/title_frame.png" alt="메뉴판">
  <div class="title-menu-layer">
- <div class="tmenu-item tmenu-main" id="primary-btn" onclick="handlePrimaryAction()">
+ <div class="tmenu-item tmenu-main" onclick="goToNameInput()">
  <span class="tmenu-icon">▶</span>
  <span class="tmenu-label">모험 시작</span>
  </div>
- <div class="tmenu-item tmenu-sub1" id="restart-btn" onclick="goToNameInput()">
+ <div class="tmenu-item tmenu-sub1" id="continue-btn" onclick="continueGame()">
  <span class="tmenu-icon">▶</span>
- <span class="tmenu-label">다시 시작</span>
+ <span class="tmenu-label">이어하기</span>
  </div>
- <div class="tmenu-item tmenu-sub2" id="study-btn" onclick="startStudyMode()">
+ <div class="tmenu-item tmenu-sub2" onclick="showWrongnote()">
  <span class="tmenu-icon">▶</span>
- <span class="tmenu-label">집중 공부</span>
+ <span class="tmenu-label">오답노트</span>
  </div>
- <div class="tmenu-item tmenu-sub3" id="wrongnote-btn" onclick="showWrongnote()">
- <span class="tmenu-icon">▶</span>
- <span class="tmenu-label">오답 노트</span>
- </div>
- <div class="tmenu-item tmenu-sub4" id="setting-btn" onclick="showSetting()">
+ <div class="tmenu-item tmenu-sub3" onclick="showSetting()">
  <span class="tmenu-icon">▶</span>
  <span class="tmenu-label">설정</span>
  </div>
@@ -57,9 +53,9 @@
  <div class="name-title">검사원 지망생 등록</div>
  <div class="name-title-sub">INSPECTOR REGISTRATION</div>
  <div class="name-sub">당신의 이름을 알려주세요.<br>이 이름으로 모험이 시작됩니다.</div>
- <input class="name-input" id="player-name-input" type="text" placeholder="이름을 입력해주세요">
+ <input class="name-input" id="player-name-input" type="text" maxlength="8" placeholder="이름을 입력하세요">
  <button class="name-confirm-btn" onclick="confirmName()">S T A R T</button>
- <button class="name-back-btn name-screen-back" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
+ <button class="name-back-btn" onclick="goBackToTitle()">← 타이틀로 돌아가기</button>
  </div>
  </div>
 
@@ -73,18 +69,17 @@
  <div id="op-scene-container"></div>
  <div id="op-fade-black" style="position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity 480ms ease;z-index:20;"></div>
  <button id="op-tap" style="position:absolute;inset:0;z-index:10;background:transparent;border:none;padding:0;cursor:pointer;pointer-events:none;" aria-label="다음"></button>
- <button id="op-home" style="position:absolute;top:14px;left:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;" onclick="confirmGoTitle()"><span class="op-nav-arrow">◀</span><span class="op-nav-text">HOME</span></button>
- <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;"><span class="op-nav-text">SKIP</span><span class="op-nav-arrow">▶</span></button>
- <div id="op-ui-layer" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;z-index:25;">
- <div id="op-bottom-wrap" style="padding:0;pointer-events:auto;">
+ <button id="op-skip" style="position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);font-family:'Galmuri9','DotGothic16',monospace;font-size:11px;padding:6px 12px;cursor:pointer;letter-spacing:1px;">SKIP ▶</button>
+ <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:none;">
+ <div style="padding:12px 12px 20px;pointer-events:auto;">
  <div id="op-box" class="op-frame-box">
  <div id="op-text" class="op-frame-text"></div>
- <div id="op-arrow-row" style="margin-top:10px;display:flex;align-items:center;height:16px;">
+ <div style="margin-top:10px;display:flex;align-items:center;">
  <div id="op-arrow" style="font-size:14px;color:rgba(255,255,255,0.7);animation:op-blink 1s ease-in-out infinite;">▶</div>
  </div>
+ <button id="op-end-btn" style="display:none;width:100%;margin-top:12px;background:#2d4e26;border:3px solid #e8c84a;color:#fff;font-family:'Galmuri9','DotGothic16',monospace;font-size:14px;padding:13px;cursor:pointer;box-shadow:3px 3px 0 #000;letter-spacing:2px;"> 모험을 시작하라!</button>
  </div>
  </div>
- <button id="op-end-btn" style="display:none;">모험을 시작하라!</button>
  </div>
  </div>
 
@@ -93,7 +88,6 @@
  ═══════════════════════════════════════════ -->
  <div id="map-screen" class="screen">
  <div class="map-header">
- <div class="map-player-journey" id="map-player-journey"><strong>용사</strong>님의 모험</div>
  <div class="map-title">MAP</div>
  <div class="map-progress" id="map-progress-text">정화된 구역: 0 / 6</div>
  </div>
@@ -107,58 +101,24 @@
  <div id="nodes-container"></div>
  </div>
  <div class="map-footer">
- <button class="footer-home-btn" onclick="confirmGoTitle()"><span class="footer-btn-icon">⌂</span><span class="footer-btn-label">HOME</span></button>
+ <button class="footer-home-btn" onclick="confirmGoTitle()">Home</button>
  <div class="footer-logo">© National Seed RPG</div>
- <button class="footer-setting-btn" onclick="showSetting()"><span class="footer-btn-icon">♪</span><span class="footer-btn-label">BGM</span></button>
- </div>
- </div>
-
- <!-- ═══════════════════════════════════════════
- 집중 공부 SCREEN
- ═══════════════════════════════════════════ -->
- <div id="study-screen" class="screen">
- <div class="study-header">
- <button class="study-exit-btn" onclick="exitStudyMode()">그만하기</button>
- <div class="study-header-main">
- <div class="study-title">집중 공부</div>
- <div class="study-sub">전 구역 문제를 무한으로 풉니다</div>
- </div>
- <div class="study-stats-inline" id="study-stats-inline">정답 0 · 오답 0</div>
- </div>
- <div class="study-body">
- <div class="study-meta">
- <div class="study-range" id="study-range">출제 범위 · 전 구역</div>
- <div class="study-counter" id="study-counter">문제 1</div>
- </div>
- <div class="study-prompt">다음 내용을 보고 <span class="tut-good">합격</span> 또는 <span class="tut-bad">불합격</span>을 판정하세요.</div>
- <div class="study-question-card">
- <div class="study-question-stage" id="study-question-stage"></div>
- <div class="study-question-text" id="study-question"></div>
- </div>
- <div class="study-result-box" id="study-result-box">
- <div class="study-result-title" id="study-result-title">정답!</div>
- <div class="study-result-answer" id="study-result-answer"></div>
- <div class="study-result-reason" id="study-result-reason"></div>
- <button class="study-next-btn" id="study-next-btn" onclick="nextStudyQuestion()">다음 문제</button>
- </div>
- </div>
- <div class="study-buttons">
- <button class="judge-btn btn-pass" id="study-pass-btn" onclick="answerStudy('pass')"><span class="judge-label judge-pass-label">합격</span></button>
- <button class="judge-btn btn-fail" id="study-fail-btn" onclick="answerStudy('fail')"><span class="judge-label judge-fail-label">불합격</span></button>
+ <button class="footer-setting-btn" onclick="showSetting()">BGM</button>
  </div>
  </div>
 
  <!-- ═══════════════════════════════════════════
  NODE POPUP
  ═══════════════════════════════════════════ -->
- <div id="node-popup" class="popup-overlay">
- <div class="node-popup-box popup-panel">
+ <div id="node-popup">
+ <div class="node-popup-box">
+ <div class="popup-emoji" id="popup-emoji"></div>
  <div class="popup-enemy-name" id="popup-enemy"></div>
  <div class="popup-desc" id="popup-desc"></div>
  <div class="popup-hp-info" id="popup-hp"></div>
  <div class="popup-btns">
  <button class="popup-cancel" onclick="closeNodePopup()">← 돌아가기</button>
- <button class="popup-start" onclick="startBattle()">전투 시작!</button>
+ <button class="popup-start" onclick="startBattle()"> 전투 시작!</button>
  </div>
  </div>
  </div>
@@ -166,32 +126,30 @@
  <!-- ═══════════════════════════════════════════
  WRONGNOTE POPUP
  ═══════════════════════════════════════════ -->
- <div id="wrongnote-popup" class="popup-overlay">
- <div class="wrongnote-panel popup-panel">
+ <div id="wrongnote-popup">
  <div class="wrongnote-header">
- <div class="wrongnote-title">오답노트</div>
- <button class="wrongnote-close" onclick="closeWrongnote()">닫기</button>
+ <div class="wrongnote-title"> 오답노트</div>
+ <button class="wrongnote-close" onclick="closeWrongnote()"> 닫기</button>
  </div>
  <div class="wrongnote-body" id="wrongnote-body"></div>
- <button class="wrongnote-clear-btn" onclick="clearWrongnote()">오답노트 초기화</button>
- </div>
+ <button class="wrongnote-clear-btn" onclick="clearWrongnote()"> 오답노트 초기화</button>
  </div>
 
  <!-- ═══════════════════════════════════════════
  SETTING POPUP
  ═══════════════════════════════════════════ -->
- <div id="setting-popup" class="popup-overlay">
- <div class="setting-box popup-panel">
+ <div id="setting-popup">
+ <div class="setting-box">
  <div class="setting-title">BGM</div>
  <div class="setting-row">
- <div class="setting-label">배경음악</div>
+ <div class="setting-label">🎵 배경음악</div>
  <div class="setting-slider-wrap">
  <input class="setting-slider" id="bgm-slider" type="range" min="0" max="100" value="70" oninput="Sound.setBGMVol(this.value)">
  <span class="setting-slider-val" id="bgm-val">70</span>
  </div>
  </div>
  <div class="setting-row">
- <div class="setting-label">효과음</div>
+ <div class="setting-label">🔊 효과음</div>
  <div class="setting-slider-wrap">
  <input class="setting-slider" id="se-slider" type="range" min="0" max="100" value="70" oninput="Sound.setSEVol(this.value)">
  <span class="setting-slider-val" id="se-val">70</span>
@@ -222,43 +180,32 @@
  BATTLE SCREEN
  ═══════════════════════════════════════════ -->
  <div id="battle-screen" class="screen">
- <div class="battle-header dual-hp-header">
- <div class="hp-side player-side">
- <div class="hp-row">
- <div class="hp-bar-bg"><div id="player-hp-fill" class="hp-bar-fill player-fill"></div></div>
- <div id="player-hp-text" class="hp-text">3 / 3</div>
+ <div class="battle-header">
+ <div class="battle-header-left">
+ <button class="battle-exit-btn" onclick="showExitConfirm()">← 나가기</button>
+ <div class="battle-enemy-name" id="battle-enemy-name"></div>
  </div>
- <div id="battle-player-name" class="battle-side-name">용사</div>
+ <div class="battle-hp" id="battle-hp"></div>
  </div>
- <button class="battle-exit-btn" onclick="showExitConfirm()">포기</button>
- <div class="hp-side enemy-side">
- <div class="hp-row">
- <div id="enemy-hp-text" class="hp-text">3 / 3</div>
- <div class="hp-bar-bg"><div id="enemy-hp-fill" class="hp-bar-fill enemy-fill"></div></div>
+ <!-- 카드형 적 배경 -->
+ <div class="battle-card-area" id="battle-card-area">
+ <div class="battle-card-img" id="battle-card-img"></div>
+ <div class="battle-card-fade" id="battle-card-fade"></div>
+ <div class="battle-card-bottom"></div>
+ <div class="q-counter" id="q-counter">1 / 5</div>
+ <div class="boss-label" id="boss-label" style="display:none"> BOSS</div>
  </div>
- <div id="battle-enemy-name" class="battle-side-name">적</div>
- </div>
- </div>
- <div class="battle-arena-area" id="battle-arena-area">
- <div class="arena-bg" id="arena-bg"></div>
- <div class="arena-enemy-sprite" id="battle-card-img"></div>
- <div class="arena-player-sprite" id="arena-player-sprite"></div>
- <div class="arena-player-dialogue" id="arena-player-dialogue">
- <div class="battle-player-badge" id="battle-player-badge">용사</div>
- <div class="player-speech-bubble" id="player-speech-bubble"><div class="bubble-text" id="battle-player-line"></div></div>
- </div>
- <div class="q-counter" id="q-counter">문제 1</div>
- <div class="boss-label" id="boss-label" style="display:none">BOSS</div>
- <div class="arena-enemy-dialogue" id="arena-enemy-dialogue">
+ <!-- 적 이름 배지 -->
  <div class="battle-name-badge" id="battle-name-badge"></div>
+ <!-- 말풍선 -->
+ <div class="battle-question-area">
  <div class="speech-bubble" id="speech-bubble">
  <div class="bubble-text" id="battle-question"></div>
  </div>
  </div>
- </div>
  <div class="battle-buttons">
- <button class="judge-btn btn-pass" onclick="answer('pass')"><span class="judge-label judge-pass-label">합격</span></button>
- <button class="judge-btn btn-fail" onclick="answer('fail')"><span class="judge-label judge-fail-label">불합격</span></button>
+ <button class="judge-btn btn-pass" onclick="answer('pass')">합  격</button>
+ <button class="judge-btn btn-fail" onclick="answer('fail')">불합격</button>
  </div>
  </div>
 
@@ -266,7 +213,7 @@
  EXIT CONFIRM
  ═══════════════════════════════════════════ -->
  <div id="exit-confirm">
- <div class="exit-box popup-panel">
+ <div class="exit-box">
  <div class="exit-title"> 전투를 포기하시겠습니까?</div>
  <div class="exit-desc">지금 나가면 이 전투의 진행이 취소되고<br>스테이지가 재도전 상태로 돌아갑니다.</div>
  <div class="exit-btns">
@@ -279,10 +226,10 @@
  <!-- ═══════════════════════════════════════════
  RESULT POPUP
  ═══════════════════════════════════════════ -->
- <div id="result-popup" class="popup-overlay">
- <div class="result-box popup-panel" id="result-box">
+ <div id="result-popup">
+ <div class="result-box" id="result-box">
  <div class="stamp-effect" id="stamp-effect"></div>
- <div class="result-badge" id="result-badge">결과</div>
+ <div class="result-badge" id="result-badge"></div>
  <div class="result-title" id="result-title">정답!</div>
  <div class="result-answer" id="result-answer"></div>
  <div class="result-reason" id="result-reason"></div>
@@ -301,9 +248,9 @@
  <div class="clear-stats">
  <div class="stat-row"><span>정답</span><span id="cs-correct">5개</span></div>
  <div class="stat-row"><span>오답</span><span id="cs-wrong">0개</span></div>
- <div class="stat-row" id="clear-hp-row"><span>남은 체력</span><span id="cs-hp"></span></div>
+ <div class="stat-row"><span>남은 체력</span><span id="cs-hp"></span></div>
  </div>
- <button id="clear-return-btn" class="clear-btn" onclick="afterClear()"> 지도로 돌아가기</button>
+ <button class="clear-btn" onclick="afterClear()"> 지도로 돌아가기</button>
  </div>
  </div>
 
@@ -326,50 +273,22 @@
  ENDING SCREEN
  ═══════════════════════════════════════════ -->
  <div id="ending-screen" class="screen">
- <div class="ending-scene-wrap" id="ending-scene-wrap">
- <div class="ending-bg-layer" id="ending-bg-layer"></div>
- <div class="ending-overlay"></div>
- <div class="ending-flash" id="ending-flash"></div>
- <div class="ending-particles" id="ending-particles"></div>
- <button id="ending-home" class="ending-nav-btn ending-home-btn" onclick="confirmGoTitle()"><span class="op-nav-arrow">◀</span><span class="op-nav-text">HOME</span></button>
- <button id="ending-skip" class="ending-nav-btn ending-skip-btn" onclick="endingSkipToRank()"><span class="op-nav-text">SKIP</span><span class="op-nav-arrow">▶</span></button>
- 
- <button id="ending-rank-trigger" class="ending-final-btn" style="display:none" onclick="showEndingRankPopup()">최종 평가</button>
- 
- <div class="ending-bottom-box">
- <div class="ending-text" id="ending-text"></div>
- <div class="ending-arrow" id="ending-arrow">▶</div>
+ <div class="particles" id="ending-particles"></div>
+ <div class="ending-content">
+ <div class="ending-icon"></div>
+ <div class="ending-title">축하합니다!<br>정식 종자검사원 임명!</div>
+ <div class="ending-sub" id="ending-sub"></div>
+ <div class="rank-badge" id="ending-rank"> S랭크 완벽한 판정관</div>
+ <div class="certificate">
+ <div class="cert-title"> 종자검사원 임명장</div>
+ <div class="cert-body">
+ 위 용사는 종자왕국의 모든 시련을 통과하여<br>
+ <div class="cert-name" id="cert-player-name">용사</div>
+ 정식 종자검사원으로 임명함을 증명합니다.
  </div>
+ <div class="cert-stamp"></div>
  </div>
- 
- <div id="ending-rank-modal" class="popup-overlay ending-rank-modal">
- <div class="ending-rank-box popup-panel">
- <div class="ending-rank-particles" id="ending-rank-particles"></div>
- <div class="ending-rank-title">최종 평가</div>
- <div class="ending-rank-grade" id="ending-rank-grade">A</div>
- <div class="ending-rank-name" id="ending-rank-name">정식 종자검사원</div>
- <div class="ending-rank-stats clear-stats">
- <div class="stat-row"><span>정답</span><span id="ending-stat-correct">0개</span></div>
- <div class="stat-row"><span>오답</span><span id="ending-stat-wrong">0개</span></div>
- <div class="stat-row"><span>정답률</span><span id="ending-stat-rate">0%</span></div>
- </div>
- <div class="ending-rank-desc" id="ending-rank-desc">왕국의 질서를 되찾았습니다.</div>
- <button class="ending-btn" onclick="goTitle()">타이틀로 돌아가기</button>
- </div>
- </div>
- </div>
- 
- <!-- ═══════════════════════════════════════════
- INTERNAL UI MODAL
- ═══════════════════════════════════════════ -->
- <div id="ui-modal" class="popup-overlay">
- <div class="modal-box popup-panel">
- <div class="modal-title" id="ui-modal-title">알림</div>
- <div class="modal-desc" id="ui-modal-desc"></div>
- <div class="modal-btns">
- <button id="ui-modal-cancel" class="modal-cancel" style="display:none">취소</button>
- <button id="ui-modal-ok" class="modal-ok">확인</button>
- </div>
+ <button class="ending-btn" onclick="goTitle()"> 타이틀로</button>
  </div>
  </div>
 
