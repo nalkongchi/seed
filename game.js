@@ -7,14 +7,19 @@
 // 나중에 파일 첨부 시 경로 변경하세요.
 // ==============================
 const SOUND_FILES = {
-  bgm_title:  'sounds/bgm_title.mp3',
-  bgm_battle: 'sounds/bgm_battle.mp3',
-  bgm_boss:   'sounds/bgm_boss.mp3',
-  se_correct: 'sounds/se_correct.mp3',
-  se_wrong:   'sounds/se_wrong.mp3',
-  se_stamp:   'sounds/se_stamp.mp3',
-  se_clear:   'sounds/se_clear.mp3',
-  se_gameover:'sounds/se_gameover.mp3',
+  bgm_title:   'sounds/bgm_title.mp3',
+  bgm_battle:  'sounds/bgm_battle.mp3',
+  bgm_boss:    'sounds/bgm_boss.mp3',
+  bgm_ending:  'sounds/bgm_ending.mp3',
+  bgm_study:   'sounds/bgm_study.mp3',
+  se_correct:  'sounds/se_correct.wav',
+  se_wrong:    'sounds/se_wrong.wav',
+  se_stamp:    'sounds/se_stamp.wav',
+  se_clear:    'sounds/se_clear.wav',
+  se_gameover: 'sounds/se_gameover.wav',
+  se_click:    'sounds/se_click.wav',
+  se_node:     'sounds/se_node.wav',
+  se_hit:      'sounds/se_hit.wav',
 };
 
 // ==============================
@@ -22,7 +27,8 @@ const SOUND_FILES = {
 // ==============================
 const Sound = (() => {
   let bgmEl = null;
-  const settings = { bgm: true, se: true };
+  let currentBgmKey = null;
+  const settings = { bgm: true, se: true, bgmVolume: 0.5, seVolume: 0.7 };
 
   function loadSettings() {
     try {
@@ -36,32 +42,48 @@ const Sound = (() => {
   }
 
   function playBGM(key) {
+    if (!key) return;
+    currentBgmKey = key;
     if (!settings.bgm) return;
-    if (bgmEl) { bgmEl.pause(); bgmEl = null; }
+    if (bgmEl && bgmEl.dataset && bgmEl.dataset.key === key) {
+      bgmEl.volume = settings.bgmVolume ?? 0.5;
+      if (bgmEl.paused) bgmEl.play().catch(()=>{});
+      return;
+    }
+    if (bgmEl) {
+      bgmEl.pause();
+      bgmEl = null;
+    }
     try {
       bgmEl = new Audio(SOUND_FILES[key]);
       bgmEl.loop = true;
-      bgmEl.volume = 0.5;
+      bgmEl.volume = settings.bgmVolume ?? 0.5;
+      bgmEl.dataset.key = key;
       bgmEl.play().catch(()=>{});
     } catch(e) {}
   }
 
   function stopBGM() {
-    if (bgmEl) { bgmEl.pause(); bgmEl = null; }
+    if (bgmEl) bgmEl.pause();
+    bgmEl = null;
   }
 
   function playSE(key) {
     if (!settings.se) return;
     try {
       const a = new Audio(SOUND_FILES[key]);
-      a.volume = 0.7;
+      a.volume = settings.seVolume ?? 0.7;
       a.play().catch(()=>{});
     } catch(e) {}
   }
 
   function toggleBGM() {
     settings.bgm = !settings.bgm;
-    if (!settings.bgm) stopBGM();
+    if (!settings.bgm) {
+      stopBGM();
+    } else if (currentBgmKey) {
+      playBGM(currentBgmKey);
+    }
     saveSettings();
     return settings.bgm;
   }
@@ -76,12 +98,15 @@ const Sound = (() => {
   function isSEOn()  { return settings.se; }
 
   function setBGMVol(val) {
-    const v = parseInt(val) / 100;
+    const v = parseInt(val, 10) / 100;
+    settings.bgmVolume = v;
     settings.bgm = v > 0;
     if (bgmEl) {
       bgmEl.volume = v;
       if (!settings.bgm) bgmEl.pause();
       else bgmEl.play().catch(()=>{});
+    } else if (settings.bgm && currentBgmKey) {
+      playBGM(currentBgmKey);
     }
     const el = document.getElementById('bgm-val');
     if (el) el.textContent = val;
@@ -89,7 +114,7 @@ const Sound = (() => {
   }
 
   function setSEVol(val) {
-    const v = parseInt(val) / 100;
+    const v = parseInt(val, 10) / 100;
     settings.se = v > 0;
     settings.seVolume = v;
     const el = document.getElementById('se-val');
@@ -137,25 +162,61 @@ let G = {
   nodeStatus: Array(NODES.length).fill('locked'),
   currentNode: 0,
   currentQ: 0,
+  questionTurn: 1,
   shuffledQ: [],
   hp: 3,
+  enemyHp: 3,
+  enemyMaxHp: 3,
   correct: 0,
   wrong: 0,
   totalCorrect: 0,
-  totalWrong: 0
+  totalWrong: 0,
+  stage1TutorialShown: false,
+  pendingDamage: false,
+  pendingDamageOutcome: null,
+  damageTimer: null,
+  mode: 'story'
 };
 G.nodeStatus[0] = 'available';
 
 // ==============================
 // 저장 / 불러오기
 // ==============================
+
+function normalizeNodeStatus(statuses) {
+  const norm = Array.isArray(statuses) ? statuses.slice(0, NODES.length) : [];
+  while (norm.length < NODES.length) norm.push('locked');
+  const progressed = new Set(['available','cleared']);
+  let furthest = -1;
+  for (let i = 0; i < norm.length; i++) {
+    if (progressed.has(norm[i])) furthest = i;
+  }
+  if (furthest < 0) {
+    norm.fill('locked');
+    norm[0] = 'available';
+    return norm;
+  }
+  for (let i = 0; i < furthest; i++) {
+    norm[i] = 'cleared';
+  }
+  if (norm[furthest] !== 'cleared') norm[furthest] = 'available';
+  for (let i = furthest + 1; i < norm.length; i++) {
+    if (norm[i] !== 'cleared') norm[i] = 'locked';
+  }
+  if (furthest === norm.length - 1 && norm[furthest] !== 'cleared') {
+    norm[furthest] = 'available';
+  }
+  return norm;
+}
+
 function saveGame() {
   try {
     localStorage.setItem('seedGame_v3', JSON.stringify({
       playerName: G.playerName,
-      nodeStatus: G.nodeStatus,
+      nodeStatus: normalizeNodeStatus(G.nodeStatus),
       totalCorrect: G.totalCorrect,
-      totalWrong: G.totalWrong
+      totalWrong: G.totalWrong,
+      stage1TutorialShown: G.stage1TutorialShown
     }));
   } catch(e) {}
 }
@@ -171,19 +232,42 @@ function resetWholeGame() {
   G = {
     playerName: '',
     nodeStatus: Array(NODES.length).fill('locked'),
-    currentNode: 0, currentQ: 0, shuffledQ: [],
-    hp: 3, correct: 0, wrong: 0, totalCorrect: 0, totalWrong: 0
+    currentNode: 0,
+    currentQ: 0,
+    questionTurn: 1,
+    shuffledQ: [],
+    hp: 3,
+    enemyHp: 3,
+    enemyMaxHp: 3,
+    correct: 0,
+    wrong: 0,
+    totalCorrect: 0,
+    totalWrong: 0,
+    stage1TutorialShown: false,
+    pendingDamage: false,
+    pendingDamageOutcome: null,
+    damageTimer: null,
+    mode: 'story'
   };
   G.nodeStatus[0] = 'available';
 }
 
 function resetNodeBattle(idx) {
+  if (G.damageTimer) {
+    clearTimeout(G.damageTimer);
+    G.damageTimer = null;
+  }
+  G.pendingDamage = false;
+  G.pendingDamageOutcome = null;
   G.currentNode = idx;
   G.currentQ = 0;
-  G.hp = NODES[idx].maxHp;
+  G.questionTurn = 1;
+  G.hp = 3;
+  G.enemyMaxHp = NODES[idx].maxHp;
+  G.enemyHp = NODES[idx].maxHp;
   G.correct = 0;
   G.wrong = 0;
-  G.shuffledQ = shuffle([...NODES[idx].questions]).slice(0, 5);
+  G.shuffledQ = shuffle([...NODES[idx].questions]);
 }
 
 // ==============================
@@ -209,58 +293,381 @@ function hpStr(hp) {
 }
 
 function highlightNumbers(text) {
-  return text.replace(/(\d+\.?\d*%)/g, '<span class="highlight">$1</span>');
+  return String(text).replace(/(\d+(?:\.\d+)?(?:%|m))/g, '<span class="highlight">$1</span>');
 }
 
 function formatQuestion(text) {
-  // 문장 부호 뒤 자동 줄바꿈 (마침표/물음표/느낌표/말줄임 뒤)
-  return text.replace(/([.?!~…])\s+/g, '$1\n');
+  return String(text).replace(/([.?!~…])\s+/g, '$1\n');
 }
+
+function formatStudyQuestionHtml(text) {
+  const lines = cleanStudyText(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
+  if (!lines.length) return '';
+  const head = '<div class="study-line-label">' + highlightNumbers(escapeHtml(lines[0])) + '</div>';
+  const body = lines.slice(1).map(line => '<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
+  return head + body;
+}
+
+function formatReasonHtml(text, labelClass = 'reason-line-label') {
+  const lines = String(text || '').split(/\n/);
+  const chunks = [];
+  let firstLabelDone = false;
+  let inRefs = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      chunks.push('<div class="reason-gap"></div>');
+      continue;
+    }
+    if (!firstLabelDone) {
+      chunks.push('<div class="' + labelClass + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
+      firstLabelDone = true;
+      continue;
+    }
+    if (/^참고\)/.test(line)) {
+      inRefs = true;
+      chunks.push('<div class="reason-ref-title">참고)</div>');
+      continue;
+    }
+    const cls = inRefs ? 'reason-ref-line' : 'reason-main-line';
+    chunks.push('<div class="' + cls + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
+  }
+  return chunks.join('');
+}
+
+
+const PLAYER_FLAVOR_LINES = ['........', '.....네?', '확인해 볼게요.', '뭐라구요?'];
+
+function getRandomPlayerFlavor() {
+  return PLAYER_FLAVOR_LINES[Math.floor(Math.random() * PLAYER_FLAVOR_LINES.length)];
+}
+
+function updatePlayerFlavorLine() {
+  const lineEl = document.getElementById('battle-player-line');
+  if (lineEl) lineEl.textContent = getRandomPlayerFlavor();
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+let uiModalOk = null;
+let uiModalCancel = null;
+
+function closeUIModal() {
+  const modal = document.getElementById('ui-modal');
+  if (modal) modal.classList.remove('show');
+  uiModalOk = null;
+  uiModalCancel = null;
+}
+
+function playUIClick() {
+  Sound.playSE('se_click');
+}
+
+function disableResultNext(disabled) {
+  const nextBtn = document.querySelector('.result-next-btn');
+  if (nextBtn) nextBtn.disabled = !!disabled;
+}
+
+
+const STUDY = {
+  active: false,
+  pool: [],
+  idx: 0,
+  turn: 1,
+  correct: 0,
+  wrong: 0,
+  current: null
+};
+
+function buildStudyPool() {
+  const all = [];
+  NODES.forEach((node, nodeIdx) => {
+    node.questions.forEach((q, qIdx) => {
+      all.push({ ...q, _nodeIdx: nodeIdx, _qIdx: qIdx, _nodeLabel: node.label.split('\n').join(' '), _enemy: node.enemy });
+    });
+  });
+  return shuffle(all);
+}
+
+function cleanStudyText(text) {
+  return String(text || '').replace(/^\s*["“”']+/, '').replace(/["“”']+\s*$/, '');
+}
+
+function updateStudyStats() {
+  const total = STUDY.correct + STUDY.wrong;
+  const rateText = total ? `${Math.round((STUDY.correct / total) * 100)}%` : '- %';
+  const inline = document.getElementById('study-stats-inline');
+  if (inline) inline.innerHTML = `정답 ${STUDY.correct} · 오답 ${STUDY.wrong}<br>정답률 ${rateText}`;
+}
+
+function showStudyQuestion() {
+  if (!STUDY.pool.length) STUDY.pool = buildStudyPool();
+  if (STUDY.idx >= STUDY.pool.length) {
+    STUDY.pool = buildStudyPool();
+    STUDY.idx = 0;
+  }
+  STUDY.current = STUDY.pool[STUDY.idx++];
+  document.getElementById('study-counter').textContent = '문제 ' + STUDY.turn;
+  const stageEl = document.getElementById('study-question-stage');
+  if (stageEl) stageEl.textContent = '';
+  const studyBody = STUDY.current.studyText || STUDY.current.text;
+  document.getElementById('study-question').innerHTML = formatStudyQuestionHtml(studyBody);
+  document.getElementById('study-result-box').classList.remove('show', 'correct', 'wrong');
+  document.getElementById('study-pass-btn').disabled = false;
+  document.getElementById('study-fail-btn').disabled = false;
+  updateStudyStats();
+}
+
+function startStudyMode() {
+  playUIClick();
+  STUDY.active = true;
+  STUDY.pool = buildStudyPool();
+  STUDY.idx = 0;
+  STUDY.turn = 1;
+  STUDY.correct = 0;
+  STUDY.wrong = 0;
+  STUDY.current = null;
+  showScreen('study-screen');
+  showStudyQuestion();
+  Sound.playBGM('bgm_study');
+}
+
+function exitStudyMode() {
+  playUIClick();
+  showConfirmModal('집중 공부 종료', '집중 공부를 종료하고 타이틀로 돌아가시겠습니까?', () => {
+    STUDY.active = false;
+    initTitle();
+    showScreen('title-screen');
+  });
+}
+
+function answerStudy(choice) {
+  playUIClick();
+  if (!STUDY.active || !STUDY.current) return;
+  document.getElementById('study-pass-btn').disabled = true;
+  document.getElementById('study-fail-btn').disabled = true;
+  const correct = choice === STUDY.current.answer;
+  const userJudge = choice === 'pass' ? '합격' : '불합격';
+  const correctJudge = STUDY.current.answer === 'pass' ? '합격' : '불합격';
+  if (correct) {
+    STUDY.correct++;
+    Sound.playSE('se_correct');
+  } else {
+    STUDY.wrong++;
+    WrongNote.add(STUDY.current);
+    Sound.playSE('se_wrong');
+  }
+  const box = document.getElementById('study-result-box');
+  box.className = 'study-result-box show ' + (correct ? 'correct' : 'wrong');
+  document.getElementById('study-result-title').textContent = correct ? '정답!' : '오답!';
+  document.getElementById('study-result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
+  let reasonText = (STUDY.current.reason || '').trim();
+  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
+  if (!reasonText) reasonText = suffix;
+  else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
+  document.getElementById('study-result-reason').innerHTML = formatReasonHtml(reasonText, 'study-reason-label');
+  updateStudyStats();
+}
+
+function nextStudyQuestion() {
+  playUIClick();
+  if (!STUDY.active) return;
+  STUDY.turn++;
+  showStudyQuestion();
+}
+
+function handlePrimaryAction() {
+  const saved = loadSave();
+  if (saved && saved.playerName) continueGame();
+  else goToNameInput();
+}
+
+function applyBattleDamageEffects(correct) {
+  const stamp = document.getElementById('stamp-effect');
+  const arena = document.getElementById('battle-arena-area');
+  if (correct) {
+    G.enemyHp = Math.max(0, G.enemyHp - 1);
+    const sprite = document.getElementById('battle-card-img');
+    if (sprite) sprite.classList.add('shake', 'hit-slam');
+    if (arena) arena.classList.add('enemy-hit-flash');
+    Sound.playSE('se_hit');
+    Sound.playSE('se_stamp');
+    setTimeout(() => {
+      if (sprite) sprite.classList.remove('shake', 'hit-slam');
+      if (arena) arena.classList.remove('enemy-hit-flash');
+    }, 460);
+  } else {
+    G.hp = Math.max(0, G.hp - 1);
+    const screen = document.getElementById('battle-screen');
+    const playerSprite = document.getElementById('arena-player-sprite');
+    if (screen) screen.classList.add('shake');
+    if (playerSprite) playerSprite.classList.add('hit-slam');
+    if (arena) arena.classList.add('player-hit-flash');
+    Sound.playSE('se_hit');
+    setTimeout(() => {
+      if (screen) screen.classList.remove('shake');
+      if (playerSprite) playerSprite.classList.remove('hit-slam');
+      if (arena) arena.classList.remove('player-hit-flash');
+    }, 420);
+  }
+  renderHp();
+  G.damageTimer = null;
+}
+
+function finalizeAfterDamage() {
+  G.pendingDamage = false;
+  G.pendingDamageOutcome = null;
+  if (G.hp <= 0) {
+    Sound.playSE('se_gameover');
+    Sound.stopBGM();
+    showScreen('gameover-screen');
+    return;
+  }
+  if (G.enemyHp <= 0) {
+    stageClear();
+    return;
+  }
+
+  G.currentQ++;
+  G.questionTurn++;
+  if (G.currentQ >= G.shuffledQ.length) {
+    G.shuffledQ = shuffle([...NODES[G.currentNode].questions]);
+    G.currentQ = 0;
+  }
+  loadQuestion();
+}
+
+function showAlertModal(title, desc, onOk) {
+  const modal = document.getElementById('ui-modal');
+  const titleEl = document.getElementById('ui-modal-title');
+  const descEl = document.getElementById('ui-modal-desc');
+  const okBtn = document.getElementById('ui-modal-ok');
+  const cancelBtn = document.getElementById('ui-modal-cancel');
+  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
+  titleEl.textContent = title;
+  descEl.innerHTML = desc;
+  cancelBtn.style.display = 'none';
+  okBtn.textContent = '확인';
+  uiModalOk = onOk || null;
+  uiModalCancel = null;
+  okBtn.onclick = () => {
+    playUIClick();
+    const cb = uiModalOk;
+    closeUIModal();
+    if (cb) cb();
+  };
+  cancelBtn.onclick = () => {
+    playUIClick();
+    closeUIModal();
+  };
+  modal.classList.add('show');
+}
+
+function showConfirmModal(title, desc, onOk, onCancel) {
+  const modal = document.getElementById('ui-modal');
+  const titleEl = document.getElementById('ui-modal-title');
+  const descEl = document.getElementById('ui-modal-desc');
+  const okBtn = document.getElementById('ui-modal-ok');
+  const cancelBtn = document.getElementById('ui-modal-cancel');
+  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
+  titleEl.textContent = title;
+  descEl.innerHTML = desc;
+  cancelBtn.style.display = 'inline-flex';
+  cancelBtn.textContent = '취소';
+  okBtn.textContent = '확인';
+  uiModalOk = onOk || null;
+  uiModalCancel = onCancel || null;
+  okBtn.onclick = () => {
+    playUIClick();
+    const cb = uiModalOk;
+    closeUIModal();
+    if (cb) cb();
+  };
+  cancelBtn.onclick = () => {
+    playUIClick();
+    const cb = uiModalCancel;
+    closeUIModal();
+    if (cb) cb();
+  };
+  modal.classList.add('show');
+}
+
 
 // ==============================
 // TITLE
 // ==============================
 function initTitle() {
   const saved = loadSave();
-  const btn = document.getElementById('continue-btn');
+  const primaryBtn = document.getElementById('primary-btn');
+  const restartBtn = document.getElementById('restart-btn');
+  const studyBtn = document.getElementById('study-btn');
+  const wrongBtn = document.getElementById('wrongnote-btn');
+  const settingBtn = document.getElementById('setting-btn');
+
+  const applyTop = (el, value) => { if (el) el.style.top = value; };
+
   if (saved && saved.playerName) {
-    btn.style.opacity = '1';
-    btn.style.pointerEvents = 'auto';
-    btn.querySelector('.tmenu-label').textContent = '이어하기 (' + saved.playerName + ')';
+    primaryBtn.querySelector('.tmenu-label').textContent = '이어하기';
+    restartBtn.style.display = 'flex';
+    applyTop(primaryBtn, '21%');
+    applyTop(restartBtn, '38.5%');
+    applyTop(studyBtn, '47.0%');
+    applyTop(wrongBtn, '55.5%');
+    applyTop(settingBtn, '64.0%');
   } else {
-    btn.style.opacity = '0.4';
-    btn.style.pointerEvents = 'none';
-    btn.querySelector('.tmenu-label').textContent = '이어하기';
+    primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
+    restartBtn.style.display = 'none';
+    applyTop(primaryBtn, '24%');
+    applyTop(studyBtn, '44.0%');
+    applyTop(wrongBtn, '52.5%');
+    applyTop(settingBtn, '61.0%');
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
 }
 
 function goToNameInput() {
+  playUIClick();
+  G.mode = 'story';
   document.getElementById('player-name-input').value = '';
   showScreen('name-screen');
 }
 
 function goBackToTitle() {
+  playUIClick();
   showScreen('title-screen');
   initTitle();
 }
 
 function confirmName() {
+  playUIClick();
   const val = document.getElementById('player-name-input').value.trim();
+  if (val.length > 7) {
+    showAlertModal('이름 입력', '이름은 7글자 이하로 입력해주세요');
+    return;
+  }
   resetWholeGame();
-  G.playerName = val || '미확인종자원';
+  G.mode = 'story';
+  G.playerName = val || '용사';
   saveGame();
   startOpening();
 }
 
 function continueGame() {
+  playUIClick();
   const saved = loadSave();
   if (!saved) return;
-  G.playerName = saved.playerName;
-  G.nodeStatus = saved.nodeStatus;
+  G.mode = 'story';
+  G.playerName = saved.playerName || '용사';
+  G.nodeStatus = normalizeNodeStatus(saved.nodeStatus);
   G.totalCorrect = saved.totalCorrect || 0;
   G.totalWrong = saved.totalWrong || 0;
+  G.stage1TutorialShown = !!saved.stage1TutorialShown;
   showScreen('map-screen');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     renderMap();
@@ -275,11 +682,16 @@ function goTitle() {
 }
 
 function confirmGoTitle() {
-  if (confirm('타이틀로 돌아가시겠습니까?\n현재 진행 상황은 저장되어 있습니다.')) {
-    Sound.stopBGM();
-    initTitle();
-    showScreen('title-screen');
-  }
+  playUIClick();
+  showConfirmModal(
+    '타이틀로 돌아가기',
+    '현재 진행 상황은 저장되어 있습니다.<br>타이틀로 돌아가시겠습니까?',
+    () => {
+      Sound.stopBGM();
+      initTitle();
+      showScreen('title-screen');
+    }
+  );
 }
 
 // ==============================
@@ -288,31 +700,83 @@ function confirmGoTitle() {
 const OP_SCENES = [
   { image: 'images/scene1.png', lightning: false, lines: [
     '오래전, 종자 왕국의 질서가 무너졌다.',
-    '기준 미달 종자와 혼입 종자,\n그리고 거짓된 판정이 왕국을 뒤덮었다.'
+    '태초에 생명의 계약을 맺었던 비옥한 땅은\n이제 저주받은 듯 숨을 죽였다.',
+    '어리석은 자들은 풍요를 탐하며\n검증되지 않은 씨앗을 심었고,\n대지는 그 거짓된 생명을 받아들이지 않았다.'
   ]},
   { image: 'images/scene2.png', lightning: false, lines: [
-    '세상의 균형을 바로잡는 자,',
-    '그들이 바로 종자검사원이다.'
+    '그러나 거짓을 가려낼 눈이\n완전히 사라진 것은 아니었다.',
+    '모든 질서가 무너진 지금,\n거짓 속의 진실을 꿰뚫어 볼 수 있는 자들...',
+    '뒤엉킨 생명의 근원을 바로잡고,\n타락한 종자에 ‘불합격’의 심판을 내릴 존재.',
+    '사람들은 그들을\n‘종자검사원’이라 불렀다.'
   ]},
   { image: 'images/scene3.png', lightning: false, lines: [
-    '아직은 지망생에 불과한 당신은\n정식 검사원이 되기 위해',
-    '들판, 평원, 연금실, 성소, 협곡,\n그리고 심판의 성을 향해 떠난다.'
+    '아직은 수습생에 불과한 당신은\n정식 종자검사원이 되기 위해\n긴 여정에 오른다.',
+    '죽어가는 들판, 낯선 성소,\n그리고 모든 악의 근원이 기다리는\n심판의 성을 향해.'
   ]},
   { image: 'images/scene4.png', lightning: true, lines: [
-    '하지만 왕국의 끝에는',
-    '우량종자 공급을 방해하는\n최종 보스가 기다리고 있다.',
-    '당신의 올바른 판단만이 세상을 구할 수 있다.',
-    '__NAME__의 모험이 시작된다.'
+    '왕국의 끝, 안개 너머에서는\n거짓의 세상을 지키려는 최종 보스가\n당신의 의지를 시험하려 기다리고 있다.',
+    '당신의 날카로운 감각과\n올바른 판단만이\n이 세상을 구할 수 있다.',
+    '두려워하지 마라.',
+    '지금부터... __NAME__의 모험이 시작된다.'
   ]}
+];
+
+const ENDING_SCENES = [
+  {
+    image: 'images/ending_01.png',
+    fallback: 'radial-gradient(circle at 50% 38%, rgba(120,32,20,0.45), rgba(8,4,4,0.98) 72%)',
+    lines: [
+      '거짓의 심판은 마침내 무너졌다.',
+      '붉게 뒤엉킨 기준과 오염된 질서도\n서서히 힘을 잃기 시작했다.'
+    ]
+  },
+  {
+    image: 'images/ending_02.png',
+    fallback: 'linear-gradient(180deg, #172616 0%, #0a160a 100%)',
+    lines: [
+      '죽어가던 들판에는 다시 푸른 숨결이 깃들었다.',
+      '왕국의 대지는 올바른 생명을\n다시 받아들일 준비를 마쳤다.'
+    ]
+  },
+  {
+    image: 'images/ending_03.png',
+    fallback: 'linear-gradient(180deg, #17110a 0%, #050404 100%)',
+    lines: [
+      '당신은 거짓을 가려내고,\n타락한 종자에 올바른 심판을 내렸다.',
+      '왕국은 이제 당신을\n정식 종자검사원으로 인정한다.'
+    ]
+  },
+  {
+    image: 'images/ending_04.png',
+    fallback: 'linear-gradient(180deg, #292010 0%, #0a0906 100%)',
+    lines: [
+      '왕국의 질서는 다시 세워졌고,',
+      '정식 종자검사원 __NAME__.\n그 위대한 판정은, 이제부터가 시작이다.'
+    ]
+  }
 ];
 
 let opSceneIdx = 0, opLineIdx = 0;
 let opTyping = false, opFullLine = '', opTypingTimer = null;
 let opSceneEls = [];
 
+let endingSceneIdx = 0, endingLineIdx = 0;
+let endingTyping = false, endingFullLine = '', endingTypingTimer = null;
+let endingAwaitingRank = false;
+let endingRankPopupShown = false;
+let endingRankData = null;
+
 function opRenderLine(line) {
-  const safe = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return safe.replace(/__NAME__/g, '<span class="op-player-name">' + G.playerName + '</span>');
+  const safe = line
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+
+  return safe
+    .replace(/__NAME__/g, '<span class="op-player-name">' + G.playerName + '</span>')
+    .replace(/불합격/g, '<span class="op-keyword-fail">불합격</span>')
+    .replace(/종자검사원/g, '<span class="op-keyword-inspector">종자검사원</span>');
 }
 
 function opTypeLine(line) {
@@ -336,27 +800,45 @@ function opTypeLine(line) {
 function opSetScene(idx) {
   opSceneEls.forEach((el, i) => {
     const isCurrent = i === idx;
-    el.classList.toggle('active', isCurrent);
-    el.classList.remove('wipe-in');
     if (isCurrent) {
-      void el.offsetWidth;
-      el.classList.add('wipe-in');
+      el.classList.add('active', 'wipe-in');
+      el.classList.remove('wipe-out');
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
         bg.style.animation = 'none'; void bg.offsetWidth;
-        bg.style.animation = 'op-slow-pan 9s ease-in-out forwards';
+        bg.style.animation = 'op-breathe-pan 11s ease-in-out forwards';
       }
-      setTimeout(() => { el.classList.remove('wipe-in'); }, 460);
+      setTimeout(() => {
+        el.classList.remove('wipe-in');
+        el.style.webkitMaskImage = 'none';
+        el.style.maskImage = 'none';
+        el.style.webkitMaskSize = 'auto';
+        el.style.maskSize = 'auto';
+      }, 620);
+    } else if (el.classList.contains('active')) {
+      el.classList.add('wipe-out');
+      el.classList.remove('wipe-in');
+      setTimeout(() => {
+        el.classList.remove('active');
+        el.classList.remove('wipe-out');
+        el.style.webkitMaskImage = 'none';
+        el.style.maskImage = 'none';
+        el.style.webkitMaskSize = 'auto';
+        el.style.maskSize = 'auto';
+      }, 620);
     }
   });
   if (OP_SCENES[idx].lightning) {
     const flash = opSceneEls[idx].querySelector('.op-flash');
-    if (flash) {
+    const burst = (delay, duration = 280) => {
       setTimeout(() => {
         flash.classList.add('active');
-        setTimeout(() => flash.classList.remove('active'), 600);
-      }, 900);
-    }
+        setTimeout(() => flash.classList.remove('active'), duration);
+      }, delay);
+    };
+    burst(640, 280);
+    burst(1100, 220);
+    burst(1560, 420);
   }
 }
 
@@ -384,14 +866,15 @@ function opNextStep() {
 }
 
 function opFinish() {
-  document.getElementById('op-arrow').style.display = 'none';
+  document.getElementById('op-arrow').style.visibility = 'hidden';
   document.getElementById('op-end-btn').style.display = 'block';
   document.getElementById('op-tap').disabled = true;
   document.getElementById('op-tap').style.pointerEvents = 'none';
-  document.getElementById('op-skip').style.display = 'none';
+  document.getElementById('op-skip').style.display = 'block';
 }
 
 function opSkipAll() {
+  playUIClick();
   clearTimeout(opTypingTimer);
   opSceneIdx = OP_SCENES.length - 1;
   opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
@@ -420,7 +903,7 @@ function startOpening() {
 
   // 상태 초기화
   opSceneIdx = 0; opLineIdx = 0; opTyping = false;
-  document.getElementById('op-arrow').style.display = 'block';
+  document.getElementById('op-arrow').style.visibility = 'visible';
   document.getElementById('op-end-btn').style.display = 'none';
   document.getElementById('op-skip').style.display = 'block';
   document.getElementById('op-tap').disabled = false;
@@ -440,6 +923,7 @@ function startOpening() {
 }
 
 function startGame() {
+  playUIClick();
   showScreen('map-screen');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     renderMap();
@@ -455,6 +939,8 @@ function renderMap() {
   renderPaths();
   const cleared = G.nodeStatus.filter(s => s === 'cleared').length;
   document.getElementById('map-progress-text').textContent = '정화된 구역: ' + cleared + ' / ' + NODES.length;
+  const journey = document.getElementById('map-player-journey');
+  if (journey) journey.innerHTML = '<strong>' + escapeHtml(G.playerName || '용사') + '</strong>님의 모험';
 }
 
 function renderNodes() {
@@ -475,13 +961,26 @@ function renderNodes() {
     div.style.top  = Math.round(node.y * scaleY) + 'px';
     div.id = 'node-' + i;
 
-    // 스프라이트 아이콘
     const icon = document.createElement('div');
-    icon.className = 'node-icon';
+    icon.className = 'node-icon' + (isBoss ? ' boss-wide-icon' : '');
     div.appendChild(icon);
 
-    // 보스 태그 (아이콘 아래)
     if (isBoss) {
+      const customIcon = status === 'available' ? node.bossOpenIcon : status === 'cleared' ? node.bossClearIcon : '';
+      if (customIcon) {
+        const preload = new Image();
+        preload.onload = () => {
+          icon.classList.add('custom-boss-icon');
+          icon.style.backgroundImage = 'url(' + customIcon + ')';
+          icon.style.backgroundPosition = 'center';
+          icon.style.backgroundSize = 'contain';
+          icon.style.backgroundRepeat = 'no-repeat';
+        };
+        preload.src = customIcon;
+      }
+    }
+
+    if (isBoss && status !== 'locked') {
       const bossTag = document.createElement('div');
       bossTag.className = 'boss-tag';
       bossTag.textContent = 'BOSS';
@@ -494,6 +993,7 @@ function renderNodes() {
 }
 
 function renderPaths() {
+
   const svg = document.getElementById('path-svg');
   svg.innerHTML = '';
   const mapArea = svg.parentElement;
@@ -519,18 +1019,17 @@ function renderPaths() {
 // ==============================
 function openNodePopup(idx) {
   if (G.nodeStatus[idx] === 'locked') return;
+  Sound.playSE('se_node');
   G.currentNode = idx;
   const node = NODES[idx];
-  const hpArr = ['', '❤️', '❤️❤️', '❤️❤️❤️'];
-  const typeLabel = node.type === 'boss' ? '(보스)' : idx === 0 ? '(초심자)' : '(일반)';
-  document.getElementById('popup-emoji').textContent = node.enemyEmoji;
   document.getElementById('popup-enemy').textContent = node.enemy;
   document.getElementById('popup-desc').textContent = node.desc;
-  document.getElementById('popup-hp').textContent = '체력: ' + hpArr[node.maxHp] + ' ' + typeLabel + ' · 문제: 5개';
+  document.getElementById('popup-hp').textContent = '내 체력 3 · 적 체력 ' + node.maxHp;
   document.getElementById('node-popup').classList.add('show');
 }
 
 function closeNodePopup() {
+  playUIClick();
   document.getElementById('node-popup').classList.remove('show');
 }
 
@@ -542,19 +1041,21 @@ function closeNodePopup() {
 // 오답노트
 // ==============================
 function showWrongnote() {
+  playUIClick();
   const list = WrongNote.load();
   const body = document.getElementById('wrongnote-body');
   body.innerHTML = '';
+  body.classList.toggle('is-empty', list.length === 0);
 
   if (list.length === 0) {
-    body.innerHTML = '<div class="wrongnote-empty">❗ 아직 틀린 문제가 없습니다.<br>모험을 시작하세요!</div>';
+    body.innerHTML = '<div class="wrongnote-empty">아직 틀린 문제가 없습니다.<br>모험을 시작하세요!</div>';
   } else {
     list.forEach(item => {
       const div = document.createElement('div');
       div.className = 'wrongnote-item';
       div.innerHTML =
         '<div class="wrongnote-item-q">' + highlightNumbers(item.text) + '</div>' +
-        '<div class="wrongnote-item-ans">정답: ' + (item.answer === 'pass' ? '✅ 합격' : '❌ 불합격') + '</div>' +
+        '<div class="wrongnote-item-ans">정답: ' + (item.answer === 'pass' ? '합격' : '불합격') + '</div>' +
         '<div class="wrongnote-item-reason">' + item.reason + '</div>';
       body.appendChild(div);
     });
@@ -563,25 +1064,33 @@ function showWrongnote() {
 }
 
 function closeWrongnote() {
+  playUIClick();
   document.getElementById('wrongnote-popup').classList.remove('show');
 }
 
 function clearWrongnote() {
-  if (confirm('오답노트를 모두 지우시겠습니까?')) {
-    WrongNote.clear();
-    showWrongnote();
-  }
+  playUIClick();
+  showConfirmModal(
+    '오답노트 초기화',
+    '오답노트를 모두 지우시겠습니까?',
+    () => {
+      WrongNote.clear();
+      showWrongnote();
+    }
+  );
 }
 
 // ==============================
 // 설정
 // ==============================
 function showSetting() {
+  playUIClick();
   updateSettingUI();
   document.getElementById('setting-popup').classList.add('show');
 }
 
 function closeSetting() {
+  playUIClick();
   document.getElementById('setting-popup').classList.remove('show');
 }
 
@@ -604,7 +1113,6 @@ function updateSettingUI() {
 
 function toggleBGM() {
   Sound.toggleBGM();
-  if (Sound.isBGMOn()) Sound.playBGM('bgm_title');
   updateSettingUI();
 }
 
@@ -617,114 +1125,173 @@ function toggleSE() {
 // BATTLE START
 // ==============================
 function startBattle() {
-  closeNodePopup();
+  playUIClick();
+  document.getElementById('node-popup').classList.remove('show');
   const node = NODES[G.currentNode];
   const isBoss = node.type === 'boss';
-
   const encImg = document.getElementById('enc-enemy-img');
-  if (encImg) encImg.style.backgroundImage = 'url(' + node.enemyImage + ')';
-  document.getElementById('enc-name').textContent = node.enemy;
-
-  // 보스 등장 대사
+  const encBtn = document.getElementById('enc-battle-btn');
   const introBox = document.getElementById('boss-intro-box');
-  if (isBoss && node.bossLine) {
-    document.getElementById('boss-intro-text').textContent = node.bossLine;
-    introBox.style.display = 'block';
-    document.getElementById('enc-battle-btn').style.display = 'none';
-    setTimeout(() => {
+
+  if (encImg) {
+    encImg.style.animation = 'none';
+    encImg.offsetWidth;
+    encImg.style.backgroundImage = 'url(' + node.enemyImage + ')';
+    encImg.style.animation = 'enemy-img-appear 0.6s ease-out 0.1s forwards';
+  }
+  document.getElementById('enc-name').textContent = node.enemy;
+  encBtn.classList.remove('show');
+
+  const revealBattleButton = () => {
+    if (isBoss && node.bossLine) {
+      document.getElementById('boss-intro-text').textContent = node.bossLine;
+      introBox.style.display = 'block';
+      introBox.style.cursor = 'pointer';
+      encBtn.classList.remove('show');
+      introBox.onclick = () => {
+        introBox.style.display = 'none';
+        introBox.onclick = null;
+        encBtn.classList.add('show');
+      };
+    } else {
       introBox.style.display = 'none';
-      document.getElementById('enc-battle-btn').style.display = 'inline-block';
-    }, 3000);
+      introBox.onclick = null;
+      encBtn.classList.add('show');
+    }
+  };
+
+  if (encImg) {
+    const onAppearDone = () => {
+      encImg.removeEventListener('animationend', onAppearDone);
+      revealBattleButton();
+    };
+    encImg.addEventListener('animationend', onAppearDone);
   } else {
-    introBox.style.display = 'none';
-    document.getElementById('enc-battle-btn').style.display = 'inline-block';
+    revealBattleButton();
   }
 
   showScreen('encounter-screen');
 
-  // 화면 흔들림
   const ec = document.getElementById('encounter-screen');
   ec.style.animation = 'none';
   requestAnimationFrame(() => {
     ec.style.animation = 'screen-shake 0.4s ease-out';
   });
 
-  // BGM
   Sound.playBGM(isBoss ? 'bgm_boss' : 'bgm_battle');
 }
 
-function startActualBattle() {
+function showStage1TutorialAndStart(onComplete) {
+  showAlertModal(
+    '전투 안내',
+    '상대의 주장을 확인한 뒤 판정하세요.<br>기준에 맞으면 <span class="tut-good">합격</span>, 문제가 있으면 <span class="tut-bad">불합격</span>입니다.<br><span class="tut-good">정답</span>이면 적 체력이 줄고,<br><span class="tut-bad">오답</span>이면 내 체력이 줄어듭니다.',
+    () => {
+      G.stage1TutorialShown = true;
+      saveGame();
+      if (onComplete) onComplete();
+    }
+  );
+}
+
+function doStartActualBattle() {
   resetNodeBattle(G.currentNode);
   const node = NODES[G.currentNode];
   const isBoss = node.type === 'boss';
 
   document.getElementById('battle-enemy-name').textContent = node.enemy;
-  document.getElementById('battle-name-badge').textContent = '⚔ ' + node.enemy;
+  document.getElementById('battle-player-name').textContent = G.playerName || '용사';
+  document.getElementById('battle-name-badge').textContent = node.enemy;
+  const playerBadge = document.getElementById('battle-player-badge');
+  if (playerBadge) playerBadge.textContent = G.playerName || '용사';
 
-  // 카드형 적 이미지 영역
-  const cardImg = document.getElementById('battle-card-img');
-  const cardFade = document.getElementById('battle-card-fade');
-  if (node.enemyImage) {
-    cardImg.innerHTML = '<img src="' + node.enemyImage + '" alt="' + node.enemy + '">';
-    cardImg.className = 'battle-card-img';
-    cardFade.style.display = 'block';
+  const sprite = document.getElementById('battle-card-img');
+  const spriteSrc = node.enemySprite || node.enemyImage;
+  if (spriteSrc) {
+    sprite.innerHTML = '<img src="' + spriteSrc + '" alt="' + node.enemy + '">';
   } else {
-    // 이미지 없으면 이모지 폴백
-    cardImg.innerHTML = node.enemyEmoji;
-    cardImg.className = 'battle-card-img emoji-mode' + (isBoss ? ' boss-bg' : '');
-    cardFade.style.display = 'none';
+    sprite.innerHTML = '<div class="arena-fallback-enemy">' + node.enemy + '</div>';
   }
 
-  // 보스 전용 UI
+  const playerSprite = document.getElementById('arena-player-sprite');
+  if (playerSprite) {
+    playerSprite.innerHTML = '<img src="images/player_back.png" alt="' + (G.playerName || '용사') + '">';
+  }
+
   const bossLabel = document.getElementById('boss-label');
   const bubble = document.getElementById('speech-bubble');
+  const enemyBadge = document.getElementById('battle-name-badge');
   if (isBoss) {
-    bossLabel.style.display = 'block';
+    if (bossLabel) bossLabel.style.display = 'none';
     bubble.classList.add('boss-bubble');
-    document.getElementById('battle-name-badge').style.borderColor = '#ff4444';
+    enemyBadge.style.borderColor = '#ff4444';
+    enemyBadge.classList.add('has-boss');
+    enemyBadge.innerHTML = '<span class="badge-name">' + node.enemy + '</span><span class="boss-inline-tag">BOSS</span>';
   } else {
-    bossLabel.style.display = 'none';
+    if (bossLabel) bossLabel.style.display = 'none';
     bubble.classList.remove('boss-bubble');
-    document.getElementById('battle-name-badge').style.borderColor = '#8a7a50';
+    enemyBadge.style.borderColor = '#8a7a50';
+    enemyBadge.classList.remove('has-boss');
+    enemyBadge.textContent = node.enemy;
   }
 
+  updatePlayerFlavorLine();
   renderHp();
   loadQuestion();
   showScreen('battle-screen');
+}
+
+function startActualBattle() {
+  playUIClick();
+  if (G.currentNode === 0 && !G.stage1TutorialShown) {
+    showStage1TutorialAndStart(doStartActualBattle);
+    return;
+  }
+  doStartActualBattle();
 }
 
 // ==============================
 // HP
 // ==============================
 function renderHp() {
-  const node = NODES[G.currentNode];
-  const el = document.getElementById('battle-hp');
-  el.innerHTML = '';
-  for (let i = 0; i < node.maxHp; i++) {
-    const span = document.createElement('span');
-    span.className = 'hp-icon' + (i >= G.hp ? ' empty' : '');
-    span.id = 'hp-icon-' + i;
-    span.textContent = '🌾';
-    el.appendChild(span);
+  const pFill = document.getElementById('player-hp-fill');
+  const pText = document.getElementById('player-hp-text');
+  const eFill = document.getElementById('enemy-hp-fill');
+  const eText = document.getElementById('enemy-hp-text');
+
+  const pRatio = Math.max(0, Math.min(1, G.hp / 3));
+  const eRatio = Math.max(0, Math.min(1, G.enemyHp / G.enemyMaxHp));
+
+  if (pFill) {
+    pFill.style.width = (pRatio * 100) + '%';
+    pFill.classList.remove('is-mid', 'is-low');
+    if (pRatio <= 0.34) pFill.classList.add('is-low');
+    else if (pRatio <= 0.67) pFill.classList.add('is-mid');
   }
+  if (eFill) {
+    eFill.style.width = (eRatio * 100) + '%';
+    eFill.classList.remove('is-mid', 'is-low');
+    if (eRatio <= 0.34) eFill.classList.add('is-low');
+    else if (eRatio <= 0.67) eFill.classList.add('is-mid');
+  }
+
+  if (pText) pText.textContent = G.hp + ' / 3';
+  if (eText) eText.textContent = G.enemyHp + ' / ' + G.enemyMaxHp;
 }
 
 function animateHpBreak(idx) {
-  const el = document.getElementById('hp-icon-' + idx);
-  if (el) {
-    el.classList.add('breaking');
-    setTimeout(() => el.classList.remove('breaking'), 500);
-  }
+  return;
 }
 
 // ==============================
 // QUESTION
 // ==============================
 function loadQuestion() {
+  if (!G.shuffledQ.length) return;
   const q = G.shuffledQ[G.currentQ];
   const formatted = formatQuestion(q.text);
   document.getElementById('battle-question').innerHTML = highlightNumbers(formatted);
-  document.getElementById('q-counter').textContent = (G.currentQ + 1) + ' / 5';
+  document.getElementById('q-counter').textContent = '문제 ' + G.questionTurn;
+  updatePlayerFlavorLine();
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);
 }
 
@@ -732,69 +1299,67 @@ function loadQuestion() {
 // ANSWER
 // ==============================
 function answer(choice) {
+  playUIClick();
+  if (G.pendingDamage) return;
+  disableResultNext(false);
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = true);
   const q = G.shuffledQ[G.currentQ];
   const correct = choice === q.answer;
+  const userJudge = choice === 'pass' ? '합격' : '불합격';
+  const correctJudge = q.answer === 'pass' ? '합격' : '불합격';
 
   const box = document.getElementById('result-box');
-  const stamp = document.getElementById('stamp-effect');
   box.className = 'result-box ' + (correct ? 'correct' : 'wrong');
-  document.getElementById('result-badge').textContent = correct ? '✅' : '❌';
+  document.getElementById('result-badge').textContent = '채점 결과';
   document.getElementById('result-title').textContent = correct ? '정답!' : '오답!';
-  document.getElementById('result-answer').textContent = '판정: ' + (q.answer === 'pass' ? '합격' : '불합격');
-  document.getElementById('result-reason').textContent = q.reason;
+  document.getElementById('result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
 
+  let reasonText = (q.reason || '').trim();
+  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
+  if (!reasonText) reasonText = suffix;
+  else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
+  document.getElementById('result-reason').innerHTML = formatReasonHtml(reasonText);
+  document.getElementById('result-popup').classList.add('show');
+
+  G.pendingDamage = true;
+  G.pendingDamageOutcome = correct;
   if (correct) {
     G.correct++; G.totalCorrect++;
-    // 도장 이펙트
-    stamp.textContent = q.answer === 'pass' ? '✅' : '🚫';
-    stamp.classList.remove('show');
-    requestAnimationFrame(() => stamp.classList.add('show'));
-    // 적 흔들림
-    const sprite = document.getElementById('battle-card-img');
-    sprite.classList.add('shake');
-    setTimeout(() => sprite.classList.remove('shake'), 500);
     Sound.playSE('se_correct');
-    Sound.playSE('se_stamp');
   } else {
     G.wrong++; G.totalWrong++;
-    // 오답노트에 저장
     WrongNote.add(q);
-    // 체력 감소 + 애니메이션
-    animateHpBreak(G.hp - 1);
-    G.hp--;
-    setTimeout(renderHp, 400);
-    // 화면 흔들림
-    const screen = document.getElementById('battle-screen');
-    screen.classList.add('shake');
-    setTimeout(() => screen.classList.remove('shake'), 400);
     Sound.playSE('se_wrong');
   }
-
-  document.getElementById('result-popup').classList.add('show');
 }
 
 function nextQuestion() {
+  playUIClick();
+  if (!G.pendingDamage || G.pendingDamageOutcome === null) return;
+
+  const correct = G.pendingDamageOutcome;
+  G.pendingDamageOutcome = null;
   document.getElementById('result-popup').classList.remove('show');
-  if (G.hp <= 0) {
-    Sound.playSE('se_gameover');
-    Sound.stopBGM();
-    showScreen('gameover-screen');
-    return;
-  }
-  G.currentQ++;
-  if (G.currentQ >= 5) stageClear();
-  else loadQuestion();
+  disableResultNext(true);
+
+  if (G.damageTimer) clearTimeout(G.damageTimer);
+  G.damageTimer = setTimeout(() => {
+    applyBattleDamageEffects(correct);
+    G.damageTimer = setTimeout(() => {
+      finalizeAfterDamage();
+    }, 460);
+  }, 30);
 }
 
 // ==============================
 // EXIT
 // ==============================
-function showExitConfirm() { document.getElementById('exit-confirm').classList.add('show'); }
-function hideExitConfirm() { document.getElementById('exit-confirm').classList.remove('show'); }
+function showExitConfirm() { playUIClick(); document.getElementById('exit-confirm').classList.add('show'); }
+function hideExitConfirm() { playUIClick(); document.getElementById('exit-confirm').classList.remove('show'); }
 
 function exitToMap() {
-  hideExitConfirm();
+  playUIClick();
+  document.getElementById('exit-confirm').classList.remove('show');
   document.getElementById('result-popup').classList.remove('show');
   Sound.stopBGM();
   Sound.playBGM('bgm_title');
@@ -808,23 +1373,31 @@ function exitToMap() {
 // STAGE CLEAR
 // ==============================
 function stageClear() {
+  if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
+  G.pendingDamage = false;
   G.nodeStatus[G.currentNode] = 'cleared';
-  if (G.currentNode + 1 < NODES.length) G.nodeStatus[G.currentNode + 1] = 'available';
+  if (G.currentNode + 1 < NODES.length && G.nodeStatus[G.currentNode + 1] === 'locked') {
+    G.nodeStatus[G.currentNode + 1] = 'available';
+  }
   saveGame();
   Sound.playSE('se_clear');
   Sound.stopBGM();
 
   const node = NODES[G.currentNode];
   const isLast = G.currentNode === NODES.length - 1;
-  document.getElementById('clear-title').textContent = isLast ? '🎉 최종 보스 격파!' : node.label + ' 클리어!';
+  document.getElementById('clear-title').textContent = isLast ? '최종 보스 격파!' : node.label + ' 클리어!';
   document.getElementById('clear-sub').textContent = isLast ? '왕국의 질서가 되찾아졌다!' : '다음 지역으로 나아가자!';
   document.getElementById('cs-correct').textContent = G.correct + '개';
   document.getElementById('cs-wrong').textContent = G.wrong + '개';
-  document.getElementById('cs-hp').textContent = hpStr(G.hp);
+  const hpRow = document.getElementById('clear-hp-row');
+  if (hpRow) hpRow.style.display = 'none';
+  const clearBtn = document.getElementById('clear-return-btn');
+  if (clearBtn) clearBtn.textContent = isLast ? '엔딩 보기' : '지도로 돌아가기';
   showScreen('clear-screen');
 }
 
 function afterClear() {
+  playUIClick();
   if (G.currentNode === NODES.length - 1) showEnding();
   else {
     showScreen('map-screen');
@@ -839,6 +1412,7 @@ function afterClear() {
 // GAME OVER
 // ==============================
 function retryNode() {
+  playUIClick();
   showScreen('map-screen');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     renderMap();
@@ -849,31 +1423,259 @@ function retryNode() {
 // ==============================
 // ENDING
 // ==============================
-function showEnding() {
-  const total = G.totalCorrect + G.totalWrong;
-  const rate = total > 0 ? G.totalCorrect / total : 0;
-  let rank = '📜 B랭크 성장형 검사원';
-  if (rate >= 1.0)  rank = '🥇 S랭크 완벽한 판정관';
-  else if (rate >= 0.85) rank = '🥈 A랭크 우수한 검사원';
-  document.getElementById('ending-rank').textContent = rank;
-  document.getElementById('ending-sub').textContent = G.playerName + '의 모험이 끝났다!';
-  document.getElementById('cert-player-name').textContent = G.playerName;
+function endingRenderLine(line) {
+  const safe = line
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+  return safe.replace(/__NAME__/g, '<span class="ending-player-name">' + G.playerName + '</span>');
+}
 
-  const p = document.getElementById('ending-particles');
-  p.innerHTML = '';
-  ['🌾','⭐','✨','🎉','🏅'].forEach(emoji => {
-    for (let i = 0; i < 5; i++) {
-      const el = document.createElement('div');
-      el.className = 'particle';
-      el.textContent = emoji;
-      el.style.left = Math.random() * 100 + '%';
-      el.style.animationDelay = Math.random() * 3 + 's';
-      el.style.animationDuration = (3 + Math.random() * 4) + 's';
-      p.appendChild(el);
+function endingTypeLine(line) {
+  clearTimeout(endingTypingTimer);
+  endingTyping = true;
+  endingFullLine = line;
+  const plain = line.replace(/__NAME__/g, G.playerName);
+  const textEl = document.getElementById('ending-text');
+  if (!textEl) { endingTyping = false; return; }
+  let i = 0;
+  textEl.innerHTML = '';
+  function tick() {
+    const s = plain.slice(0, i).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    textEl.innerHTML = s;
+    i++;
+    if (i <= plain.length) endingTypingTimer = setTimeout(tick, 28);
+    else {
+      textEl.innerHTML = endingRenderLine(line);
+      endingTyping = false;
     }
-  });
+  }
+  tick();
+}
 
+function setEndingBackground(idx) {
+  const layer = document.getElementById('ending-bg-layer');
+  const flash = document.getElementById('ending-flash');
+  if (!layer) return;
+  const scene = ENDING_SCENES[idx];
+  layer.style.background = scene.fallback;
+  layer.style.backgroundSize = 'cover';
+  layer.style.backgroundPosition = 'center center';
+  layer.style.backgroundRepeat = 'no-repeat';
+  const img = new Image();
+  img.onload = () => {
+    layer.style.background = `url("${scene.image}"), ${scene.fallback}`;
+    layer.style.backgroundSize = 'cover, cover';
+    layer.style.backgroundPosition = 'center center, center center';
+    layer.style.backgroundRepeat = 'no-repeat, no-repeat';
+  };
+  img.src = scene.image;
+  if (flash && idx > 0) {
+    flash.classList.remove('show');
+    void flash.offsetWidth;
+    flash.classList.add('show');
+  }
+}
+
+function endingSetScene(idx, immediate = false) {
+  const layer = document.getElementById('ending-bg-layer');
+  if (!layer) { setEndingBackground(idx); return; }
+  if (immediate) {
+    setEndingBackground(idx);
+    layer.classList.remove('wipe-in', 'wipe-out');
+    layer.style.webkitMaskImage = 'none';
+    layer.style.maskImage = 'none';
+    layer.style.webkitMaskSize = 'auto';
+    layer.style.maskSize = 'auto';
+    return;
+  }
+  layer.classList.remove('wipe-in');
+  layer.classList.add('wipe-out');
+  setTimeout(() => {
+    setEndingBackground(idx);
+    layer.classList.remove('wipe-out');
+    layer.classList.add('wipe-in');
+    setTimeout(() => {
+      layer.classList.remove('wipe-in', 'wipe-out');
+      layer.style.webkitMaskImage = 'none';
+      layer.style.maskImage = 'none';
+      layer.style.webkitMaskSize = 'auto';
+      layer.style.maskSize = 'auto';
+    }, 620);
+  }, 240);
+}
+
+function endingShowLine() {
+  endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]);
+}
+
+function buildEndingParticles() {
+  const wrap = document.getElementById('ending-particles');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'ending-particle';
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.bottom = (-20 - Math.random() * 80) + 'px';
+    p.style.animationDelay = (Math.random() * 4) + 's';
+    p.style.animationDuration = (4 + Math.random() * 5) + 's';
+    if (Math.random() > 0.7) {
+      p.style.width = '2px';
+      p.style.height = '2px';
+    }
+    wrap.appendChild(p);
+  }
+}
+
+function buildEndingRankParticles() {
+  const wrap = document.getElementById('ending-rank-particles');
+  if (wrap) {
+    wrap.innerHTML = '';
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'ending-rank-particle';
+      p.style.left = (8 + Math.random() * 84) + '%';
+      p.style.top = (4 + Math.random() * 88) + '%';
+      p.style.animationDelay = (Math.random() * 2.5) + 's';
+      p.style.animationDuration = (2.8 + Math.random() * 2.2) + 's';
+      wrap.appendChild(p);
+    }
+  }
+  const modal = document.getElementById('ending-rank-modal');
+  if (!modal) return;
+  let bg = document.getElementById('ending-rank-bg-particles');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = 'ending-rank-bg-particles';
+    bg.className = 'ending-rank-bg-particles';
+    modal.prepend(bg);
+  }
+  bg.innerHTML = '';
+  for (let i = 0; i < 92; i++) {
+    const p = document.createElement('div');
+    p.className = 'ending-rank-bg-particle';
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.top = (Math.random() * 100) + '%';
+    p.style.animationDelay = (Math.random() * 2.8) + 's';
+    p.style.animationDuration = (3.6 + Math.random() * 3.2) + 's';
+    const size = Math.random() > 0.7 ? 4 : (Math.random() > 0.35 ? 3 : 2);
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    bg.appendChild(p);
+  }
+}
+
+function buildEndingRankData() {
+  const total = G.totalCorrect + G.totalWrong;
+  const rate = total > 0 ? Math.round((G.totalCorrect / total) * 100) : 0;
+  let grade = 'B';
+  let title = '성장형 검사원';
+  let desc = '왕국의 질서를 되찾았습니다.';
+  if (rate >= 100) {
+    grade = 'S';
+    title = '완벽한 판정관';
+    desc = '완벽한 판정으로 왕국의 기준을 다시 세웠습니다.';
+  } else if (rate >= 85) {
+    grade = 'A';
+    title = '우수한 검사원';
+    desc = '뛰어난 판단으로 왕국의 질서를 되찾았습니다.';
+  }
+  endingRankData = { total, rate, grade, title, desc };
+}
+
+function showEndingRankPopup() {
+  if (!endingRankData) buildEndingRankData();
+  const modal = document.getElementById('ending-rank-modal');
+  document.getElementById('ending-rank-grade').textContent = endingRankData.grade;
+  document.getElementById('ending-rank-name').textContent = `${G.playerName} · ${endingRankData.title}`;
+  document.getElementById('ending-stat-correct').textContent = `${G.totalCorrect}개`;
+  document.getElementById('ending-stat-wrong').textContent = `${G.totalWrong}개`;
+  document.getElementById('ending-stat-rate').textContent = `${endingRankData.rate}%`;
+  document.getElementById('ending-rank-desc').textContent = endingRankData.desc;
+  buildEndingRankParticles();
+  if (modal) {
+    modal.classList.add('show');
+    modal.classList.add('ending-rank-standalone');
+  }
+  endingRankPopupShown = true;
+}
+
+function endingSkipToRank() {
+  if (!endingRankData) buildEndingRankData();
+  endingTyping = false;
+  endingAwaitingRank = false;
+  const textEl = document.getElementById('ending-text');
+  if (textEl) textEl.innerHTML = '';
+  const btn = document.getElementById('ending-rank-trigger');
+  const arrow = document.getElementById('ending-arrow');
+  if (btn) btn.style.display = 'none';
+  if (arrow) arrow.style.visibility = 'hidden';
+  showEndingRankPopup();
+}
+
+function endingFinish() {
+  endingAwaitingRank = true;
+  const btn = document.getElementById('ending-rank-trigger');
+  const arrow = document.getElementById('ending-arrow');
+  if (btn) btn.style.display = 'block';
+  if (arrow) arrow.style.visibility = 'hidden';
+}
+
+function endingNextStep() {
+  if (endingRankPopupShown) return;
+  if (endingTyping) {
+    clearTimeout(endingTypingTimer);
+    const textEl = document.getElementById('ending-text');
+    if (textEl) textEl.innerHTML = endingRenderLine(endingFullLine);
+    endingTyping = false;
+    return;
+  }
+  if (endingAwaitingRank) {
+    showEndingRankPopup();
+    return;
+  }
+  const scene = ENDING_SCENES[endingSceneIdx];
+  if (endingLineIdx < scene.lines.length - 1) {
+    endingLineIdx++;
+    endingShowLine();
+    return;
+  }
+  if (endingSceneIdx < ENDING_SCENES.length - 1) {
+    endingSceneIdx++;
+    endingLineIdx = 0;
+    endingSetScene(endingSceneIdx);
+    endingShowLine();
+    return;
+  }
+  endingFinish();
+}
+
+function showEnding() {
+  if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
+  G.pendingDamage = false;
+  endingSceneIdx = 0;
+  endingLineIdx = 0;
+  endingTyping = false;
+  endingAwaitingRank = false;
+  endingRankPopupShown = false;
+  buildEndingRankData();
+  buildEndingParticles();
+  const rankModal = document.getElementById('ending-rank-modal');
+  const rankBtn = document.getElementById('ending-rank-trigger');
+  const arrow = document.getElementById('ending-arrow');
+  if (rankModal) rankModal.classList.remove('show');
+  const rankParticles = document.getElementById('ending-rank-particles');
+  if (rankParticles) rankParticles.innerHTML = '';
+  if (rankBtn) rankBtn.style.display = 'none';
+  if (arrow) arrow.style.visibility = 'visible';
+  endingSetScene(0, true);
   showScreen('ending-screen');
+  endingShowLine();
+  Sound.playBGM('bgm_ending');
+  const wrap = document.getElementById('ending-scene-wrap');
+  if (wrap) wrap.onclick = endingNextStep;
 }
 
 // ==============================
@@ -881,3 +1683,13 @@ function showEnding() {
 // ==============================
 Sound.loadSettings();
 initTitle();
+
+
+(() => {
+  const modal = document.getElementById('ui-modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeUIModal();
+    });
+  }
+})();
