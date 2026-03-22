@@ -266,11 +266,46 @@ function hpStr(hp) {
 }
 
 function highlightNumbers(text) {
-  return text.replace(/(\d+\.?\d*%)/g, '<span class="highlight">$1</span>');
+  return String(text).replace(/(\d+(?:\.\d+)?(?:%|m))/g, '<span class="highlight">$1</span>');
 }
 
 function formatQuestion(text) {
-  return text.replace(/([.?!~…])\s+/g, '$1\n');
+  return String(text).replace(/([.?!~…])\s+/g, '$1\n');
+}
+
+function formatStudyQuestionHtml(text) {
+  const lines = cleanStudyText(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
+  if (!lines.length) return '';
+  const head = '<div class="study-line-label">' + highlightNumbers(escapeHtml(lines[0])) + '</div>';
+  const body = lines.slice(1).map(line => '<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
+  return head + body;
+}
+
+function formatReasonHtml(text, labelClass = 'reason-line-label') {
+  const lines = String(text || '').split(/\n/);
+  const chunks = [];
+  let firstLabelDone = false;
+  let inRefs = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      chunks.push('<div class="reason-gap"></div>');
+      continue;
+    }
+    if (!firstLabelDone) {
+      chunks.push('<div class="' + labelClass + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
+      firstLabelDone = true;
+      continue;
+    }
+    if (/^참고\)/.test(line)) {
+      inRefs = true;
+      chunks.push('<div class="reason-ref-title">참고)</div>');
+      continue;
+    }
+    const cls = inRefs ? 'reason-ref-line' : 'reason-main-line';
+    chunks.push('<div class="' + cls + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
+  }
+  return chunks.join('');
 }
 
 
@@ -338,9 +373,9 @@ function cleanStudyText(text) {
 
 function updateStudyStats() {
   const total = STUDY.correct + STUDY.wrong;
-  const statText = `정답 ${STUDY.correct} · 오답 ${STUDY.wrong}` + (total ? ` · 정답률 ${Math.round((STUDY.correct/total)*100)}%` : '');
+  const rateText = total ? `${Math.round((STUDY.correct / total) * 100)}%` : '- %';
   const inline = document.getElementById('study-stats-inline');
-  if (inline) inline.textContent = statText;
+  if (inline) inline.innerHTML = `정답 ${STUDY.correct} · 오답 ${STUDY.wrong}<br>정답률 ${rateText}`;
 }
 
 function showStudyQuestion() {
@@ -354,7 +389,7 @@ function showStudyQuestion() {
   const stageEl = document.getElementById('study-question-stage');
   if (stageEl) stageEl.textContent = '';
   const studyBody = STUDY.current.studyText || STUDY.current.text;
-  document.getElementById('study-question').innerHTML = highlightNumbers(formatQuestion(cleanStudyText(studyBody)));
+  document.getElementById('study-question').innerHTML = formatStudyQuestionHtml(studyBody);
   document.getElementById('study-result-box').classList.remove('show', 'correct', 'wrong');
   document.getElementById('study-pass-btn').disabled = false;
   document.getElementById('study-fail-btn').disabled = false;
@@ -408,7 +443,7 @@ function answerStudy(choice) {
   const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
   if (!reasonText) reasonText = suffix;
   else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
-  document.getElementById('study-result-reason').textContent = reasonText;
+  document.getElementById('study-result-reason').innerHTML = formatReasonHtml(reasonText, 'study-reason-label');
   updateStudyStats();
 }
 
@@ -1256,7 +1291,7 @@ function answer(choice) {
   const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
   if (!reasonText) reasonText = suffix;
   else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
-  document.getElementById('result-reason').textContent = reasonText;
+  document.getElementById('result-reason').innerHTML = formatReasonHtml(reasonText);
   document.getElementById('result-popup').classList.add('show');
 
   G.pendingDamage = true;
@@ -1314,7 +1349,9 @@ function stageClear() {
   if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
   G.pendingDamage = false;
   G.nodeStatus[G.currentNode] = 'cleared';
-  if (G.currentNode + 1 < NODES.length) G.nodeStatus[G.currentNode + 1] = 'available';
+  if (G.currentNode + 1 < NODES.length && G.nodeStatus[G.currentNode + 1] === 'locked') {
+    G.nodeStatus[G.currentNode + 1] = 'available';
+  }
   saveGame();
   Sound.playSE('se_clear');
   Sound.stopBGM();

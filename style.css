@@ -2778,3 +2778,135 @@ body {
 .footer-btn-label { font-size:11px !important; }
 .map-player-journey, .map-progress { font-size:11px !important; }
 .map-title { font-size:13px !important; }
+
+/* ═══════════════════════════════════════════
+   V16 PATCH - study/result/map/gameover polish
+════════════════════════════════════════════ */
+.wrongnote-body.is-empty {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.wrongnote-empty {
+  width: 100%;
+  margin-top: 0 !important;
+  line-height: 2.05;
+}
+
+.footer-home-btn,
+.footer-setting-btn {
+  font-size: 10px !important;
+  padding: 6px 10px !important;
+  gap: 5px !important;
+  min-width: 70px !important;
+}
+.footer-btn-icon {
+  font-size: 9px !important;
+}
+.footer-btn-label {
+  font-size: 10px !important;
+  letter-spacing: 0.02em !important;
+}
+.map-player-journey,
+.map-progress {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+.map-player-journey strong {
+  font-weight: 900 !important;
+}
+
+#gameover-screen {
+  background: rgba(0, 0, 0, 0.92) !important;
+  position: relative;
+}
+#gameover-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 38%, rgba(120, 12, 20, 0.16), rgba(0, 0, 0, 0.06) 42%, rgba(0, 0, 0, 0.86) 100%);
+  pointer-events: none;
+}
+.gameover-content {
+  position: relative;
+  z-index: 1;
+  width: min(86%, 320px);
+  padding: 28px 22px 24px !important;
+  background: rgba(16, 8, 10, 0.96);
+  border: 1px solid rgba(210, 70, 70, 0.54);
+  box-shadow: 0 0 0 1px rgba(75, 16, 18, 0.9) inset, 0 22px 54px rgba(0, 0, 0, 0.72);
+  animation: gameover-pop 360ms cubic-bezier(.18,.92,.28,1.02);
+}
+.gameover-content::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(255, 120, 120, 0.08);
+  pointer-events: none;
+}
+.gameover-title {
+  margin-bottom: 12px !important;
+}
+.gameover-sub {
+  margin-bottom: 22px !important;
+}
+.gameover-btns {
+  gap: 12px !important;
+}
+.gameover-btn {
+  width: 220px !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+}
+@keyframes gameover-pop {
+  0% { transform: translateY(18px) scale(0.96); opacity: 0; }
+  58% { transform: translateY(-4px) scale(1.015); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.study-stats-inline {
+  line-height: 1.45 !important;
+}
+.study-line-label,
+.study-reason-label,
+.reason-line-label {
+  font-size: 13px;
+  font-weight: 900;
+  color: #f0d28b;
+  margin-bottom: 10px;
+}
+.study-line-body {
+  font-size: 15px;
+  line-height: 1.82;
+  color: #f5f0e2;
+  margin-top: 6px;
+}
+.study-question-text .highlight,
+.study-result-reason .highlight,
+.result-reason .highlight,
+.wrongnote-item-q .highlight {
+  color: #f0d28b;
+  font-weight: 800;
+}
+.study-result-reason,
+.result-reason {
+  white-space: normal !important;
+}
+.reason-main-line,
+.reason-ref-line {
+  font-size: 12px;
+  line-height: 1.72;
+  color: #ddd4c2;
+}
+.reason-ref-title {
+  margin-top: 10px;
+  margin-bottom: 6px;
+  color: #d9c99a;
+  font-weight: 800;
+  font-size: 12px;
+}
+.reason-gap {
+  height: 4px;
+}
+.reason-ref-line {
+  color: #cfc7b5;
+}
