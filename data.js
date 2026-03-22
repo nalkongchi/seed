@@ -375,28 +375,6 @@ var NODES = [
   function formatThreshold(metric) {
     return formatNumber(metric.threshold, metric.format) + (metric.unit || '') + (metric.type === 'min' ? ' 이상' : ' 이하');
   }
-  function buildCriterionLabel(metric) {
-    return metric.label + ' 기준 ' + formatThreshold(metric);
-  }
-  function buildRuleKey(profile, metric, verdictType) {
-    return [profile.id, metric.label, metric.type, formatNumber(metric.threshold, metric.format) + (metric.unit || ''), verdictType].join('::');
-  }
-  function buildMistakeType(metric, verdictType) {
-    if (verdictType === 'pass') return metric.label + ' 기준 ' + (metric.type === 'min' ? '충족' : '이내');
-    return metric.label + ' 기준 ' + (metric.type === 'min' ? '미달' : '초과');
-  }
-  function distanceFromThreshold(metric, value) {
-    return Math.abs(Number(value) - Number(metric.threshold));
-  }
-  function pickPrimaryEntry(entries, answer) {
-    if (!entries.length) return null;
-    const copy = entries.slice();
-    if (answer === 'fail') {
-      const failed = copy.filter(e => !e.pass);
-      if (failed.length) return failed.sort((a, b) => distanceFromThreshold(a.metric, a.value) - distanceFromThreshold(b.metric, b.value))[0];
-    }
-    return copy.sort((a, b) => distanceFromThreshold(a.metric, a.value) - distanceFromThreshold(b.metric, b.value))[0];
-  }
   function weightedPick(items, weightFn) {
     const pool = items.map(item => ({ item, w: Math.max(0, Number(weightFn(item)) || 0) })).filter(x => x.w > 0);
     if (!pool.length) return items[0];
@@ -468,49 +446,37 @@ var NODES = [
   }
 
   function buildStudyText(prefix, valuesText) {
-    return prefix + '\n' + valuesText + '일 때 판정은?';
+    return prefix + '. ' + valuesText + '일 때 판정은?';
   }
 
   function buildReason(prefix, entries, answer) {
     const failed = entries.filter(e => !e.pass);
-    const sortedEntries = entries.slice().sort((a, b) => distanceFromThreshold(a.metric, a.value) - distanceFromThreshold(b.metric, b.value));
-    const primary = answer === 'fail'
-      ? (failed.slice().sort((a, b) => distanceFromThreshold(a.metric, a.value) - distanceFromThreshold(b.metric, b.value))[0] || entries[0])
-      : (sortedEntries[0] || entries[0]);
-    const refs = [];
-    const seenRef = new Set();
-    entries.forEach(e => {
-      const ref = buildCriterionLabel(e.metric);
-      if (!seenRef.has(ref)) {
-        seenRef.add(ref);
-        refs.push(ref);
-      }
-    });
-
-    const parts = [prefix];
-
+    const passed = entries.filter(e => e.pass);
+    const parts = [];
     if (answer === 'pass') {
-      if (entries.length === 1 && primary) {
-        parts.push(primary.metric.label + ' ' + formatValue(primary.metric, primary.value) + '는 기준(' + formatThreshold(primary.metric) + ')을 충족하므로 합격입니다.');
+      if (entries.length === 1) {
+        const e = entries[0];
+        parts.push(prefix + '의 ' + e.metric.label + ' 기준은 ' + formatThreshold(e.metric) + '입니다. ' + formatValue(e.metric, e.value) + '는 기준을 충족하므로 합격입니다.');
       } else {
-        parts.push('제시된 항목이 모두 각 기준을 충족하므로 합격입니다.');
+        parts.push(prefix + '의 제시 항목은 모두 기준을 충족하므로 합격입니다.');
+        const refs = passed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value) + '는 기준에 맞습니다');
+        parts.push('(참고) ' + refs.join(', ') + '.');
       }
     } else {
-      if (failed.length === 1 && primary) {
-        const verdict = primary.metric.type === 'min' ? '기준에 미달하므로' : '기준을 초과하므로';
-        parts.push(primary.metric.label + ' ' + formatValue(primary.metric, primary.value) + '는 ' + verdict + ' 불합격입니다.');
-      } else if (failed.length > 1) {
-        const failTexts = failed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value));
-        parts.push(failTexts.join(', ') + '가 각각 해당 기준을 벗어나 불합격입니다.');
+      if (failed.length === 1) {
+        const e = failed[0];
+        const verdict = e.metric.type === 'min' ? '기준에 미달하므로' : '기준을 넘었으므로';
+        parts.push(prefix + '의 ' + e.metric.label + ' 기준은 ' + formatThreshold(e.metric) + '입니다. ' + formatValue(e.metric, e.value) + '는 ' + verdict + ' 불합격입니다.');
       } else {
-        parts.push('제시된 항목 중 기준을 벗어난 값이 있어 불합격입니다.');
+        const failTexts = failed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value));
+        parts.push(prefix + '에서는 ' + failTexts.join(', ') + '가 각각 해당 기준을 벗어나 불합격입니다.');
+      }
+      if (passed.length) {
+        const refs = passed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value) + '는 기준에 맞습니다');
+        parts.push('(참고) ' + refs.join(', ') + '.');
       }
     }
-
-    parts.push('');
-    parts.push('참고)');
-    refs.forEach(ref => parts.push(ref));
-    return parts.join('\n');
+    return parts.join('\n\n');
   }
 
   function chooseProfile(stage) {
@@ -552,13 +518,7 @@ var NODES = [
     const storyText = buildStoryText(stage, prefix, valuesText);
     const studyText = buildStudyText(prefix, valuesText);
     const reason = buildReason(prefix, entries, answer);
-    const primaryEntry = pickPrimaryEntry(entries, answer);
-    const verdictType = answer === 'pass' ? 'pass' : 'fail';
-    const ruleKey = primaryEntry ? buildRuleKey(profile, primaryEntry.metric, verdictType) : ('legacy::' + storyText);
-    const mistakeType = primaryEntry ? buildMistakeType(primaryEntry.metric, verdictType) : (answer === 'pass' ? '기준 충족' : '기준 이탈');
-    const criterionLabel = primaryEntry ? buildCriterionLabel(primaryEntry.metric) : '';
-    const exampleText = primaryEntry ? (primaryEntry.metric.label + ' ' + formatValue(primaryEntry.metric, primaryEntry.value)) : valuesText;
-    return { text: storyText, storyText, studyText, answer, reason, ruleKey, mistakeType, criterionLabel, exampleText };
+    return { text: storyText, storyText, studyText, answer, reason };
   }
 
   function generateStageQuestions(stage) {

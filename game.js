@@ -1,7 +1,11 @@
 // ============================================================
-// game.js - 종자검사원 게임 로직 (ver17 rebuild)
+// game.js - 나는야 종자검사원 게임 로직
 // ============================================================
 
+// ==============================
+// 설정 (사운드 파일 경로)
+// 나중에 파일 첨부 시 경로 변경하세요.
+// ==============================
 const SOUND_FILES = {
   bgm_title:   'sounds/bgm_title.mp3',
   bgm_battle:  'sounds/bgm_battle.mp3',
@@ -18,6 +22,9 @@ const SOUND_FILES = {
   se_hit:      'sounds/se_hit.wav',
 };
 
+// ==============================
+// 사운드 시스템
+// ==============================
 const Sound = (() => {
   let bgmEl = null;
   let currentBgmKey = null;
@@ -25,13 +32,13 @@ const Sound = (() => {
 
   function loadSettings() {
     try {
-      const saved = localStorage.getItem('seedGame_sound');
-      if (saved) Object.assign(settings, JSON.parse(saved));
-    } catch (e) {}
+      const s = localStorage.getItem('seedGame_sound');
+      if (s) Object.assign(settings, JSON.parse(s));
+    } catch(e) {}
   }
 
   function saveSettings() {
-    try { localStorage.setItem('seedGame_sound', JSON.stringify(settings)); } catch (e) {}
+    try { localStorage.setItem('seedGame_sound', JSON.stringify(settings)); } catch(e) {}
   }
 
   function playBGM(key) {
@@ -40,7 +47,7 @@ const Sound = (() => {
     if (!settings.bgm) return;
     if (bgmEl && bgmEl.dataset && bgmEl.dataset.key === key) {
       bgmEl.volume = settings.bgmVolume ?? 0.5;
-      if (bgmEl.paused) bgmEl.play().catch(() => {});
+      if (bgmEl.paused) bgmEl.play().catch(()=>{});
       return;
     }
     if (bgmEl) {
@@ -52,8 +59,8 @@ const Sound = (() => {
       bgmEl.loop = true;
       bgmEl.volume = settings.bgmVolume ?? 0.5;
       bgmEl.dataset.key = key;
-      bgmEl.play().catch(() => {});
-    } catch (e) {}
+      bgmEl.play().catch(()=>{});
+    } catch(e) {}
   }
 
   function stopBGM() {
@@ -66,14 +73,17 @@ const Sound = (() => {
     try {
       const a = new Audio(SOUND_FILES[key]);
       a.volume = settings.seVolume ?? 0.7;
-      a.play().catch(() => {});
-    } catch (e) {}
+      a.play().catch(()=>{});
+    } catch(e) {}
   }
 
   function toggleBGM() {
     settings.bgm = !settings.bgm;
-    if (!settings.bgm) stopBGM();
-    else if (currentBgmKey) playBGM(currentBgmKey);
+    if (!settings.bgm) {
+      stopBGM();
+    } else if (currentBgmKey) {
+      playBGM(currentBgmKey);
+    }
     saveSettings();
     return settings.bgm;
   }
@@ -85,112 +95,58 @@ const Sound = (() => {
   }
 
   function isBGMOn() { return settings.bgm; }
-  function isSEOn() { return settings.se; }
+  function isSEOn()  { return settings.se; }
 
   function setBGMVol(val) {
     const v = parseInt(val, 10) / 100;
     settings.bgmVolume = v;
     settings.bgm = v > 0;
-    const el = document.getElementById('bgm-val');
-    if (el) el.textContent = String(val);
     if (bgmEl) {
       bgmEl.volume = v;
       if (!settings.bgm) bgmEl.pause();
-      else bgmEl.play().catch(() => {});
+      else bgmEl.play().catch(()=>{});
     } else if (settings.bgm && currentBgmKey) {
       playBGM(currentBgmKey);
     }
+    const el = document.getElementById('bgm-val');
+    if (el) el.textContent = val;
     saveSettings();
   }
 
   function setSEVol(val) {
     const v = parseInt(val, 10) / 100;
-    settings.seVolume = v;
     settings.se = v > 0;
+    settings.seVolume = v;
     const el = document.getElementById('se-val');
-    if (el) el.textContent = String(val);
+    if (el) el.textContent = val;
     saveSettings();
   }
 
   return { playBGM, stopBGM, playSE, toggleBGM, toggleSE, isBGMOn, isSEOn, loadSettings, setBGMVol, setSEVol };
 })();
 
+// ==============================
+// 오답노트 저장소
+// ==============================
 const WrongNote = (() => {
   const KEY = 'seedGame_wrongnote';
 
   function load() {
-    try {
-      const raw = JSON.parse(localStorage.getItem(KEY));
-      return Array.isArray(raw) ? raw : [];
-    } catch (e) {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; }
   }
 
   function save(list) {
-    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
-  }
-
-  function trimExamples(examples) {
-    return (Array.isArray(examples) ? examples : []).filter(Boolean).slice(0, 3);
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(e) {}
   }
 
   function add(q) {
-    if (!q || typeof q !== 'object') return;
     const list = load();
-    const now = Date.now();
-
-    if (!q.ruleKey) {
-      const legacyKey = 'legacy::' + (q.text || '');
-      if (!list.find(item => item.ruleKey === legacyKey || item.text === q.text)) {
-        list.unshift({
-          ruleKey: legacyKey,
-          title: q.text || '오답 문제',
-          criterionLabel: q.criterionLabel || '',
-          examples: trimExamples(q.exampleText ? [q.exampleText] : []),
-          wrongCount: 1,
-          lastWrongAt: now,
-          answer: q.answer,
-          reason: q.reason || '',
-          text: q.text || ''
-        });
-        if (list.length > 50) list.length = 50;
-        save(list);
-      }
-      return;
+    // 중복 방지
+    if (!list.find(item => item.text === q.text)) {
+      list.unshift({ text: q.text, answer: q.answer, reason: q.reason });
+      if (list.length > 50) list.pop();
+      save(list);
     }
-
-    const idx = list.findIndex(item => item.ruleKey === q.ruleKey);
-    if (idx >= 0) {
-      const item = list[idx];
-      item.title = q.mistakeType || item.title || '오답 유형';
-      item.criterionLabel = q.criterionLabel || item.criterionLabel || '';
-      item.answer = q.answer || item.answer;
-      item.reason = q.reason || item.reason || '';
-      item.text = q.text || item.text || '';
-      item.wrongCount = (Number(item.wrongCount) || 0) + 1;
-      item.lastWrongAt = now;
-      const examples = Array.isArray(item.examples) ? item.examples.slice() : [];
-      if (q.exampleText) item.examples = trimExamples([q.exampleText].concat(examples.filter(v => v !== q.exampleText)));
-      else item.examples = trimExamples(examples);
-      list.splice(idx, 1);
-      list.unshift(item);
-    } else {
-      list.unshift({
-        ruleKey: q.ruleKey,
-        title: q.mistakeType || '오답 유형',
-        criterionLabel: q.criterionLabel || '',
-        examples: trimExamples(q.exampleText ? [q.exampleText] : []),
-        wrongCount: 1,
-        lastWrongAt: now,
-        answer: q.answer,
-        reason: q.reason || '',
-        text: q.text || ''
-      });
-    }
-
-    if (list.length > 50) list.length = 50;
-    save(list);
   }
 
   function clear() { save([]); }
@@ -198,8 +154,11 @@ const WrongNote = (() => {
   return { load, add, clear };
 })();
 
+// ==============================
+// 게임 상태
+// ==============================
 let G = {
-  playerName: '용사',
+  playerName: '',
   nodeStatus: Array(NODES.length).fill('locked'),
   currentNode: 0,
   currentQ: 0,
@@ -220,6 +179,201 @@ let G = {
 };
 G.nodeStatus[0] = 'available';
 
+// ==============================
+// 저장 / 불러오기
+// ==============================
+
+function normalizeNodeStatus(statuses) {
+  const norm = Array.isArray(statuses) ? statuses.slice(0, NODES.length) : [];
+  while (norm.length < NODES.length) norm.push('locked');
+  const progressed = new Set(['available','cleared']);
+  let furthest = -1;
+  for (let i = 0; i < norm.length; i++) {
+    if (progressed.has(norm[i])) furthest = i;
+  }
+  if (furthest < 0) {
+    norm.fill('locked');
+    norm[0] = 'available';
+    return norm;
+  }
+  for (let i = 0; i < furthest; i++) {
+    norm[i] = 'cleared';
+  }
+  if (norm[furthest] !== 'cleared') norm[furthest] = 'available';
+  for (let i = furthest + 1; i < norm.length; i++) {
+    if (norm[i] !== 'cleared') norm[i] = 'locked';
+  }
+  if (furthest === norm.length - 1 && norm[furthest] !== 'cleared') {
+    norm[furthest] = 'available';
+  }
+  return norm;
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem('seedGame_v3', JSON.stringify({
+      playerName: G.playerName,
+      nodeStatus: normalizeNodeStatus(G.nodeStatus),
+      totalCorrect: G.totalCorrect,
+      totalWrong: G.totalWrong,
+      stage1TutorialShown: G.stage1TutorialShown
+    }));
+  } catch(e) {}
+}
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem('seedGame_v3');
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function resetWholeGame() {
+  G = {
+    playerName: '',
+    nodeStatus: Array(NODES.length).fill('locked'),
+    currentNode: 0,
+    currentQ: 0,
+    questionTurn: 1,
+    shuffledQ: [],
+    hp: 3,
+    enemyHp: 3,
+    enemyMaxHp: 3,
+    correct: 0,
+    wrong: 0,
+    totalCorrect: 0,
+    totalWrong: 0,
+    stage1TutorialShown: false,
+    pendingDamage: false,
+    pendingDamageOutcome: null,
+    damageTimer: null,
+    mode: 'story'
+  };
+  G.nodeStatus[0] = 'available';
+}
+
+function resetNodeBattle(idx) {
+  if (G.damageTimer) {
+    clearTimeout(G.damageTimer);
+    G.damageTimer = null;
+  }
+  G.pendingDamage = false;
+  G.pendingDamageOutcome = null;
+  G.currentNode = idx;
+  G.currentQ = 0;
+  G.questionTurn = 1;
+  G.hp = 3;
+  G.enemyMaxHp = NODES[idx].maxHp;
+  G.enemyHp = NODES[idx].maxHp;
+  G.correct = 0;
+  G.wrong = 0;
+  G.shuffledQ = shuffle([...NODES[idx].questions]);
+}
+
+// ==============================
+// 유틸
+// ==============================
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function hpStr(hp) {
+  let s = '';
+  for (let i = 0; i < hp; i++) s += '🌾';
+  return s || '없음';
+}
+
+function highlightNumbers(text) {
+  return String(text).replace(/(\d+(?:\.\d+)?(?:%|m))/g, '<span class="highlight">$1</span>');
+}
+
+function formatQuestion(text) {
+  return String(text).replace(/([.?!~…])\s+/g, '$1\n');
+}
+
+function formatStudyQuestionHtml(text) {
+  const lines = cleanStudyText(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
+  if (!lines.length) return '';
+  const head = '<div class="study-line-label">' + highlightNumbers(escapeHtml(lines[0])) + '</div>';
+  const body = lines.slice(1).map(line => '<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
+  return head + body;
+}
+
+function formatReasonHtml(text, labelClass = 'reason-line-label') {
+  const lines = String(text || '').split(/\n/);
+  const chunks = [];
+  let firstLabelDone = false;
+  let inRefs = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      chunks.push('<div class="reason-gap"></div>');
+      continue;
+    }
+    if (!firstLabelDone) {
+      chunks.push('<div class="' + labelClass + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
+      firstLabelDone = true;
+      continue;
+    }
+    if (/^참고\)/.test(line)) {
+      inRefs = true;
+      chunks.push('<div class="reason-ref-title">참고)</div>');
+      continue;
+    }
+    const cls = inRefs ? 'reason-ref-line' : 'reason-main-line';
+    chunks.push('<div class="' + cls + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
+  }
+  return chunks.join('');
+}
+
+
+const PLAYER_FLAVOR_LINES = ['........', '.....네?', '확인해 볼게요.', '뭐라구요?'];
+
+function getRandomPlayerFlavor() {
+  return PLAYER_FLAVOR_LINES[Math.floor(Math.random() * PLAYER_FLAVOR_LINES.length)];
+}
+
+function updatePlayerFlavorLine() {
+  const lineEl = document.getElementById('battle-player-line');
+  if (lineEl) lineEl.textContent = getRandomPlayerFlavor();
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+let uiModalOk = null;
+let uiModalCancel = null;
+
+function closeUIModal() {
+  const modal = document.getElementById('ui-modal');
+  if (modal) modal.classList.remove('show');
+  uiModalOk = null;
+  uiModalCancel = null;
+}
+
+function playUIClick() {
+  Sound.playSE('se_click');
+}
+
+function disableResultNext(disabled) {
+  const nextBtn = document.querySelector('.result-next-btn');
+  if (nextBtn) nextBtn.disabled = !!disabled;
+}
+
+
 const STUDY = {
   active: false,
   pool: [],
@@ -230,11 +384,319 @@ const STUDY = {
   current: null
 };
 
-let uiModalOk = null;
-let uiModalCancel = null;
+function buildStudyPool() {
+  const all = [];
+  NODES.forEach((node, nodeIdx) => {
+    node.questions.forEach((q, qIdx) => {
+      all.push({ ...q, _nodeIdx: nodeIdx, _qIdx: qIdx, _nodeLabel: node.label.split('\n').join(' '), _enemy: node.enemy });
+    });
+  });
+  return shuffle(all);
+}
 
-const PLAYER_FLAVOR_LINES = ['........', '.....네?', '확인해 볼게요.', '뭐라구요?'];
+function cleanStudyText(text) {
+  return String(text || '').replace(/^\s*["“”']+/, '').replace(/["“”']+\s*$/, '');
+}
 
+function updateStudyStats() {
+  const total = STUDY.correct + STUDY.wrong;
+  const rateText = total ? `${Math.round((STUDY.correct / total) * 100)}%` : '- %';
+  const inline = document.getElementById('study-stats-inline');
+  if (inline) inline.innerHTML = `정답 ${STUDY.correct} · 오답 ${STUDY.wrong}<br>정답률 ${rateText}`;
+}
+
+function showStudyQuestion() {
+  if (!STUDY.pool.length) STUDY.pool = buildStudyPool();
+  if (STUDY.idx >= STUDY.pool.length) {
+    STUDY.pool = buildStudyPool();
+    STUDY.idx = 0;
+  }
+  STUDY.current = STUDY.pool[STUDY.idx++];
+  document.getElementById('study-counter').textContent = '문제 ' + STUDY.turn;
+  const stageEl = document.getElementById('study-question-stage');
+  if (stageEl) stageEl.textContent = '';
+  const studyBody = STUDY.current.studyText || STUDY.current.text;
+  document.getElementById('study-question').innerHTML = formatStudyQuestionHtml(studyBody);
+  document.getElementById('study-result-box').classList.remove('show', 'correct', 'wrong');
+  document.getElementById('study-pass-btn').disabled = false;
+  document.getElementById('study-fail-btn').disabled = false;
+  updateStudyStats();
+}
+
+function startStudyMode() {
+  playUIClick();
+  STUDY.active = true;
+  STUDY.pool = buildStudyPool();
+  STUDY.idx = 0;
+  STUDY.turn = 1;
+  STUDY.correct = 0;
+  STUDY.wrong = 0;
+  STUDY.current = null;
+  showScreen('study-screen');
+  showStudyQuestion();
+  Sound.playBGM('bgm_study');
+}
+
+function exitStudyMode() {
+  playUIClick();
+  showConfirmModal('집중 공부 종료', '집중 공부를 종료하고 타이틀로 돌아가시겠습니까?', () => {
+    STUDY.active = false;
+    initTitle();
+    showScreen('title-screen');
+  });
+}
+
+function answerStudy(choice) {
+  playUIClick();
+  if (!STUDY.active || !STUDY.current) return;
+  document.getElementById('study-pass-btn').disabled = true;
+  document.getElementById('study-fail-btn').disabled = true;
+  const correct = choice === STUDY.current.answer;
+  const userJudge = choice === 'pass' ? '합격' : '불합격';
+  const correctJudge = STUDY.current.answer === 'pass' ? '합격' : '불합격';
+  if (correct) {
+    STUDY.correct++;
+    Sound.playSE('se_correct');
+  } else {
+    STUDY.wrong++;
+    WrongNote.add(STUDY.current);
+    Sound.playSE('se_wrong');
+  }
+  const box = document.getElementById('study-result-box');
+  box.className = 'study-result-box show ' + (correct ? 'correct' : 'wrong');
+  document.getElementById('study-result-title').textContent = correct ? '정답!' : '오답!';
+  document.getElementById('study-result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
+  let reasonText = (STUDY.current.reason || '').trim();
+  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
+  if (!reasonText) reasonText = suffix;
+  else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
+  document.getElementById('study-result-reason').innerHTML = formatReasonHtml(reasonText, 'study-reason-label');
+  updateStudyStats();
+}
+
+function nextStudyQuestion() {
+  playUIClick();
+  if (!STUDY.active) return;
+  STUDY.turn++;
+  showStudyQuestion();
+}
+
+function handlePrimaryAction() {
+  const saved = loadSave();
+  if (saved && saved.playerName) continueGame();
+  else goToNameInput();
+}
+
+function applyBattleDamageEffects(correct) {
+  const stamp = document.getElementById('stamp-effect');
+  const arena = document.getElementById('battle-arena-area');
+  if (correct) {
+    G.enemyHp = Math.max(0, G.enemyHp - 1);
+    const sprite = document.getElementById('battle-card-img');
+    if (sprite) sprite.classList.add('shake', 'hit-slam');
+    if (arena) arena.classList.add('enemy-hit-flash');
+    Sound.playSE('se_hit');
+    Sound.playSE('se_stamp');
+    setTimeout(() => {
+      if (sprite) sprite.classList.remove('shake', 'hit-slam');
+      if (arena) arena.classList.remove('enemy-hit-flash');
+    }, 460);
+  } else {
+    G.hp = Math.max(0, G.hp - 1);
+    const screen = document.getElementById('battle-screen');
+    const playerSprite = document.getElementById('arena-player-sprite');
+    if (screen) screen.classList.add('shake');
+    if (playerSprite) playerSprite.classList.add('hit-slam');
+    if (arena) arena.classList.add('player-hit-flash');
+    Sound.playSE('se_hit');
+    setTimeout(() => {
+      if (screen) screen.classList.remove('shake');
+      if (playerSprite) playerSprite.classList.remove('hit-slam');
+      if (arena) arena.classList.remove('player-hit-flash');
+    }, 420);
+  }
+  renderHp();
+  G.damageTimer = null;
+}
+
+function finalizeAfterDamage() {
+  G.pendingDamage = false;
+  G.pendingDamageOutcome = null;
+  if (G.hp <= 0) {
+    Sound.playSE('se_gameover');
+    Sound.stopBGM();
+    showScreen('gameover-screen');
+    return;
+  }
+  if (G.enemyHp <= 0) {
+    stageClear();
+    return;
+  }
+
+  G.currentQ++;
+  G.questionTurn++;
+  if (G.currentQ >= G.shuffledQ.length) {
+    G.shuffledQ = shuffle([...NODES[G.currentNode].questions]);
+    G.currentQ = 0;
+  }
+  loadQuestion();
+}
+
+function showAlertModal(title, desc, onOk) {
+  const modal = document.getElementById('ui-modal');
+  const titleEl = document.getElementById('ui-modal-title');
+  const descEl = document.getElementById('ui-modal-desc');
+  const okBtn = document.getElementById('ui-modal-ok');
+  const cancelBtn = document.getElementById('ui-modal-cancel');
+  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
+  titleEl.textContent = title;
+  descEl.innerHTML = desc;
+  cancelBtn.style.display = 'none';
+  okBtn.textContent = '확인';
+  uiModalOk = onOk || null;
+  uiModalCancel = null;
+  okBtn.onclick = () => {
+    playUIClick();
+    const cb = uiModalOk;
+    closeUIModal();
+    if (cb) cb();
+  };
+  cancelBtn.onclick = () => {
+    playUIClick();
+    closeUIModal();
+  };
+  modal.classList.add('show');
+}
+
+function showConfirmModal(title, desc, onOk, onCancel) {
+  const modal = document.getElementById('ui-modal');
+  const titleEl = document.getElementById('ui-modal-title');
+  const descEl = document.getElementById('ui-modal-desc');
+  const okBtn = document.getElementById('ui-modal-ok');
+  const cancelBtn = document.getElementById('ui-modal-cancel');
+  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
+  titleEl.textContent = title;
+  descEl.innerHTML = desc;
+  cancelBtn.style.display = 'inline-flex';
+  cancelBtn.textContent = '취소';
+  okBtn.textContent = '확인';
+  uiModalOk = onOk || null;
+  uiModalCancel = onCancel || null;
+  okBtn.onclick = () => {
+    playUIClick();
+    const cb = uiModalOk;
+    closeUIModal();
+    if (cb) cb();
+  };
+  cancelBtn.onclick = () => {
+    playUIClick();
+    const cb = uiModalCancel;
+    closeUIModal();
+    if (cb) cb();
+  };
+  modal.classList.add('show');
+}
+
+
+// ==============================
+// TITLE
+// ==============================
+function initTitle() {
+  const saved = loadSave();
+  const primaryBtn = document.getElementById('primary-btn');
+  const restartBtn = document.getElementById('restart-btn');
+  const studyBtn = document.getElementById('study-btn');
+  const wrongBtn = document.getElementById('wrongnote-btn');
+  const settingBtn = document.getElementById('setting-btn');
+
+  const applyTop = (el, value) => { if (el) el.style.top = value; };
+
+  if (saved && saved.playerName) {
+    primaryBtn.querySelector('.tmenu-label').textContent = '이어하기';
+    restartBtn.style.display = 'flex';
+    applyTop(primaryBtn, '21%');
+    applyTop(restartBtn, '38.5%');
+    applyTop(studyBtn, '47.0%');
+    applyTop(wrongBtn, '55.5%');
+    applyTop(settingBtn, '64.0%');
+  } else {
+    primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
+    restartBtn.style.display = 'none';
+    applyTop(primaryBtn, '24%');
+    applyTop(studyBtn, '44.0%');
+    applyTop(wrongBtn, '52.5%');
+    applyTop(settingBtn, '61.0%');
+  }
+  updateSettingUI();
+  Sound.playBGM('bgm_title');
+}
+
+function goToNameInput() {
+  playUIClick();
+  G.mode = 'story';
+  document.getElementById('player-name-input').value = '';
+  showScreen('name-screen');
+}
+
+function goBackToTitle() {
+  playUIClick();
+  showScreen('title-screen');
+  initTitle();
+}
+
+function confirmName() {
+  playUIClick();
+  const val = document.getElementById('player-name-input').value.trim();
+  if (val.length > 7) {
+    showAlertModal('이름 입력', '이름은 7글자 이하로 입력해주세요');
+    return;
+  }
+  resetWholeGame();
+  G.mode = 'story';
+  G.playerName = val || '용사';
+  saveGame();
+  startOpening();
+}
+
+function continueGame() {
+  playUIClick();
+  const saved = loadSave();
+  if (!saved) return;
+  G.mode = 'story';
+  G.playerName = saved.playerName || '용사';
+  G.nodeStatus = normalizeNodeStatus(saved.nodeStatus);
+  G.totalCorrect = saved.totalCorrect || 0;
+  G.totalWrong = saved.totalWrong || 0;
+  G.stage1TutorialShown = !!saved.stage1TutorialShown;
+  showScreen('map-screen');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
+  Sound.playBGM('bgm_title');
+}
+
+function goTitle() {
+  resetWholeGame();
+  initTitle();
+  showScreen('title-screen');
+}
+
+function confirmGoTitle() {
+  playUIClick();
+  showConfirmModal(
+    '타이틀로 돌아가기',
+    '현재 진행 상황은 저장되어 있습니다.<br>타이틀로 돌아가시겠습니까?',
+    () => {
+      Sound.stopBGM();
+      initTitle();
+      showScreen('title-screen');
+    }
+  );
+}
+
+// ==============================
+// OPENING (컷신)
+// ==============================
 const OP_SCENES = [
   { image: 'images/scene1.png', lightning: false, lines: [
     '오래전, 종자 왕국의 질서가 무너졌다.',
@@ -294,380 +756,43 @@ const ENDING_SCENES = [
   }
 ];
 
-let opSceneIdx = 0, opLineIdx = 0, opTyping = false, opFullLine = '', opTypingTimer = null, opSceneEls = [];
-let endingSceneIdx = 0, endingLineIdx = 0, endingTyping = false, endingFullLine = '', endingTypingTimer = null;
-let endingAwaitingRank = false, endingRankPopupShown = false, endingRankData = null;
+let opSceneIdx = 0, opLineIdx = 0;
+let opTyping = false, opFullLine = '', opTypingTimer = null;
+let opSceneEls = [];
 
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function shuffle(arr) {
-  const copy = arr.slice();
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const target = document.getElementById(id);
-  if (target) target.classList.add('active');
-}
-
-function playUIClick() { Sound.playSE('se_click'); }
-
-function disableResultNext(disabled) {
-  const nextBtn = document.querySelector('.result-next-btn');
-  if (nextBtn) nextBtn.disabled = !!disabled;
-}
-
-function highlightNumbers(text) {
-  return String(text).replace(/(\d+(?:\.\d+)?(?:%|m|일|회|주|년|세대|단계)?)(?![\d])/g, '<span class="highlight">$1</span>');
-}
-
-function formatQuestion(text) {
-  return String(text || '').replace(/([.?!~…])\s+/g, '$1\n');
-}
-
-function cleanStudyText(text) {
-  let cleaned = String(text || '').replace(/^\s*["“”']+/, '').replace(/["“”']+\s*$/, '');
-  if (!/\n/.test(cleaned)) {
-    const m = cleaned.match(/^(\([^\n)]+\)\s+[^.]+?)\.\s+(.+)$/);
-    if (m) cleaned = m[1] + '\n' + m[2];
-  }
-  return cleaned;
-}
-
-function formatStudyQuestionHtml(text) {
-  const lines = cleanStudyText(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
-  if (!lines.length) return '';
-  const labelLine = lines[0];
-  const bodyLines = lines.slice(1);
-  const head = '<div class="study-line-label">' + highlightNumbers(escapeHtml(labelLine)) + '</div>';
-  const body = bodyLines.map(line => '<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
-  return head + body;
-}
-
-function formatReasonHtml(text, labelClass = 'reason-line-label') {
-  const lines = String(text || '').split(/\n/);
-  const chunks = [];
-  let firstLabelDone = false;
-  let inRefs = false;
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) {
-      chunks.push('<div class="reason-gap"></div>');
-      continue;
-    }
-    if (!firstLabelDone) {
-      chunks.push('<div class="' + labelClass + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
-      firstLabelDone = true;
-      continue;
-    }
-    if (/^\(?참고\)?/.test(line)) {
-      inRefs = true;
-      chunks.push('<div class="reason-ref-title">참고)</div>');
-      continue;
-    }
-    const cls = inRefs ? 'reason-ref-line' : 'reason-main-line';
-    chunks.push('<div class="' + cls + '">' + highlightNumbers(escapeHtml(line)) + '</div>');
-  }
-  return chunks.join('');
-}
-
-function normalizeNodeStatus(statuses) {
-  const norm = Array.isArray(statuses) ? statuses.slice(0, NODES.length) : [];
-  while (norm.length < NODES.length) norm.push('locked');
-  const progressed = new Set(['available', 'cleared']);
-  let furthest = -1;
-  for (let i = 0; i < norm.length; i++) if (progressed.has(norm[i])) furthest = i;
-  if (furthest < 0) {
-    norm.fill('locked');
-    norm[0] = 'available';
-    return norm;
-  }
-  for (let i = 0; i < furthest; i++) norm[i] = 'cleared';
-  if (norm[furthest] !== 'cleared') norm[furthest] = 'available';
-  for (let i = furthest + 1; i < norm.length; i++) if (norm[i] !== 'cleared') norm[i] = 'locked';
-  return norm;
-}
-
-function saveGame() {
-  try {
-    localStorage.setItem('seedGame_v3', JSON.stringify({
-      playerName: G.playerName,
-      nodeStatus: normalizeNodeStatus(G.nodeStatus),
-      totalCorrect: G.totalCorrect,
-      totalWrong: G.totalWrong,
-      stage1TutorialShown: G.stage1TutorialShown
-    }));
-  } catch (e) {}
-}
-
-function loadSave() {
-  try {
-    const raw = localStorage.getItem('seedGame_v3');
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-function resetWholeGame() {
-  G = {
-    playerName: '용사',
-    nodeStatus: Array(NODES.length).fill('locked'),
-    currentNode: 0,
-    currentQ: 0,
-    questionTurn: 1,
-    shuffledQ: [],
-    hp: 3,
-    enemyHp: 3,
-    enemyMaxHp: 3,
-    correct: 0,
-    wrong: 0,
-    totalCorrect: 0,
-    totalWrong: 0,
-    stage1TutorialShown: false,
-    pendingDamage: false,
-    pendingDamageOutcome: null,
-    damageTimer: null,
-    mode: 'story'
-  };
-  G.nodeStatus[0] = 'available';
-}
-
-function resetNodeBattle(idx) {
-  if (G.damageTimer) {
-    clearTimeout(G.damageTimer);
-    G.damageTimer = null;
-  }
-  G.pendingDamage = false;
-  G.pendingDamageOutcome = null;
-  G.currentNode = idx;
-  G.currentQ = 0;
-  G.questionTurn = 1;
-  G.hp = 3;
-  G.enemyMaxHp = NODES[idx].maxHp;
-  G.enemyHp = NODES[idx].maxHp;
-  G.correct = 0;
-  G.wrong = 0;
-  G.shuffledQ = shuffle(NODES[idx].questions || []);
-}
-
-function getRandomPlayerFlavor() {
-  return PLAYER_FLAVOR_LINES[Math.floor(Math.random() * PLAYER_FLAVOR_LINES.length)];
-}
-
-function updatePlayerFlavorLine() {
-  const lineEl = document.getElementById('battle-player-line');
-  if (lineEl) lineEl.textContent = getRandomPlayerFlavor();
-}
-
-function closeUIModal() {
-  const modal = document.getElementById('ui-modal');
-  if (modal) modal.classList.remove('show');
-  uiModalOk = null;
-  uiModalCancel = null;
-}
-
-function showAlertModal(title, desc, onOk) {
-  const modal = document.getElementById('ui-modal');
-  const titleEl = document.getElementById('ui-modal-title');
-  const descEl = document.getElementById('ui-modal-desc');
-  const okBtn = document.getElementById('ui-modal-ok');
-  const cancelBtn = document.getElementById('ui-modal-cancel');
-  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
-  titleEl.textContent = title;
-  descEl.innerHTML = desc;
-  cancelBtn.style.display = 'none';
-  okBtn.textContent = '확인';
-  uiModalOk = onOk || null;
-  uiModalCancel = null;
-  okBtn.onclick = () => {
-    playUIClick();
-    const cb = uiModalOk;
-    closeUIModal();
-    if (cb) cb();
-  };
-  cancelBtn.onclick = () => { playUIClick(); closeUIModal(); };
-  modal.classList.add('show');
-}
-
-function showConfirmModal(title, desc, onOk, onCancel) {
-  const modal = document.getElementById('ui-modal');
-  const titleEl = document.getElementById('ui-modal-title');
-  const descEl = document.getElementById('ui-modal-desc');
-  const okBtn = document.getElementById('ui-modal-ok');
-  const cancelBtn = document.getElementById('ui-modal-cancel');
-  if (!modal || !titleEl || !descEl || !okBtn || !cancelBtn) return;
-  titleEl.textContent = title;
-  descEl.innerHTML = desc;
-  cancelBtn.style.display = 'inline-flex';
-  cancelBtn.textContent = '취소';
-  okBtn.textContent = '확인';
-  uiModalOk = onOk || null;
-  uiModalCancel = onCancel || null;
-  okBtn.onclick = () => {
-    playUIClick();
-    const cb = uiModalOk;
-    closeUIModal();
-    if (cb) cb();
-  };
-  cancelBtn.onclick = () => {
-    playUIClick();
-    const cb = uiModalCancel;
-    closeUIModal();
-    if (cb) cb();
-  };
-  modal.classList.add('show');
-}
-
-function updateSettingUI() {
-  const bgmSlider = document.getElementById('bgm-slider');
-  const seSlider = document.getElementById('se-slider');
-  const bgmVal = document.getElementById('bgm-val');
-  const seVal = document.getElementById('se-val');
-  let soundCfg = {};
-  try { soundCfg = JSON.parse(localStorage.getItem('seedGame_sound') || '{}') || {}; } catch (e) {}
-  if (bgmSlider) {
-    const bgmVolume = Number(soundCfg.bgmVolume ?? 0.5);
-    const v = Math.round((Sound.isBGMOn() ? bgmVolume : 0) * 100);
-    bgmSlider.value = v || 0;
-    if (bgmVal) bgmVal.textContent = String(v || 0);
-  }
-  if (seSlider) {
-    const seVolume = Number(soundCfg.seVolume ?? 0.7);
-    const v = Math.round((Sound.isSEOn() ? seVolume : 0) * 100);
-    seSlider.value = v || 0;
-    if (seVal) seVal.textContent = String(v || 0);
-  }
-}
-
-function initTitle() {
-  const saved = loadSave();
-  const primaryBtn = document.getElementById('primary-btn');
-  const restartBtn = document.getElementById('restart-btn');
-  const studyBtn = document.getElementById('study-btn');
-  const wrongBtn = document.getElementById('wrongnote-btn');
-  const settingBtn = document.getElementById('setting-btn');
-  const applyTop = (el, value) => { if (el) el.style.top = value; };
-  if (saved && saved.playerName) {
-    primaryBtn.querySelector('.tmenu-label').textContent = '이어하기';
-    restartBtn.style.display = 'flex';
-    applyTop(primaryBtn, '21%');
-    applyTop(restartBtn, '38.5%');
-    applyTop(studyBtn, '47.0%');
-    applyTop(wrongBtn, '55.5%');
-    applyTop(settingBtn, '64.0%');
-  } else {
-    primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
-    restartBtn.style.display = 'none';
-    applyTop(primaryBtn, '24%');
-    applyTop(studyBtn, '44.0%');
-    applyTop(wrongBtn, '52.5%');
-    applyTop(settingBtn, '61.0%');
-  }
-  updateSettingUI();
-  Sound.playBGM('bgm_title');
-}
-
-function handlePrimaryAction() {
-  const saved = loadSave();
-  if (saved && saved.playerName) continueGame();
-  else goToNameInput();
-}
-
-function goToNameInput() {
-  playUIClick();
-  G.mode = 'story';
-  const input = document.getElementById('player-name-input');
-  if (input) input.value = '';
-  showScreen('name-screen');
-}
-
-function goBackToTitle() {
-  playUIClick();
-  showScreen('title-screen');
-  initTitle();
-}
-
-function continueGame() {
-  playUIClick();
-  const saved = loadSave();
-  if (!saved) return;
-  G.mode = 'story';
-  G.playerName = saved.playerName || '용사';
-  G.nodeStatus = normalizeNodeStatus(saved.nodeStatus);
-  G.totalCorrect = saved.totalCorrect || 0;
-  G.totalWrong = saved.totalWrong || 0;
-  G.stage1TutorialShown = !!saved.stage1TutorialShown;
-  showScreen('map-screen');
-  renderMap();
-  Sound.playBGM('bgm_title');
-}
-
-function confirmName() {
-  playUIClick();
-  const val = (document.getElementById('player-name-input')?.value || '').trim();
-  if (val.length > 7) {
-    showAlertModal('이름 입력', '이름은 7글자 이하로 입력해주세요');
-    return;
-  }
-  resetWholeGame();
-  G.mode = 'story';
-  G.playerName = val || '용사';
-  saveGame();
-  startOpening();
-}
-
-function goTitle() {
-  resetWholeGame();
-  showScreen('title-screen');
-  initTitle();
-}
-
-function confirmGoTitle() {
-  playUIClick();
-  showConfirmModal('타이틀로 돌아가기', '현재 진행 상황은 저장되어 있습니다.<br>타이틀로 돌아가시겠습니까?', () => {
-    Sound.stopBGM();
-    showScreen('title-screen');
-    initTitle();
-  });
-}
+let endingSceneIdx = 0, endingLineIdx = 0;
+let endingTyping = false, endingFullLine = '', endingTypingTimer = null;
+let endingAwaitingRank = false;
+let endingRankPopupShown = false;
+let endingRankData = null;
 
 function opRenderLine(line) {
-  const safe = escapeHtml(line).replace(/\n/g, '<br>');
+  const safe = line
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+
   return safe
-    .replace(/__NAME__/g, '<span class="op-player-name">' + escapeHtml(G.playerName || '용사') + '</span>')
+    .replace(/__NAME__/g, '<span class="op-player-name">' + G.playerName + '</span>')
     .replace(/불합격/g, '<span class="op-keyword-fail">불합격</span>')
     .replace(/종자검사원/g, '<span class="op-keyword-inspector">종자검사원</span>');
 }
 
 function opTypeLine(line) {
   clearTimeout(opTypingTimer);
-  opTyping = true;
-  opFullLine = line;
-  const plain = line.replace(/__NAME__/g, G.playerName || '용사');
+  opTyping = true; opFullLine = line;
+  const plain = line.replace(/__NAME__/g, G.playerName);
   const textEl = document.getElementById('op-text');
   if (!textEl) { opTyping = false; return; }
   let i = 0;
   textEl.innerHTML = '';
   function tick() {
-    const s = escapeHtml(plain.slice(0, i)).replace(/\n/g, '<br>');
+    const s = plain.slice(0,i).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     textEl.innerHTML = s;
     i++;
     if (i <= plain.length) opTypingTimer = setTimeout(tick, 32);
-    else {
-      textEl.innerHTML = opRenderLine(line);
-      opTyping = false;
-    }
+    else { textEl.innerHTML = opRenderLine(line); opTyping = false; }
   }
   tick();
 }
@@ -680,38 +805,46 @@ function opSetScene(idx) {
       el.classList.remove('wipe-out');
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
-        bg.style.animation = 'none';
-        void bg.offsetWidth;
-        bg.style.animation = 'op-slow-pan 11s ease-in-out forwards';
+        bg.style.animation = 'none'; void bg.offsetWidth;
+        bg.style.animation = 'op-breathe-pan 11s ease-in-out forwards';
       }
       setTimeout(() => {
         el.classList.remove('wipe-in');
         el.style.webkitMaskImage = 'none';
         el.style.maskImage = 'none';
+        el.style.webkitMaskSize = 'auto';
+        el.style.maskSize = 'auto';
       }, 620);
     } else if (el.classList.contains('active')) {
       el.classList.add('wipe-out');
+      el.classList.remove('wipe-in');
       setTimeout(() => {
-        el.classList.remove('active', 'wipe-out');
+        el.classList.remove('active');
+        el.classList.remove('wipe-out');
         el.style.webkitMaskImage = 'none';
         el.style.maskImage = 'none';
+        el.style.webkitMaskSize = 'auto';
+        el.style.maskSize = 'auto';
       }, 620);
     }
   });
   if (OP_SCENES[idx].lightning) {
-    const flash = opSceneEls[idx]?.querySelector('.op-flash');
-    if (flash) {
-      [640, 1100, 1560].forEach((delay, n) => {
-        setTimeout(() => {
-          flash.classList.add('active');
-          setTimeout(() => flash.classList.remove('active'), n === 2 ? 420 : 280);
-        }, delay);
-      });
-    }
+    const flash = opSceneEls[idx].querySelector('.op-flash');
+    const burst = (delay, duration = 280) => {
+      setTimeout(() => {
+        flash.classList.add('active');
+        setTimeout(() => flash.classList.remove('active'), duration);
+      }, delay);
+    };
+    burst(640, 280);
+    burst(1100, 220);
+    burst(1560, 420);
   }
 }
 
-function opShowLine() { opTypeLine(OP_SCENES[opSceneIdx].lines[opLineIdx]); }
+function opShowLine() {
+  opTypeLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
+}
 
 function opNextStep() {
   if (opTyping) {
@@ -721,11 +854,7 @@ function opNextStep() {
     return;
   }
   const scene = OP_SCENES[opSceneIdx];
-  if (opLineIdx < scene.lines.length - 1) {
-    opLineIdx++;
-    opShowLine();
-    return;
-  }
+  if (opLineIdx < scene.lines.length - 1) { opLineIdx++; opShowLine(); return; }
   if (opSceneIdx < OP_SCENES.length - 1) {
     opSceneIdx++;
     opLineIdx = 0;
@@ -737,64 +866,58 @@ function opNextStep() {
 }
 
 function opFinish() {
-  const arrow = document.getElementById('op-arrow');
-  const endBtn = document.getElementById('op-end-btn');
-  const tap = document.getElementById('op-tap');
-  const skip = document.getElementById('op-skip');
-  if (arrow) arrow.style.visibility = 'hidden';
-  if (endBtn) endBtn.style.display = 'block';
-  if (tap) {
-    tap.disabled = true;
-    tap.style.pointerEvents = 'none';
-  }
-  if (skip) skip.style.display = 'block';
+  document.getElementById('op-arrow').style.visibility = 'hidden';
+  document.getElementById('op-end-btn').style.display = 'block';
+  document.getElementById('op-tap').disabled = true;
+  document.getElementById('op-tap').style.pointerEvents = 'none';
+  document.getElementById('op-skip').style.display = 'block';
 }
 
 function opSkipAll() {
   playUIClick();
   clearTimeout(opTypingTimer);
   opSceneIdx = OP_SCENES.length - 1;
-  opLineIdx = OP_SCENES[opSceneIdx].lines.length - 1;
+  opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
   opSetScene(opSceneIdx);
-  const textEl = document.getElementById('op-text');
-  if (textEl) textEl.innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
+  document.getElementById('op-text').innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
   opTyping = false;
   opFinish();
 }
 
 function startOpening() {
   showScreen('opening-screen');
+
+  // 씬 요소 생성
   const container = document.getElementById('op-scene-container');
-  if (!container) return;
   container.innerHTML = '';
   opSceneEls = OP_SCENES.map((scene, idx) => {
     const layer = document.createElement('div');
     layer.className = 'op-scene-layer' + (idx === 0 ? ' active' : '');
-    layer.innerHTML = '<img class="op-scene-bg" src="' + scene.image + '" alt=""><div class="op-scene-overlay"></div><div class="op-flash"></div>';
+    layer.innerHTML =
+      '<img class="op-scene-bg" src="' + scene.image + '" alt="">' +
+      '<div class="op-scene-overlay"></div>' +
+      '<div class="op-flash"></div>';
     container.appendChild(layer);
     return layer;
   });
-  opSceneIdx = 0;
-  opLineIdx = 0;
-  opTyping = false;
-  const arrow = document.getElementById('op-arrow');
-  const endBtn = document.getElementById('op-end-btn');
+
+  // 상태 초기화
+  opSceneIdx = 0; opLineIdx = 0; opTyping = false;
+  document.getElementById('op-arrow').style.visibility = 'visible';
+  document.getElementById('op-end-btn').style.display = 'none';
+  document.getElementById('op-skip').style.display = 'block';
+  document.getElementById('op-tap').disabled = false;
+  document.getElementById('op-tap').style.pointerEvents = 'auto';
+  document.getElementById('op-fade-black').style.opacity = '0';
+
+  // 이벤트
+  const tap  = document.getElementById('op-tap');
   const skip = document.getElementById('op-skip');
-  const tap = document.getElementById('op-tap');
-  if (arrow) arrow.style.visibility = 'visible';
-  if (endBtn) {
-    endBtn.style.display = 'none';
-    endBtn.onclick = startGame;
-  }
-  if (skip) {
-    skip.style.display = 'block';
-    skip.onclick = opSkipAll;
-  }
-  if (tap) {
-    tap.disabled = false;
-    tap.style.pointerEvents = 'auto';
-    tap.onclick = opNextStep;
-  }
+  const end  = document.getElementById('op-end-btn');
+  tap.onclick  = opNextStep;
+  skip.onclick = opSkipAll;
+  end.onclick  = startGame;
+
   opSetScene(0);
   opShowLine();
 }
@@ -802,23 +925,26 @@ function startOpening() {
 function startGame() {
   playUIClick();
   showScreen('map-screen');
-  renderMap();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
   Sound.playBGM('bgm_title');
 }
 
+// ==============================
+// MAP
+// ==============================
 function renderMap() {
   renderNodes();
   renderPaths();
   const cleared = G.nodeStatus.filter(s => s === 'cleared').length;
-  const progress = document.getElementById('map-progress-text');
-  if (progress) progress.textContent = '정화된 구역: ' + cleared + ' / ' + NODES.length;
+  document.getElementById('map-progress-text').textContent = '정화된 구역: ' + cleared + ' / ' + NODES.length;
   const journey = document.getElementById('map-player-journey');
   if (journey) journey.innerHTML = '<strong>' + escapeHtml(G.playerName || '용사') + '</strong>님의 모험';
 }
 
 function renderNodes() {
   const container = document.getElementById('nodes-container');
-  if (!container) return;
   container.innerHTML = '';
   const mapArea = container.parentElement;
   const mapH = mapArea ? mapArea.offsetHeight : 720;
@@ -827,69 +953,77 @@ function renderNodes() {
   const scaleX = mapW / 390;
 
   NODES.forEach((node, i) => {
-    const status = G.nodeStatus[i] || 'locked';
+    const status = G.nodeStatus[i];
     const isBoss = node.type === 'boss';
-    const el = document.createElement('div');
-    el.className = 'map-node stage-' + i + ' ' + status + (isBoss ? ' boss' : '');
-    el.style.left = (node.x * scaleX) + 'px';
-    el.style.top = (node.y * scaleY) + 'px';
+    const div = document.createElement('div');
+    div.className = 'map-node stage-' + i + ' ' + status + (isBoss ? ' boss' : '');
+    div.style.left = Math.round(node.x * scaleX) + 'px';
+    div.style.top  = Math.round(node.y * scaleY) + 'px';
+    div.id = 'node-' + i;
 
     const icon = document.createElement('div');
-    icon.className = 'node-icon';
-    if (isBoss && status !== 'locked') {
-      const src = status === 'cleared' ? node.bossClearIcon : node.bossOpenIcon;
-      if (src) {
-        icon.classList.add('custom-boss-icon');
-        icon.style.backgroundImage = 'url(' + src + ')';
+    icon.className = 'node-icon' + (isBoss ? ' boss-wide-icon' : '');
+    div.appendChild(icon);
+
+    if (isBoss) {
+      const customIcon = status === 'available' ? node.bossOpenIcon : status === 'cleared' ? node.bossClearIcon : '';
+      if (customIcon) {
+        const preload = new Image();
+        preload.onload = () => {
+          icon.classList.add('custom-boss-icon');
+          icon.style.backgroundImage = 'url(' + customIcon + ')';
+          icon.style.backgroundPosition = 'center';
+          icon.style.backgroundSize = 'contain';
+          icon.style.backgroundRepeat = 'no-repeat';
+        };
+        preload.src = customIcon;
       }
     }
-    el.appendChild(icon);
 
     if (isBoss && status !== 'locked') {
-      const tag = document.createElement('div');
-      tag.className = 'boss-tag';
-      tag.textContent = 'BOSS';
-      el.appendChild(tag);
+      const bossTag = document.createElement('div');
+      bossTag.className = 'boss-tag';
+      bossTag.textContent = 'BOSS';
+      div.appendChild(bossTag);
     }
 
-    if (status === 'available' || status === 'cleared') {
-      el.addEventListener('click', () => openNodePopup(i));
-    }
-    container.appendChild(el);
+    if (status !== 'locked') div.onclick = () => openNodePopup(i);
+    container.appendChild(div);
   });
 }
 
 function renderPaths() {
+
   const svg = document.getElementById('path-svg');
-  const mapArea = document.querySelector('.map-area');
-  if (!svg || !mapArea) return;
-  const w = mapArea.offsetWidth || 390;
-  const h = mapArea.offsetHeight || 720;
-  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
   svg.innerHTML = '';
-  const points = NODES.map(node => ({ x: node.x * (w / 390), y: node.y * (h / 750) }));
-  for (let i = 0; i < points.length - 1; i++) {
+  const mapArea = svg.parentElement;
+  const mapH = mapArea ? mapArea.offsetHeight : 720;
+  const mapW = mapArea ? mapArea.offsetWidth : 390;
+  const scaleY = mapH / 750;
+  const scaleX = mapW / 390;
+  for (let i = 0; i < NODES.length - 1; i++) {
+    const a = NODES[i], b = NODES[i + 1];
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', points[i].x);
-    line.setAttribute('y1', points[i].y);
-    line.setAttribute('x2', points[i + 1].x);
-    line.setAttribute('y2', points[i + 1].y);
-    line.setAttribute('stroke', 'rgba(232,200,74,0.55)');
+    line.setAttribute('x1', Math.round(a.x * scaleX)); line.setAttribute('y1', Math.round(a.y * scaleY));
+    line.setAttribute('x2', Math.round(b.x * scaleX)); line.setAttribute('y2', Math.round(b.y * scaleY));
+    line.setAttribute('stroke', G.nodeStatus[i + 1] === 'locked' ? 'rgba(255,255,255,0.1)' : 'rgba(255,200,80,0.2)');
     line.setAttribute('stroke-width', '3');
-    line.setAttribute('stroke-linecap', 'round');
-    line.setAttribute('stroke-dasharray', '5 7');
+    line.setAttribute('stroke-dasharray', 'none');
+    line.setAttribute('opacity', '1');
     svg.appendChild(line);
   }
 }
 
+// ==============================
+// NODE POPUP
+// ==============================
 function openNodePopup(idx) {
-  playUIClick();
-  const status = G.nodeStatus[idx];
-  if (status !== 'available' && status !== 'cleared') return;
+  if (G.nodeStatus[idx] === 'locked') return;
+  Sound.playSE('se_node');
   G.currentNode = idx;
   const node = NODES[idx];
   document.getElementById('popup-enemy').textContent = node.enemy;
-  document.getElementById('popup-desc').textContent = node.desc || '';
+  document.getElementById('popup-desc').textContent = node.desc;
   document.getElementById('popup-hp').textContent = '내 체력 3 · 적 체력 ' + node.maxHp;
   document.getElementById('node-popup').classList.add('show');
 }
@@ -899,27 +1033,30 @@ function closeNodePopup() {
   document.getElementById('node-popup').classList.remove('show');
 }
 
+// ==============================
+// TUTORIAL
+// ==============================
+
+// ==============================
+// 오답노트
+// ==============================
 function showWrongnote() {
   playUIClick();
   const list = WrongNote.load();
   const body = document.getElementById('wrongnote-body');
-  if (!body) return;
   body.innerHTML = '';
   body.classList.toggle('is-empty', list.length === 0);
+
   if (list.length === 0) {
     body.innerHTML = '<div class="wrongnote-empty">아직 틀린 문제가 없습니다.<br>모험을 시작하세요!</div>';
   } else {
     list.forEach(item => {
       const div = document.createElement('div');
       div.className = 'wrongnote-item';
-      const title = item.title || item.text || '오답 문제';
-      const criterion = item.criterionLabel ? '<div class="wrongnote-item-criterion">기준: ' + highlightNumbers(escapeHtml(item.criterionLabel)) + '</div>' : '';
-      const examples = Array.isArray(item.examples) && item.examples.length
-        ? '<div class="wrongnote-item-examples"><div class="wrongnote-item-examples-title">최근 오답 예시</div><div class="wrongnote-item-examples-list">' + item.examples.map(v => '<span class="wrongnote-example-chip">' + highlightNumbers(escapeHtml(v)) + '</span>').join('') + '</div></div>'
-        : '';
-      const meta = typeof item.wrongCount === 'number' ? '<div class="wrongnote-item-meta">누적 오답 ' + item.wrongCount + '회</div>' : '';
-      const reason = item.reason ? '<div class="wrongnote-item-reason">' + formatReasonHtml(item.reason, 'wrongnote-item-label') + '</div>' : '';
-      div.innerHTML = '<div class="wrongnote-item-title">' + highlightNumbers(escapeHtml(title)) + '</div>' + criterion + examples + meta + reason;
+      div.innerHTML =
+        '<div class="wrongnote-item-q">' + highlightNumbers(item.text) + '</div>' +
+        '<div class="wrongnote-item-ans">정답: ' + (item.answer === 'pass' ? '합격' : '불합격') + '</div>' +
+        '<div class="wrongnote-item-reason">' + item.reason + '</div>';
       body.appendChild(div);
     });
   }
@@ -933,12 +1070,19 @@ function closeWrongnote() {
 
 function clearWrongnote() {
   playUIClick();
-  showConfirmModal('오답노트 초기화', '오답노트를 모두 지우시겠습니까?', () => {
-    WrongNote.clear();
-    showWrongnote();
-  });
+  showConfirmModal(
+    '오답노트 초기화',
+    '오답노트를 모두 지우시겠습니까?',
+    () => {
+      WrongNote.clear();
+      showWrongnote();
+    }
+  );
 }
 
+// ==============================
+// 설정
+// ==============================
 function showSetting() {
   playUIClick();
   updateSettingUI();
@@ -950,18 +1094,36 @@ function closeSetting() {
   document.getElementById('setting-popup').classList.remove('show');
 }
 
-function showStage1TutorialAndStart(onOk) {
-  showAlertModal(
-    '전투 안내',
-    '상대의 주장을 확인한 뒤 <span class="tut-good">합격</span> 또는 <span class="tut-bad">불합격</span>을 판정하세요.<br><span class="tut-good">정답</span>이면 적 체력이 줄고, <span class="tut-bad">오답</span>이면 내 체력이 줄어듭니다.',
-    () => {
-      G.stage1TutorialShown = true;
-      saveGame();
-      if (onOk) onOk();
-    }
-  );
+function updateSettingUI() {
+  const bgmSlider = document.getElementById('bgm-slider');
+  const seSlider  = document.getElementById('se-slider');
+  const bgmVal    = document.getElementById('bgm-val');
+  const seVal     = document.getElementById('se-val');
+  if (bgmSlider) {
+    const v = Sound.isBGMOn() ? (bgmSlider.value || 70) : 0;
+    bgmSlider.value = v;
+    if (bgmVal) bgmVal.textContent = v;
+  }
+  if (seSlider) {
+    const v = Sound.isSEOn() ? (seSlider.value || 70) : 0;
+    seSlider.value = v;
+    if (seVal) seVal.textContent = v;
+  }
 }
 
+function toggleBGM() {
+  Sound.toggleBGM();
+  updateSettingUI();
+}
+
+function toggleSE() {
+  Sound.toggleSE();
+  updateSettingUI();
+}
+
+// ==============================
+// BATTLE START
+// ==============================
 function startBattle() {
   playUIClick();
   document.getElementById('node-popup').classList.remove('show');
@@ -970,40 +1132,72 @@ function startBattle() {
   const encImg = document.getElementById('enc-enemy-img');
   const encBtn = document.getElementById('enc-battle-btn');
   const introBox = document.getElementById('boss-intro-box');
-  const introText = document.getElementById('boss-intro-text');
+
   if (encImg) {
     encImg.style.animation = 'none';
-    void encImg.offsetWidth;
-    encImg.style.backgroundImage = 'url(' + (node.enemyImage || '') + ')';
+    encImg.offsetWidth;
+    encImg.style.backgroundImage = 'url(' + node.enemyImage + ')';
     encImg.style.animation = 'enemy-img-appear 0.6s ease-out 0.1s forwards';
   }
   document.getElementById('enc-name').textContent = node.enemy;
-  if (encBtn) {
-    encBtn.style.display = 'none';
-    encBtn.classList.remove('show');
-  }
-  if (isBoss && introBox && introText) {
-    introText.textContent = node.bossLine || '마지막 시험이다.';
-    introBox.style.display = 'block';
-    introBox.onclick = () => {
-      playUIClick();
+  encBtn.classList.remove('show');
+
+  const revealBattleButton = () => {
+    if (isBoss && node.bossLine) {
+      document.getElementById('boss-intro-text').textContent = node.bossLine;
+      introBox.style.display = 'block';
+      introBox.style.cursor = 'pointer';
+      encBtn.classList.remove('show');
+      introBox.onclick = () => {
+        introBox.style.display = 'none';
+        introBox.onclick = null;
+        encBtn.classList.add('show');
+      };
+    } else {
       introBox.style.display = 'none';
-      if (encBtn) encBtn.style.display = 'inline-block';
+      introBox.onclick = null;
+      encBtn.classList.add('show');
+    }
+  };
+
+  if (encImg) {
+    const onAppearDone = () => {
+      encImg.removeEventListener('animationend', onAppearDone);
+      revealBattleButton();
     };
-  } else if (introBox) {
-    introBox.style.display = 'none';
-    introBox.onclick = null;
-    setTimeout(() => {
-      if (encBtn) encBtn.style.display = 'inline-block';
-    }, 720);
+    encImg.addEventListener('animationend', onAppearDone);
+  } else {
+    revealBattleButton();
   }
+
   showScreen('encounter-screen');
+
+  const ec = document.getElementById('encounter-screen');
+  ec.style.animation = 'none';
+  requestAnimationFrame(() => {
+    ec.style.animation = 'screen-shake 0.4s ease-out';
+  });
+
+  Sound.playBGM(isBoss ? 'bgm_boss' : 'bgm_battle');
+}
+
+function showStage1TutorialAndStart(onComplete) {
+  showAlertModal(
+    '전투 안내',
+    '상대의 주장을 확인한 뒤 판정하세요.<br>기준에 맞으면 <span class="tut-good">합격</span>, 문제가 있으면 <span class="tut-bad">불합격</span>입니다.<br><span class="tut-good">정답</span>이면 적 체력이 줄고,<br><span class="tut-bad">오답</span>이면 내 체력이 줄어듭니다.',
+    () => {
+      G.stage1TutorialShown = true;
+      saveGame();
+      if (onComplete) onComplete();
+    }
+  );
 }
 
 function doStartActualBattle() {
   resetNodeBattle(G.currentNode);
   const node = NODES[G.currentNode];
   const isBoss = node.type === 'boss';
+
   document.getElementById('battle-enemy-name').textContent = node.enemy;
   document.getElementById('battle-player-name').textContent = G.playerName || '용사';
   document.getElementById('battle-name-badge').textContent = node.enemy;
@@ -1012,28 +1206,38 @@ function doStartActualBattle() {
 
   const sprite = document.getElementById('battle-card-img');
   const spriteSrc = node.enemySprite || node.enemyImage;
-  if (sprite) {
-    if (spriteSrc) sprite.innerHTML = '<img src="' + spriteSrc + '" alt="' + escapeHtml(node.enemy) + '">';
-    else sprite.innerHTML = '<div class="arena-fallback-enemy">' + escapeHtml(node.enemy) + '</div>';
+  if (spriteSrc) {
+    sprite.innerHTML = '<img src="' + spriteSrc + '" alt="' + node.enemy + '">';
+  } else {
+    sprite.innerHTML = '<div class="arena-fallback-enemy">' + node.enemy + '</div>';
   }
-  const playerSprite = document.getElementById('arena-player-sprite');
-  if (playerSprite) playerSprite.innerHTML = '<img src="images/player_back.png" alt="' + escapeHtml(G.playerName || '용사') + '">';
 
+  const playerSprite = document.getElementById('arena-player-sprite');
+  if (playerSprite) {
+    playerSprite.innerHTML = '<img src="images/player_back.png" alt="' + (G.playerName || '용사') + '">';
+  }
+
+  const bossLabel = document.getElementById('boss-label');
   const bubble = document.getElementById('speech-bubble');
   const enemyBadge = document.getElementById('battle-name-badge');
   if (isBoss) {
-    if (bubble) bubble.classList.add('boss-bubble');
-    if (enemyBadge) enemyBadge.innerHTML = '<span class="badge-name">' + escapeHtml(node.enemy) + '</span><span class="boss-inline-tag">BOSS</span>';
+    if (bossLabel) bossLabel.style.display = 'none';
+    bubble.classList.add('boss-bubble');
+    enemyBadge.style.borderColor = '#ff4444';
+    enemyBadge.classList.add('has-boss');
+    enemyBadge.innerHTML = '<span class="badge-name">' + node.enemy + '</span><span class="boss-inline-tag">BOSS</span>';
   } else {
-    if (bubble) bubble.classList.remove('boss-bubble');
-    if (enemyBadge) enemyBadge.textContent = node.enemy;
+    if (bossLabel) bossLabel.style.display = 'none';
+    bubble.classList.remove('boss-bubble');
+    enemyBadge.style.borderColor = '#8a7a50';
+    enemyBadge.classList.remove('has-boss');
+    enemyBadge.textContent = node.enemy;
   }
 
   updatePlayerFlavorLine();
   renderHp();
   loadQuestion();
   showScreen('battle-screen');
-  Sound.playBGM(isBoss ? 'bgm_boss' : 'bgm_battle');
 }
 
 function startActualBattle() {
@@ -1045,13 +1249,18 @@ function startActualBattle() {
   doStartActualBattle();
 }
 
+// ==============================
+// HP
+// ==============================
 function renderHp() {
   const pFill = document.getElementById('player-hp-fill');
   const pText = document.getElementById('player-hp-text');
   const eFill = document.getElementById('enemy-hp-fill');
   const eText = document.getElementById('enemy-hp-text');
+
   const pRatio = Math.max(0, Math.min(1, G.hp / 3));
   const eRatio = Math.max(0, Math.min(1, G.enemyHp / G.enemyMaxHp));
+
   if (pFill) {
     pFill.style.width = (pRatio * 100) + '%';
     pFill.classList.remove('is-mid', 'is-low');
@@ -1064,112 +1273,87 @@ function renderHp() {
     if (eRatio <= 0.34) eFill.classList.add('is-low');
     else if (eRatio <= 0.67) eFill.classList.add('is-mid');
   }
+
   if (pText) pText.textContent = G.hp + ' / 3';
   if (eText) eText.textContent = G.enemyHp + ' / ' + G.enemyMaxHp;
 }
 
+function animateHpBreak(idx) {
+  return;
+}
+
+// ==============================
+// QUESTION
+// ==============================
 function loadQuestion() {
   if (!G.shuffledQ.length) return;
   const q = G.shuffledQ[G.currentQ];
-  const formatted = formatQuestion(q.text || '');
-  document.getElementById('battle-question').innerHTML = highlightNumbers(escapeHtml(formatted)).replace(/\n/g, '<br>');
+  const formatted = formatQuestion(q.text);
+  document.getElementById('battle-question').innerHTML = highlightNumbers(formatted);
   document.getElementById('q-counter').textContent = '문제 ' + G.questionTurn;
   updatePlayerFlavorLine();
-  document.querySelectorAll('#battle-screen .judge-btn').forEach(b => b.disabled = false);
+  document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);
 }
 
+// ==============================
+// ANSWER
+// ==============================
 function answer(choice) {
   playUIClick();
   if (G.pendingDamage) return;
   disableResultNext(false);
-  document.querySelectorAll('#battle-screen .judge-btn').forEach(b => b.disabled = true);
+  document.querySelectorAll('.judge-btn').forEach(b => b.disabled = true);
   const q = G.shuffledQ[G.currentQ];
   const correct = choice === q.answer;
   const userJudge = choice === 'pass' ? '합격' : '불합격';
   const correctJudge = q.answer === 'pass' ? '합격' : '불합격';
+
   const box = document.getElementById('result-box');
-  box.className = 'result-box popup-panel ' + (correct ? 'correct' : 'wrong');
+  box.className = 'result-box ' + (correct ? 'correct' : 'wrong');
   document.getElementById('result-badge').textContent = '채점 결과';
   document.getElementById('result-title').textContent = correct ? '정답!' : '오답!';
   document.getElementById('result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
-  let reasonText = String(q.reason || '').trim();
+
+  let reasonText = (q.reason || '').trim();
   const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
   if (!reasonText) reasonText = suffix;
   else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
   document.getElementById('result-reason').innerHTML = formatReasonHtml(reasonText);
   document.getElementById('result-popup').classList.add('show');
+
   G.pendingDamage = true;
   G.pendingDamageOutcome = correct;
   if (correct) {
-    G.correct++;
-    G.totalCorrect++;
+    G.correct++; G.totalCorrect++;
     Sound.playSE('se_correct');
   } else {
-    G.wrong++;
-    G.totalWrong++;
+    G.wrong++; G.totalWrong++;
     WrongNote.add(q);
     Sound.playSE('se_wrong');
   }
 }
 
-function applyBattleDamageEffects(correct) {
-  const arena = document.getElementById('battle-arena-area');
-  if (correct) {
-    G.enemyHp = Math.max(0, G.enemyHp - 1);
-    if (arena) arena.classList.add('enemy-hit-flash');
-    Sound.playSE('se_hit');
-    Sound.playSE('se_stamp');
-    setTimeout(() => { if (arena) arena.classList.remove('enemy-hit-flash'); }, 420);
-  } else {
-    G.hp = Math.max(0, G.hp - 1);
-    if (arena) arena.classList.add('player-hit-flash');
-    const screen = document.getElementById('battle-screen');
-    if (screen) screen.classList.add('shake');
-    Sound.playSE('se_hit');
-    setTimeout(() => {
-      if (arena) arena.classList.remove('player-hit-flash');
-      if (screen) screen.classList.remove('shake');
-    }, 420);
-  }
-  renderHp();
-}
-
-function finalizeAfterDamage() {
-  G.pendingDamage = false;
-  G.pendingDamageOutcome = null;
-  if (G.hp <= 0) {
-    Sound.playSE('se_gameover');
-    Sound.stopBGM();
-    showScreen('gameover-screen');
-    return;
-  }
-  if (G.enemyHp <= 0) {
-    stageClear();
-    return;
-  }
-  G.currentQ++;
-  G.questionTurn++;
-  if (G.currentQ >= G.shuffledQ.length) {
-    G.shuffledQ = shuffle(NODES[G.currentNode].questions || []);
-    G.currentQ = 0;
-  }
-  loadQuestion();
-}
-
 function nextQuestion() {
   playUIClick();
   if (!G.pendingDamage || G.pendingDamageOutcome === null) return;
+
   const correct = G.pendingDamageOutcome;
   G.pendingDamageOutcome = null;
   document.getElementById('result-popup').classList.remove('show');
   disableResultNext(true);
+
   if (G.damageTimer) clearTimeout(G.damageTimer);
   G.damageTimer = setTimeout(() => {
     applyBattleDamageEffects(correct);
-    G.damageTimer = setTimeout(() => finalizeAfterDamage(), 460);
+    G.damageTimer = setTimeout(() => {
+      finalizeAfterDamage();
+    }, 460);
   }, 30);
 }
 
+// ==============================
+// EXIT
+// ==============================
 function showExitConfirm() { playUIClick(); document.getElementById('exit-confirm').classList.add('show'); }
 function hideExitConfirm() { playUIClick(); document.getElementById('exit-confirm').classList.remove('show'); }
 
@@ -1180,9 +1364,14 @@ function exitToMap() {
   Sound.stopBGM();
   Sound.playBGM('bgm_title');
   showScreen('map-screen');
-  renderMap();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
 }
 
+// ==============================
+// STAGE CLEAR
+// ==============================
 function stageClear() {
   if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
   G.pendingDamage = false;
@@ -1193,6 +1382,7 @@ function stageClear() {
   saveGame();
   Sound.playSE('se_clear');
   Sound.stopBGM();
+
   const node = NODES[G.currentNode];
   const isLast = G.currentNode === NODES.length - 1;
   document.getElementById('clear-title').textContent = isLast ? '최종 보스 격파!' : node.label + ' 클리어!';
@@ -1211,127 +1401,49 @@ function afterClear() {
   if (G.currentNode === NODES.length - 1) showEnding();
   else {
     showScreen('map-screen');
-    renderMap();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      renderMap();
+    }));
     Sound.playBGM('bgm_title');
   }
 }
 
+// ==============================
+// GAME OVER
+// ==============================
 function retryNode() {
   playUIClick();
   showScreen('map-screen');
-  renderMap();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    renderMap();
+  }));
   Sound.playBGM('bgm_title');
 }
 
-function buildStudyPool() {
-  const all = [];
-  NODES.forEach((node, nodeIdx) => {
-    (node.questions || []).forEach((q, qIdx) => {
-      all.push({ ...q, _nodeIdx: nodeIdx, _qIdx: qIdx, _nodeLabel: node.label.split('\n').join(' '), _enemy: node.enemy });
-    });
-  });
-  return shuffle(all);
-}
-
-function updateStudyStats() {
-  const total = STUDY.correct + STUDY.wrong;
-  const rateText = total ? (Math.round((STUDY.correct / total) * 100) + '%') : '- %';
-  const inline = document.getElementById('study-stats-inline');
-  if (inline) inline.innerHTML = '정답 ' + STUDY.correct + ' · 오답 ' + STUDY.wrong + '<br>정답률 ' + rateText;
-}
-
-function showStudyQuestion() {
-  if (!STUDY.pool.length) STUDY.pool = buildStudyPool();
-  if (STUDY.idx >= STUDY.pool.length) {
-    STUDY.pool = buildStudyPool();
-    STUDY.idx = 0;
-  }
-  STUDY.current = STUDY.pool[STUDY.idx++];
-  document.getElementById('study-counter').textContent = '문제 ' + STUDY.turn;
-  const stageEl = document.getElementById('study-question-stage');
-  if (stageEl) stageEl.textContent = '';
-  const studyBody = STUDY.current.studyText || STUDY.current.text || '';
-  document.getElementById('study-question').innerHTML = formatStudyQuestionHtml(studyBody);
-  const box = document.getElementById('study-result-box');
-  box.classList.remove('show', 'correct', 'wrong');
-  document.getElementById('study-pass-btn').disabled = false;
-  document.getElementById('study-fail-btn').disabled = false;
-  updateStudyStats();
-}
-
-function startStudyMode() {
-  playUIClick();
-  STUDY.active = true;
-  STUDY.pool = buildStudyPool();
-  STUDY.idx = 0;
-  STUDY.turn = 1;
-  STUDY.correct = 0;
-  STUDY.wrong = 0;
-  STUDY.current = null;
-  showScreen('study-screen');
-  showStudyQuestion();
-  Sound.playBGM('bgm_study');
-}
-
-function exitStudyMode() {
-  playUIClick();
-  showConfirmModal('집중 공부 종료', '집중 공부를 종료하고 타이틀로 돌아가시겠습니까?', () => {
-    STUDY.active = false;
-    showScreen('title-screen');
-    initTitle();
-  });
-}
-
-function answerStudy(choice) {
-  playUIClick();
-  if (!STUDY.active || !STUDY.current) return;
-  document.getElementById('study-pass-btn').disabled = true;
-  document.getElementById('study-fail-btn').disabled = true;
-  const correct = choice === STUDY.current.answer;
-  const userJudge = choice === 'pass' ? '합격' : '불합격';
-  const correctJudge = STUDY.current.answer === 'pass' ? '합격' : '불합격';
-  if (correct) {
-    STUDY.correct++;
-    Sound.playSE('se_correct');
-  } else {
-    STUDY.wrong++;
-    WrongNote.add(STUDY.current);
-    Sound.playSE('se_wrong');
-  }
-  const box = document.getElementById('study-result-box');
-  box.className = 'study-result-box show ' + (correct ? 'correct' : 'wrong');
-  document.getElementById('study-result-title').textContent = correct ? '정답!' : '오답!';
-  document.getElementById('study-result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
-  let reasonText = String(STUDY.current.reason || '').trim();
-  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
-  if (!reasonText) reasonText = suffix;
-  else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
-  document.getElementById('study-result-reason').innerHTML = formatReasonHtml(reasonText, 'study-reason-label');
-  updateStudyStats();
-}
-
-function nextStudyQuestion() {
-  playUIClick();
-  if (!STUDY.active) return;
-  STUDY.turn++;
-  showStudyQuestion();
-}
-
+// ==============================
+// ENDING
+// ==============================
 function endingRenderLine(line) {
-  return escapeHtml(line).replace(/\n/g, '<br>').replace(/__NAME__/g, '<span class="ending-player-name">' + escapeHtml(G.playerName || '용사') + '</span>');
+  const safe = line
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+  return safe.replace(/__NAME__/g, '<span class="ending-player-name">' + G.playerName + '</span>');
 }
 
 function endingTypeLine(line) {
   clearTimeout(endingTypingTimer);
   endingTyping = true;
   endingFullLine = line;
-  const plain = line.replace(/__NAME__/g, G.playerName || '용사');
+  const plain = line.replace(/__NAME__/g, G.playerName);
   const textEl = document.getElementById('ending-text');
   if (!textEl) { endingTyping = false; return; }
   let i = 0;
   textEl.innerHTML = '';
   function tick() {
-    textEl.innerHTML = escapeHtml(plain.slice(0, i)).replace(/\n/g, '<br>');
+    const s = plain.slice(0, i).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    textEl.innerHTML = s;
     i++;
     if (i <= plain.length) endingTypingTimer = setTimeout(tick, 28);
     else {
@@ -1353,7 +1465,7 @@ function setEndingBackground(idx) {
   layer.style.backgroundRepeat = 'no-repeat';
   const img = new Image();
   img.onload = () => {
-    layer.style.background = 'url("' + scene.image + '"), ' + scene.fallback;
+    layer.style.background = `url("${scene.image}"), ${scene.fallback}`;
     layer.style.backgroundSize = 'cover, cover';
     layer.style.backgroundPosition = 'center center, center center';
     layer.style.backgroundRepeat = 'no-repeat, no-repeat';
@@ -1374,6 +1486,8 @@ function endingSetScene(idx, immediate = false) {
     layer.classList.remove('wipe-in', 'wipe-out');
     layer.style.webkitMaskImage = 'none';
     layer.style.maskImage = 'none';
+    layer.style.webkitMaskSize = 'auto';
+    layer.style.maskSize = 'auto';
     return;
   }
   layer.classList.remove('wipe-in');
@@ -1386,11 +1500,15 @@ function endingSetScene(idx, immediate = false) {
       layer.classList.remove('wipe-in', 'wipe-out');
       layer.style.webkitMaskImage = 'none';
       layer.style.maskImage = 'none';
+      layer.style.webkitMaskSize = 'auto';
+      layer.style.maskSize = 'auto';
     }, 620);
   }, 240);
 }
 
-function endingShowLine() { endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]); }
+function endingShowLine() {
+  endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]);
+}
 
 function buildEndingParticles() {
   const wrap = document.getElementById('ending-particles');
@@ -1451,34 +1569,30 @@ function buildEndingRankParticles() {
 
 function buildEndingRankData() {
   const total = G.totalCorrect + G.totalWrong;
-  const rate = total ? Math.round((G.totalCorrect / total) * 100) : 0;
-  let grade = 'C';
-  let title = '예비 종자검사원';
-  let desc = '조금 더 많은 기준을 익히면 훌륭한 검사원이 될 수 있습니다.';
-  if (rate >= 95) {
+  const rate = total > 0 ? Math.round((G.totalCorrect / total) * 100) : 0;
+  let grade = 'B';
+  let title = '성장형 검사원';
+  let desc = '왕국의 질서를 되찾았습니다.';
+  if (rate >= 100) {
     grade = 'S';
-    title = '전설의 종자검사원';
-    desc = '완벽에 가까운 판정으로 왕국의 질서를 되찾았습니다.';
+    title = '완벽한 판정관';
+    desc = '완벽한 판정으로 왕국의 기준을 다시 세웠습니다.';
   } else if (rate >= 85) {
     grade = 'A';
-    title = '정식 종자검사원';
-    desc = '탁월한 판정으로 왕국의 질서를 바로 세웠습니다.';
-  } else if (rate >= 70) {
-    grade = 'B';
-    title = '숙련 검사원';
-    desc = '충분한 실력을 보여 주었습니다. 이제 더 정교한 판정이 필요합니다.';
+    title = '우수한 검사원';
+    desc = '뛰어난 판단으로 왕국의 질서를 되찾았습니다.';
   }
-  endingRankData = { grade, title, desc, rate };
+  endingRankData = { total, rate, grade, title, desc };
 }
 
 function showEndingRankPopup() {
   if (!endingRankData) buildEndingRankData();
   const modal = document.getElementById('ending-rank-modal');
   document.getElementById('ending-rank-grade').textContent = endingRankData.grade;
-  document.getElementById('ending-rank-name').textContent = (G.playerName || '용사') + ' · ' + endingRankData.title;
-  document.getElementById('ending-stat-correct').textContent = G.totalCorrect + '개';
-  document.getElementById('ending-stat-wrong').textContent = G.totalWrong + '개';
-  document.getElementById('ending-stat-rate').textContent = endingRankData.rate + '%';
+  document.getElementById('ending-rank-name').textContent = `${G.playerName} · ${endingRankData.title}`;
+  document.getElementById('ending-stat-correct').textContent = `${G.totalCorrect}개`;
+  document.getElementById('ending-stat-wrong').textContent = `${G.totalWrong}개`;
+  document.getElementById('ending-stat-rate').textContent = `${endingRankData.rate}%`;
   document.getElementById('ending-rank-desc').textContent = endingRankData.desc;
   buildEndingRankParticles();
   if (modal) {
@@ -1556,41 +1670,26 @@ function showEnding() {
   if (rankParticles) rankParticles.innerHTML = '';
   if (rankBtn) rankBtn.style.display = 'none';
   if (arrow) arrow.style.visibility = 'visible';
-  showScreen('ending-screen');
   endingSetScene(0, true);
+  showScreen('ending-screen');
   endingShowLine();
   Sound.playBGM('bgm_ending');
+  const wrap = document.getElementById('ending-scene-wrap');
+  if (wrap) wrap.onclick = endingNextStep;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  Sound.loadSettings();
-  const saved = loadSave();
-  if (saved && saved.playerName) {
-    G.playerName = saved.playerName || '용사';
-    G.nodeStatus = normalizeNodeStatus(saved.nodeStatus);
-    G.totalCorrect = saved.totalCorrect || 0;
-    G.totalWrong = saved.totalWrong || 0;
-    G.stage1TutorialShown = !!saved.stage1TutorialShown;
-  }
+// ==============================
+// INIT
+// ==============================
+Sound.loadSettings();
+initTitle();
 
-  const opTap = document.getElementById('op-tap');
-  if (opTap) opTap.onclick = opNextStep;
-  const opSkip = document.getElementById('op-skip');
-  if (opSkip) opSkip.onclick = opSkipAll;
-  const endingWrap = document.getElementById('ending-scene-wrap');
-  if (endingWrap) {
-    endingWrap.addEventListener('click', (e) => {
-      const modal = document.getElementById('ending-rank-modal');
-      if (modal && modal.classList.contains('show')) return;
-      if (e.target && (e.target.id === 'ending-home' || e.target.id === 'ending-skip' || e.target.id === 'ending-rank-trigger')) return;
-      endingNextStep();
+
+(() => {
+  const modal = document.getElementById('ui-modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeUIModal();
     });
   }
-  const rankModal = document.getElementById('ending-rank-modal');
-  if (rankModal) {
-    rankModal.addEventListener('click', (e) => {
-      if (e.target === rankModal) rankModal.classList.remove('show');
-    });
-  }
-  initTitle();
-});
+})();
