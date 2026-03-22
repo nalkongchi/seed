@@ -3057,3 +3057,78 @@ body {
     opacity: 1;
   }
 }
+
+
+/* ========================================
+   VER17 SHARARAK FIX - small mosaic grid
+   Keep current layout/logic, replace only
+   the 4-slice conic mask pattern.
+======================================== */
+:root {
+  --shararak-mosaic-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Crect width='1' height='1' fill='white'/%3E%3Crect x='1' width='1' height='1' fill='white'/%3E%3Crect x='3' width='1' height='1' fill='white'/%3E%3Crect x='1' y='1' width='1' height='1' fill='white'/%3E%3Crect x='2' y='1' width='1' height='1' fill='white'/%3E%3Crect width='1' y='2' height='1' fill='white'/%3E%3Crect x='2' y='2' width='1' height='1' fill='white'/%3E%3Crect x='3' y='2' width='1' height='1' fill='white'/%3E%3Crect width='1' y='3' height='1' fill='white'/%3E%3Crect x='1' y='3' width='1' height='1' fill='white'/%3E%3Crect x='3' y='3' width='1' height='1' fill='white'/%3E%3C/svg%3E");
+}
+
+.op-scene-layer.wipe-out,
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-out,
+.ending-bg-layer.wipe-in {
+  -webkit-mask-image: var(--shararak-mosaic-mask) !important;
+  mask-image: var(--shararak-mosaic-mask) !important;
+  -webkit-mask-repeat: repeat !important;
+  mask-repeat: repeat !important;
+  -webkit-mask-position: 0 0 !important;
+  mask-position: 0 0 !important;
+  -webkit-mask-mode: alpha !important;
+  mask-mode: alpha !important;
+  animation-duration: 0.98s !important;
+  animation-timing-function: steps(12) !important;
+  animation-fill-mode: forwards !important;
+}
+
+.op-scene-layer.wipe-out,
+.ending-bg-layer.wipe-out {
+  animation-name: shararakMosaicOut !important;
+}
+
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-in {
+  animation-name: shararakMosaicIn !important;
+}
+
+@keyframes shararakMosaicOut {
+  0% {
+    -webkit-mask-size: 6px 6px;
+    mask-size: 6px 6px;
+    opacity: 1;
+  }
+  72% {
+    -webkit-mask-size: 28px 28px;
+    mask-size: 28px 28px;
+    opacity: 0.92;
+  }
+  100% {
+    -webkit-mask-size: 64px 64px;
+    mask-size: 64px 64px;
+    opacity: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+@keyframes shararakMosaicIn {
+  0% {
+    -webkit-mask-size: 64px 64px;
+    mask-size: 64px 64px;
+    opacity: 0;
+  }
+  34% {
+    opacity: 0.84;
+  }
+  100% {
+    -webkit-mask-size: 6px 6px;
+    mask-size: 6px 6px;
+    opacity: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
