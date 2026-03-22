@@ -297,9 +297,6 @@ const ENDING_SCENES = [
 let opSceneIdx = 0, opLineIdx = 0, opTyping = false, opFullLine = '', opTypingTimer = null, opSceneEls = [];
 let endingSceneIdx = 0, endingLineIdx = 0, endingTyping = false, endingFullLine = '', endingTypingTimer = null;
 let endingAwaitingRank = false, endingRankPopupShown = false, endingRankData = null;
-const OPENING_WIPE_MS = 520;
-const ENDING_WIPE_MS = 520;
-const ENDING_WIPE_SWAP_DELAY = 260;
 
 function escapeHtml(s) {
   return String(s)
@@ -679,34 +676,26 @@ function opSetScene(idx) {
   opSceneEls.forEach((el, i) => {
     const isCurrent = i === idx;
     if (isCurrent) {
-      el.classList.add('active');
+      el.classList.add('active', 'wipe-in');
       el.classList.remove('wipe-out');
-      void el.offsetWidth;
-      el.classList.add('wipe-in');
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
         bg.style.animation = 'none';
         void bg.offsetWidth;
-        bg.style.animation = 'op-breathe-pan 11s ease-in-out forwards';
+        bg.style.animation = 'op-slow-pan 11s ease-in-out forwards';
       }
       setTimeout(() => {
-        el.classList.remove('wipe-in', 'wipe-out');
+        el.classList.remove('wipe-in');
         el.style.webkitMaskImage = 'none';
         el.style.maskImage = 'none';
-        el.style.webkitMaskSize = '';
-        el.style.maskSize = '';
-      }, OPENING_WIPE_MS + 40);
+      }, 620);
     } else if (el.classList.contains('active')) {
-      el.classList.remove('wipe-in');
-      void el.offsetWidth;
       el.classList.add('wipe-out');
       setTimeout(() => {
-        el.classList.remove('active', 'wipe-in', 'wipe-out');
+        el.classList.remove('active', 'wipe-out');
         el.style.webkitMaskImage = 'none';
         el.style.maskImage = 'none';
-        el.style.webkitMaskSize = '';
-        el.style.maskSize = '';
-      }, OPENING_WIPE_MS + 40);
+      }, 620);
     }
   });
   if (OP_SCENES[idx].lightning) {
@@ -1385,26 +1374,20 @@ function endingSetScene(idx, immediate = false) {
     layer.classList.remove('wipe-in', 'wipe-out');
     layer.style.webkitMaskImage = 'none';
     layer.style.maskImage = 'none';
-    layer.style.webkitMaskSize = '';
-    layer.style.maskSize = '';
     return;
   }
-  layer.classList.remove('wipe-in', 'wipe-out');
-  void layer.offsetWidth;
+  layer.classList.remove('wipe-in');
   layer.classList.add('wipe-out');
   setTimeout(() => {
     setEndingBackground(idx);
     layer.classList.remove('wipe-out');
-    void layer.offsetWidth;
     layer.classList.add('wipe-in');
     setTimeout(() => {
       layer.classList.remove('wipe-in', 'wipe-out');
       layer.style.webkitMaskImage = 'none';
       layer.style.maskImage = 'none';
-      layer.style.webkitMaskSize = '';
-      layer.style.maskSize = '';
-    }, ENDING_WIPE_MS + 40);
-  }, ENDING_WIPE_SWAP_DELAY);
+    }, 620);
+  }, 240);
 }
 
 function endingShowLine() { endingTypeLine(ENDING_SCENES[endingSceneIdx].lines[endingLineIdx]); }

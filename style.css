@@ -90,6 +90,8 @@ body {
 
 @keyframes node-pulse { 0%,100%{box-shadow:3px 3px 0 #000} 50%{box-shadow:3px 3px 0 #000,0 0 20px rgba(232,200,74,0.6)} }
 @keyframes boss-pulse { 0%,100%{box-shadow:3px 3px 0 #000} 50%{box-shadow:3px 3px 0 #000,0 0 25px rgba(255,68,68,0.8)} }
+@keyframes enemy-idle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes enemy-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px) rotate(-3deg)} 75%{transform:translateX(8px) rotate(3deg)} }
 @keyframes screen-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
 @keyframes encounter-flash { 0%{filter:brightness(3)} 100%{filter:brightness(1)} }
 @keyframes enemy-appear { 0%{transform:scale(0) rotate(-20deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
@@ -99,6 +101,8 @@ body {
 @keyframes ending-shine { 0%,100%{filter:drop-shadow(0 0 10px rgba(232,200,74,0.5))} 50%{filter:drop-shadow(0 0 30px rgba(232,200,74,1))} }
 @keyframes particle-fall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(900px) rotate(360deg);opacity:0} }
 @keyframes stamp-pop { 0%{transform:scale(3) rotate(-15deg);opacity:0} 60%{transform:scale(0.9) rotate(3deg);opacity:1} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+@keyframes hp-break { 0%{transform:scale(1)} 30%{transform:scale(1.4)} 100%{transform:scale(0.8) rotate(15deg);opacity:0.3} }
+@keyframes boss-entrance { 0%{transform:scale(0.3);opacity:0;filter:brightness(5)} 70%{transform:scale(1.1);opacity:1} 100%{transform:scale(1);filter:brightness(1)} }
 
 /* ═══════════════════════════════════════════
    TITLE SCREEN
@@ -287,6 +291,7 @@ body {
 #node-popup { position:absolute; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:flex-end; justify-content:center; z-index:50; padding-bottom:30px; }
 #node-popup.show { display:flex; }
 .node-popup-box { width:340px; background:#0d0d0d; border:1px solid #333; padding:24px; }
+.popup-emoji { font-size:40px; float:right; margin-top:-45px; }
 .popup-enemy-name { font-size:16px; font-weight:900; color:#ff8888; margin-bottom:5px;
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 .popup-desc { font-size:12px; color:#aaa; margin-bottom:5px;
@@ -309,6 +314,10 @@ body {
 .wrongnote-body { flex:1; overflow-y:auto; padding:15px; }
 .wrongnote-empty { text-align:center; color:#555; font-size:14px; margin-top:60px; line-height:2; }
 .wrongnote-item { background:#0a1a0a; border:2px solid #333; padding:12px; margin-bottom:12px; }
+.wrongnote-item-q { font-size:12px; color:#ddd; margin-bottom:8px; line-height:1.6;
+  font-family:'Galmuri9','Noto Sans KR',sans-serif;}
+.wrongnote-item-q .highlight { color:var(--gold); font-weight:700; }
+.wrongnote-item-ans { font-size:11px; color:#c8a030; margin-bottom:4px; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
 .wrongnote-item-reason { font-size:11px; color:#888; line-height:1.5;
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 .wrongnote-clear-btn { margin:10px 15px 15px; background:#4a0000; border:2px solid #ff4444; color:#ff8888; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:13px; padding:10px; cursor:pointer; }
@@ -379,12 +388,25 @@ body {
 #battle-screen.shake { animation:screen-shake 0.4s ease-out; }
 .battle-header { background:#0a0a0a; border-bottom:1px solid #1a1a1a; padding:8px 15px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
+.battle-header-left { display:flex; align-items:center; gap:10px; }
 .battle-exit-btn { background:#1a1a1a; border:2px solid #555; color:#888; font-family:'Galmuri11','Noto Sans KR',sans-serif; font-size:11px; padding:5px 10px; cursor:pointer; }
 .battle-exit-btn:hover { border-color:#aaa; color:#ccc; }
 .battle-enemy-name { font-size:13px; font-weight:700; color:#ff8888;
   font-family:'Galmuri11','Noto Sans KR',sans-serif;}
+.battle-hp { display:flex; gap:5px; align-items:center; }
+.hp-icon { font-size:18px; transition:all 0.3s; }
+.hp-icon.empty { filter:grayscale(1) opacity(0.3); transform:scale(0.8); }
+.hp-icon.breaking { animation:hp-break 0.4s ease-out forwards; }
 
-.battle-card-img { position:absolute; inset:0; background-size:cover; background-position:center top; background-repeat:no-repeat; }
+/* 카드형 적 영역 */
+.battle-card-area { position:relative; flex:0 0 65%; overflow:hidden; background:#000; }
+.battle-card-img { position:absolute; inset:0; background-size:cover; background-position:top center; background-repeat:no-repeat; }
+.battle-card-img { position:absolute; inset:0; background-size:cover; background-position:center top; }
+.battle-card-img.emoji-mode { display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#0a1a0a 0%,#1a2a0a 100%); font-size:90px; filter:drop-shadow(0 5px 15px rgba(0,0,0,0.8)); animation:enemy-idle 2s ease-in-out infinite; }
+.battle-card-img.emoji-mode.boss-bg { background:linear-gradient(180deg,#1a0000 0%,#2a0a0a 100%); animation:boss-entrance 0.8s ease-out, enemy-idle 2s ease-in-out 0.8s infinite; }
+.battle-card-img.emoji-mode.shake { animation:enemy-shake 0.5s ease-out; }
+.battle-card-fade { position:absolute; inset:0; background:linear-gradient(180deg, transparent 35%, rgba(13,17,23,0.75) 72%, #0d1117 100%); pointer-events:none; }
+.battle-card-bottom { position:absolute; bottom:0; left:0; right:0; height:20px; background:#0d1117; }
 .q-counter { position:absolute; top:10px; right:12px; font-size:11px; color:#ccc; background:rgba(0,0,0,0.7); padding:4px 8px; border:1px solid #444; z-index:2;
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 .boss-label { position:absolute; top:10px; left:12px; font-size:11px; color:#ff4444; background:rgba(0,0,0,0.8); padding:4px 8px; border:1px solid #ff4444; letter-spacing:1px; font-weight:700; z-index:2;
@@ -394,6 +416,7 @@ body {
 .battle-name-badge { background:rgba(0,0,0,0.9); border:2px solid #ff4444; padding:5px 14px; font-size:12px; font-weight:900; color:#ff8888; letter-spacing:1px; text-align:center; margin:0 20px 6px; flex-shrink:0; position:relative; z-index:1;
   font-family:'Galmuri9','Noto Sans KR',sans-serif;}
 
+.battle-question-area { flex:0; padding:0; display:flex; flex-direction:column; justify-content:flex-start; background:#000; }
 .speech-bubble { background:#000; padding:14px 18px 10px; position:relative; }
 .speech-bubble.boss-bubble { background:#0a0000; }
 .bubble-text { font-size:14px; color:#e8dfc0; line-height:1.9; white-space:pre-line; font-family:'Galmuri9','Noto Sans KR',sans-serif; }
@@ -638,11 +661,14 @@ body {
   100% { transform:translateY(-120px) scale(1); opacity:0; }
 }
 
+
+
 /* ═══════════════════════════════════════════
    RECOVERY PATCH OVERRIDES
 ═══════════════════════════════════════════ */
 .popup-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.82); display:none; align-items:center; justify-content:center; z-index:160; }
 .popup-overlay.show { display:flex !important; }
+.popup-emoji { display:none !important; }
 
 /* 픽셀 모자이크 전환 */
 .op-scene-layer { position:absolute; inset:0; display:none; transform:scale(1.02); pointer-events:none; }
@@ -819,6 +845,7 @@ body {
   max-width:340px;
   width:calc(100% - 32px);
 }
+
 
 /* ═══════════════════════════════════════════
    FINAL REVISION OVERRIDES
@@ -1060,6 +1087,9 @@ body {
   font-size:12px;
   line-height:1.7;
 }
+.battle-question-area {
+  display:none !important;
+}
 .battle-buttons {
   margin-top:auto;
 }
@@ -1135,6 +1165,7 @@ body {
   letter-spacing:1px;
 }
 
+
 /* ═══════════════════════════════════════════
    REVISION PATCH v3
 ═══════════════════════════════════════════ */
@@ -1193,6 +1224,12 @@ body {
 }
 .map-node.stage-5 .node-icon,
 .map-node.boss .node-icon,
+.map-node.boss .boss-wide-icon {
+  width: 140px !important;
+  height: 112px !important;
+  background-size: 424px 636px !important;
+  background-repeat: no-repeat;
+}
 .stage-5.locked .node-icon,
 .map-node.boss.locked .node-icon {
   background-position: -30px -446px !important;
@@ -1290,6 +1327,7 @@ body {
 .name-input::placeholder {
   letter-spacing: 0;
 }
+
 
 /* ═══════════════════════════════════════════
    FINAL PATCH v4
@@ -1434,6 +1472,7 @@ body {
   border-color: #777 !important;
   color: #ddd !important;
 }
+
 
 /* ═══════════════════════════════════════════
    FINAL PATCH v5
@@ -1794,6 +1833,16 @@ body {
 }
 
 /* Stronger hit feedback */
+@keyframes hit-slam {
+  0% { transform: translate(0,0) scale(1); filter: drop-shadow(0 8px 10px rgba(0,0,0,0.55)); }
+  20% { transform: translate(-3px,1px) scale(1.05); }
+  45% { transform: translate(4px,-2px) scale(0.98); }
+  70% { transform: translate(-2px,2px) scale(1.03); }
+  100% { transform: translate(0,0) scale(1); filter: drop-shadow(0 8px 10px rgba(0,0,0,0.55)); }
+}
+.hit-slam {
+  animation: hit-slam 0.42s ease-out;
+}
 #battle-arena-area.enemy-hit-flash::after,
 #battle-arena-area.player-hit-flash::after {
   content: '';
@@ -1816,11 +1865,17 @@ body {
   100% { opacity: 0; }
 }
 
+
 /* ═══════════════════════════════════════════
    FINAL PATCH v9
 ═══════════════════════════════════════════ */
 /* 1) Boss custom icon rendering */
 .map-node.boss .node-icon.custom-boss-icon,
+.map-node.boss .boss-wide-icon.custom-boss-icon {
+  background-size: contain !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
 
 /* 3) Wrongnote reset modal above wrongnote popup */
 #ui-modal {
@@ -1940,6 +1995,7 @@ body {
   margin-top: 5px !important;
 }
 
+
 /* ═══════════════════════════════════════════
    FINAL PATCH v10
 ═══════════════════════════════════════════ */
@@ -2052,6 +2108,7 @@ body {
   pointer-events: auto;
 }
 
+
 /* ═══════════════════════════════════════════
    ver11 HOTFIX 1~6
 ═══════════════════════════════════════════ */
@@ -2110,6 +2167,7 @@ body {
   padding: 2px 6px !important;
   letter-spacing: 1px !important;
 }
+
 
 /* === HOTFIX PLUS: latest agreed adjustments === */
 @keyframes op-slow-pan {
@@ -2268,6 +2326,7 @@ body {
   100% { transform: translateY(-18px) scale(1.15); opacity: 0; }
 }
 
+
 /* ═══════════════════════════════════════════
    VER12 TITLE + STUDY MODE
 ═══════════════════════════════════════════ */
@@ -2381,6 +2440,7 @@ body {
   margin:0 auto 14px !important;
 }
 
+
 /* ═══════════════════════════════════════════
    VER13 STABILIZATION PATCH
 ═══════════════════════════════════════════ */
@@ -2448,6 +2508,7 @@ body {
   background: transparent !important;
   border: 0 !important;
 }
+
 
 /* ═══════════════════════════════════════════
    VER13 CURRENT PATCH
@@ -2582,6 +2643,7 @@ body {
   100% { -webkit-mask-image:none; mask-image:none; opacity: 1; }
 }
 
+
 /* ═══════════════════════════════════════════
    VER13 PLUS PATCH
 ═══════════════════════════════════════════ */
@@ -2673,6 +2735,7 @@ body {
   .hp-text { min-width: 28px !important; }
 }
 
+
 /* ═══════════════════════════════════════════
    VER14 PATCH - restore original-style shard wipe cleanly
 ═══════════════════════════════════════════ */
@@ -2705,6 +2768,7 @@ body {
 .ending-bg-layer {
   transition: none !important;
 }
+
 
 /* v15 tweaks: wrong-note empty state + map footer balance */
 .wrongnote-body.is-empty { display:flex; align-items:center; justify-content:center; }
@@ -2819,7 +2883,10 @@ body {
 .study-question-text .highlight,
 .study-result-reason .highlight,
 .result-reason .highlight,
-
+.wrongnote-item-q .highlight {
+  color: #f0d28b;
+  font-weight: 800;
+}
 .study-result-reason,
 .result-reason {
   white-space: normal !important;
@@ -2843,6 +2910,7 @@ body {
 .reason-ref-line {
   color: #cfc7b5;
 }
+
 
 /* ═══════════════════════════════════════════
    VER17 PATCH - study layout + grouped wrongnote
@@ -2938,283 +3006,4 @@ body {
   background:#050505;
   border:1px solid rgba(255,255,255,0.06);
   padding:10px 10px 9px;
-}
-
-/* ═══════════════════════════════════════════
-   VER17 PATCH - opening/ending shard wipe visibility restore
-════════════════════════════════════════════ */
-.op-scene-layer.wipe-out,
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-out,
-.ending-bg-layer.wipe-in {
-  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
-  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
-  -webkit-mask-repeat: repeat !important;
-  mask-repeat: repeat !important;
-  animation-duration: 0.96s !important;
-  animation-timing-function: steps(12) !important;
-  animation-fill-mode: both !important;
-  will-change: opacity, -webkit-mask-size, mask-size !important;
-}
-.op-scene-layer.wipe-out,
-.ending-bg-layer.wipe-out {
-  animation-name: pixelOutShardV17 !important;
-}
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-in {
-  animation-name: pixelInShardV17 !important;
-}
-@keyframes pixelOutShardV17 {
-  0% {
-    -webkit-mask-size: 2px 2px;
-    mask-size: 2px 2px;
-    opacity: 1;
-  }
-  100% {
-    -webkit-mask-size: 48px 48px;
-    mask-size: 48px 48px;
-    opacity: 0;
-  }
-}
-@keyframes pixelInShardV17 {
-  0% {
-    -webkit-mask-size: 48px 48px;
-    mask-size: 48px 48px;
-    opacity: 0;
-  }
-  100% {
-    -webkit-mask-size: 2px 2px;
-    mask-size: 2px 2px;
-    opacity: 1;
-  }
-}
-
-/* ========================================
-   VER17 SHARARAK FIX - small mosaic grid
-   Keep current layout/logic, replace only
-   the 4-slice conic mask pattern.
-======================================== */
-:root {
-  --shararak-mosaic-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Crect width='1' height='1' fill='white'/%3E%3Crect x='1' width='1' height='1' fill='white'/%3E%3Crect x='3' width='1' height='1' fill='white'/%3E%3Crect x='1' y='1' width='1' height='1' fill='white'/%3E%3Crect x='2' y='1' width='1' height='1' fill='white'/%3E%3Crect width='1' y='2' height='1' fill='white'/%3E%3Crect x='2' y='2' width='1' height='1' fill='white'/%3E%3Crect x='3' y='2' width='1' height='1' fill='white'/%3E%3Crect width='1' y='3' height='1' fill='white'/%3E%3Crect x='1' y='3' width='1' height='1' fill='white'/%3E%3Crect x='3' y='3' width='1' height='1' fill='white'/%3E%3C/svg%3E");
-}
-
-.op-scene-layer.wipe-out,
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-out,
-.ending-bg-layer.wipe-in {
-  -webkit-mask-image: var(--shararak-mosaic-mask) !important;
-  mask-image: var(--shararak-mosaic-mask) !important;
-  -webkit-mask-repeat: repeat !important;
-  mask-repeat: repeat !important;
-  -webkit-mask-position: 0 0 !important;
-  mask-position: 0 0 !important;
-  -webkit-mask-mode: alpha !important;
-  mask-mode: alpha !important;
-  animation-duration: 0.98s !important;
-  animation-timing-function: steps(12) !important;
-  animation-fill-mode: forwards !important;
-}
-
-.op-scene-layer.wipe-out,
-.ending-bg-layer.wipe-out {
-  animation-name: shararakMosaicOut !important;
-}
-
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-in {
-  animation-name: shararakMosaicIn !important;
-}
-
-@keyframes shararakMosaicOut {
-  0% {
-    -webkit-mask-size: 6px 6px;
-    mask-size: 6px 6px;
-    opacity: 1;
-  }
-  72% {
-    -webkit-mask-size: 28px 28px;
-    mask-size: 28px 28px;
-    opacity: 0.92;
-  }
-  100% {
-    -webkit-mask-size: 64px 64px;
-    mask-size: 64px 64px;
-    opacity: 0;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
-
-@keyframes shararakMosaicIn {
-  0% {
-    -webkit-mask-size: 64px 64px;
-    mask-size: 64px 64px;
-    opacity: 0;
-  }
-  34% {
-    opacity: 0.84;
-  }
-  100% {
-    -webkit-mask-size: 6px 6px;
-    mask-size: 6px 6px;
-    opacity: 1;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
-
-
-/* ═══════════════════════════════════════════
-   VER17 SHARARAK CONFLICT FIX
-   - unify opening/ending wipe into one rule set
-   - stop display-based scene hiding from fighting opacity-based wipe
-   - stop layer-level pan animation from fighting bg pan animation
-════════════════════════════════════════════ */
-#op-scene-container .op-scene-layer {
-  display: block !important;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: scale(1.02);
-  transition: none !important;
-  animation: none !important;
-}
-#op-scene-container .op-scene-layer.active,
-#op-scene-container .op-scene-layer.wipe-in,
-#op-scene-container .op-scene-layer.wipe-out {
-  visibility: visible !important;
-}
-#op-scene-container .op-scene-layer.active {
-  opacity: 1;
-  transform: scale(1);
-}
-#op-scene-container .op-scene-layer.active .op-scene-bg,
-#op-scene-container .op-scene-layer .op-scene-bg {
-  animation: op-breathe-pan 11s ease-in-out forwards !important;
-}
-
-.op-scene-layer.wipe-out,
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-out,
-.ending-bg-layer.wipe-in {
-  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
-  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
-  -webkit-mask-repeat: repeat !important;
-  mask-repeat: repeat !important;
-  -webkit-mask-position: center center !important;
-  mask-position: center center !important;
-  animation-duration: 0.92s !important;
-  animation-timing-function: steps(10) !important;
-  animation-fill-mode: forwards !important;
-  will-change: opacity, -webkit-mask-size, mask-size !important;
-}
-.op-scene-layer.wipe-out,
-.ending-bg-layer.wipe-out {
-  animation-name: pixelOutResolvedV17 !important;
-}
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-in {
-  animation-name: pixelInResolvedV17 !important;
-}
-@keyframes pixelOutResolvedV17 {
-  0% {
-    -webkit-mask-size: 2px 2px;
-    mask-size: 2px 2px;
-    opacity: 1;
-  }
-  100% {
-    -webkit-mask-size: 64px 64px;
-    mask-size: 64px 64px;
-    opacity: 0;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
-@keyframes pixelInResolvedV17 {
-  0% {
-    -webkit-mask-size: 64px 64px;
-    mask-size: 64px 64px;
-    opacity: 0;
-  }
-  100% {
-    -webkit-mask-size: 2px 2px;
-    mask-size: 2px 2px;
-    opacity: 1;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
-
-
-/* ═══════════════════════════════════════════
-   VER17 HOTFIX - clean original shararak restore
-   Keep only the classic small-mosaic shard wipe feel.
-   Opening/ending share one clean rule set.
-═══════════════════════════════════════════ */
-#op-scene-container .op-scene-layer {
-  position: absolute !important;
-  inset: 0 !important;
-  display: none !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: none !important;
-  transform: none !important;
-  transition: none !important;
-  animation: none !important;
-}
-#op-scene-container .op-scene-layer.active,
-#op-scene-container .op-scene-layer.wipe-in,
-#op-scene-container .op-scene-layer.wipe-out {
-  display: block !important;
-}
-#op-scene-container .op-scene-layer.active .op-scene-bg,
-#op-scene-container .op-scene-layer .op-scene-bg {
-  animation: op-breathe-pan 11s ease-in-out forwards !important;
-}
-.op-scene-layer.wipe-out,
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-out,
-.ending-bg-layer.wipe-in {
-  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
-  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
-  -webkit-mask-size: 2px 2px !important;
-  mask-size: 2px 2px !important;
-  -webkit-mask-position: 0 0 !important;
-  mask-position: 0 0 !important;
-  animation-duration: 0.52s !important;
-  animation-timing-function: steps(8) !important;
-  animation-fill-mode: forwards !important;
-  will-change: opacity, -webkit-mask-size, mask-size !important;
-}
-.op-scene-layer.wipe-out,
-.ending-bg-layer.wipe-out {
-  animation-name: pixelOutOriginalRestore !important;
-}
-.op-scene-layer.wipe-in,
-.ending-bg-layer.wipe-in {
-  animation-name: pixelInOriginalRestore !important;
-}
-@keyframes pixelOutOriginalRestore {
-  0% {
-    -webkit-mask-size: 2px 2px;
-    mask-size: 2px 2px;
-    opacity: 1;
-  }
-  100% {
-    -webkit-mask-size: 64px 64px;
-    mask-size: 64px 64px;
-    opacity: 0;
-  }
-}
-@keyframes pixelInOriginalRestore {
-  0% {
-    -webkit-mask-size: 64px 64px;
-    mask-size: 64px 64px;
-    opacity: 0;
-  }
-  100% {
-    -webkit-mask-size: 2px 2px;
-    mask-size: 2px 2px;
-    opacity: 1;
-  }
 }
