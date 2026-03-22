@@ -300,12 +300,33 @@ function formatQuestion(text) {
   return String(text).replace(/([.?!~…])\s+/g, '$1\n');
 }
 
+function splitLeadLabel(text) {
+  const cleaned = cleanStudyText(text).replace(/\s+/g, ' ').trim();
+  const match = cleaned.match(/^\(([^)]+)\)\s*([^.!?\n]+?)\.\s*(.*)$/);
+  if (!match) return { label: '', body: cleaned };
+  return {
+    label: `(${match[1]}) ${match[2].trim()}`,
+    body: (match[3] || '').trim()
+  };
+}
+
+function formatQuestionBodyLines(text) {
+  return formatQuestion(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
+}
+
 function formatStudyQuestionHtml(text) {
-  const lines = cleanStudyText(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
-  if (!lines.length) return '';
-  const head = '<div class="study-line-label">' + highlightNumbers(escapeHtml(lines[0])) + '</div>';
-  const body = lines.slice(1).map(line => '<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
+  const parsed = splitLeadLabel(text);
+  const rawLines = parsed.label ? [parsed.label, ...formatQuestionBodyLines(parsed.body)] : cleanStudyText(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
+  if (!rawLines.length) return '';
+  const head = '<div class="study-line-label">' + highlightNumbers(escapeHtml(rawLines[0])) + '</div>';
+  const body = rawLines.slice(1).map(line => '<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
   return head + body;
+}
+
+function formatBattleQuestionHtml(text) {
+  const parsed = splitLeadLabel(text);
+  const lines = parsed.label ? [parsed.label, ...formatQuestionBodyLines(parsed.body)] : formatQuestionBodyLines(text);
+  return lines.map((line, idx) => '<div class="' + (idx === 0 && parsed.label ? 'battle-line-label' : 'battle-line-body') + '">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
 }
 
 function formatReasonHtml(text, labelClass = 'reason-line-label') {
@@ -622,10 +643,10 @@ function initTitle() {
   } else {
     primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
     restartBtn.style.display = 'none';
-    applyTop(primaryBtn, '24%');
-    applyTop(studyBtn, '44.0%');
-    applyTop(wrongBtn, '52.5%');
-    applyTop(settingBtn, '61.0%');
+    applyTop(primaryBtn, '21%');
+    applyTop(studyBtn, '47.0%');
+    applyTop(wrongBtn, '55.5%');
+    applyTop(settingBtn, '64.0%');
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
@@ -1288,8 +1309,7 @@ function animateHpBreak(idx) {
 function loadQuestion() {
   if (!G.shuffledQ.length) return;
   const q = G.shuffledQ[G.currentQ];
-  const formatted = formatQuestion(q.text);
-  document.getElementById('battle-question').innerHTML = highlightNumbers(formatted);
+  document.getElementById('battle-question').innerHTML = formatBattleQuestionHtml(q.text);
   document.getElementById('q-counter').textContent = '문제 ' + G.questionTurn;
   updatePlayerFlavorLine();
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);

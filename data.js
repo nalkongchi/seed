@@ -133,7 +133,7 @@ var NODES = [
     "maxHp": 7,
     "type": "boss",
     "x": 195,
-    "y": 90,
+    "y": 105,
     "bossLine": "진정한 검사원인지... 마지막으로 시험하겠다. 모든 기준을 꿰뚫어 보아라!",
     "bossOpenIcon": "images/node_06_open.png",
     "bossClearIcon": "images/node_06_clear.png",
@@ -446,21 +446,23 @@ var NODES = [
   }
 
   function buildStudyText(prefix, valuesText) {
-    return prefix + '. ' + valuesText + '일 때 판정은?';
+    return prefix + '\n' + valuesText + '일 때 판정은?';
+  }
+
+  function formatThresholdValue(metric) {
+    return formatNumber(metric.threshold, metric.format) + (metric.unit || '');
   }
 
   function buildReason(prefix, entries, answer) {
     const failed = entries.filter(e => !e.pass);
-    const passed = entries.filter(e => e.pass);
     const parts = [];
+    const refLine = '(참고) ' + entries.map(e => e.metric.label + ' ' + formatThresholdValue(e.metric)).join(', ');
     if (answer === 'pass') {
       if (entries.length === 1) {
         const e = entries[0];
         parts.push(prefix + '의 ' + e.metric.label + ' 기준은 ' + formatThreshold(e.metric) + '입니다. ' + formatValue(e.metric, e.value) + '는 기준을 충족하므로 합격입니다.');
       } else {
         parts.push(prefix + '의 제시 항목은 모두 기준을 충족하므로 합격입니다.');
-        const refs = passed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value) + '는 기준에 맞습니다');
-        parts.push('(참고) ' + refs.join(', ') + '.');
       }
     } else {
       if (failed.length === 1) {
@@ -471,11 +473,8 @@ var NODES = [
         const failTexts = failed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value));
         parts.push(prefix + '에서는 ' + failTexts.join(', ') + '가 각각 해당 기준을 벗어나 불합격입니다.');
       }
-      if (passed.length) {
-        const refs = passed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value) + '는 기준에 맞습니다');
-        parts.push('(참고) ' + refs.join(', ') + '.');
-      }
     }
+    parts.push(refLine);
     return parts.join('\n\n');
   }
 

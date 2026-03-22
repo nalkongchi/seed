@@ -2818,13 +2818,7 @@ body {
 
 #gameover-screen {
   background: rgba(0, 0, 0, 0.92) !important;
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  z-index: 20;
+  position: relative;
 }
 #gameover-screen::before {
   content: '';
@@ -2915,4 +2909,41 @@ body {
 }
 .reason-ref-line {
   color: #cfc7b5;
+}
+
+
+/* ═══════════════════════════════════════════
+   VER0.2 PATCH (수정1~5)
+═══════════════════════════════════════════ */
+.map-node.boss.locked {
+  width: auto !important;
+}
+.map-node.boss.locked .node-icon,
+.map-node.stage-5.locked .node-icon {
+  width: 80px !important;
+  height: 80px !important;
+  background-size: 424px 636px !important;
+  background-repeat: no-repeat !important;
+  background-position: -61px -452px !important;
+}
+
+.bubble-text {
+  white-space: normal !important;
+}
+.battle-line-label {
+  font-size: 13px;
+  font-weight: 900;
+  color: #f0d28b;
+  margin-bottom: 8px;
+}
+.battle-line-body {
+  font-size: 13px;
+  line-height: 1.78;
+  color: #e8dfc0;
+  margin-top: 4px;
+}
+.battle-line-body .highlight,
+.battle-line-label .highlight {
+  color: var(--gold);
+  font-weight: 800;
 }
