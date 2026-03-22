@@ -2768,3 +2768,13 @@ body {
 .ending-bg-layer {
   transition: none !important;
 }
+
+
+/* v15 tweaks: wrong-note empty state + map footer balance */
+.wrongnote-body.is-empty { display:flex; align-items:center; justify-content:center; }
+.wrongnote-empty { width:100%; margin-top:0 !important; }
+.footer-home-btn, .footer-setting-btn { font-size:11px !important; padding:6px 11px !important; }
+.footer-btn-icon { font-size:10px !important; }
+.footer-btn-label { font-size:11px !important; }
+.map-player-journey, .map-progress { font-size:11px !important; }
+.map-title { font-size:13px !important; }

@@ -353,7 +353,8 @@ function showStudyQuestion() {
   document.getElementById('study-counter').textContent = '문제 ' + STUDY.turn;
   const stageEl = document.getElementById('study-question-stage');
   if (stageEl) stageEl.textContent = '';
-  document.getElementById('study-question').innerHTML = highlightNumbers(formatQuestion(cleanStudyText(STUDY.current.text)));
+  const studyBody = STUDY.current.studyText || STUDY.current.text;
+  document.getElementById('study-question').innerHTML = highlightNumbers(formatQuestion(cleanStudyText(studyBody)));
   document.getElementById('study-result-box').classList.remove('show', 'correct', 'wrong');
   document.getElementById('study-pass-btn').disabled = false;
   document.getElementById('study-fail-btn').disabled = false;
@@ -982,6 +983,7 @@ function showWrongnote() {
   const list = WrongNote.load();
   const body = document.getElementById('wrongnote-body');
   body.innerHTML = '';
+  body.classList.toggle('is-empty', list.length === 0);
 
   if (list.length === 0) {
     body.innerHTML = '<div class="wrongnote-empty">아직 틀린 문제가 없습니다.<br>모험을 시작하세요!</div>';
