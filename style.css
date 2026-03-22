@@ -2910,3 +2910,31 @@ body {
 .reason-ref-line {
   color: #cfc7b5;
 }
+
+
+/* ═══════════════════════════════════════════
+   V16 SHARARAK ONLY HOTFIX
+   - restore simple small-grid wipe only
+   - keep breathe zoom and boss flash intact
+═══════════════════════════════════════════ */
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-in {
+  -webkit-mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  mask-image: conic-gradient(black 0 25%, transparent 0 50%, black 0 75%, transparent 0 100%) !important;
+  animation-name: pixelInShararakClassic !important;
+  animation-duration: 0.5s !important;
+  animation-timing-function: steps(8) !important;
+  animation-fill-mode: forwards !important;
+  -webkit-mask-repeat: repeat !important;
+  mask-repeat: repeat !important;
+}
+.op-scene-layer.wipe-out,
+.ending-bg-layer.wipe-out {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  animation: none !important;
+}
+@keyframes pixelInShararakClassic {
+  0% { -webkit-mask-size: 64px 64px; mask-size: 64px 64px; opacity: 0; }
+  100% { -webkit-mask-size: 2px 2px; mask-size: 2px 2px; opacity: 1; }
+}

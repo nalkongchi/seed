@@ -801,8 +801,10 @@ function opSetScene(idx) {
   opSceneEls.forEach((el, i) => {
     const isCurrent = i === idx;
     if (isCurrent) {
-      el.classList.add('active', 'wipe-in');
-      el.classList.remove('wipe-out');
+      el.classList.add('active');
+      el.classList.remove('wipe-out', 'wipe-in');
+      void el.offsetWidth;
+      el.classList.add('wipe-in');
       const bg = el.querySelector('.op-scene-bg');
       if (bg) {
         bg.style.animation = 'none'; void bg.offsetWidth;
@@ -810,22 +812,9 @@ function opSetScene(idx) {
       }
       setTimeout(() => {
         el.classList.remove('wipe-in');
-        el.style.webkitMaskImage = 'none';
-        el.style.maskImage = 'none';
-        el.style.webkitMaskSize = 'auto';
-        el.style.maskSize = 'auto';
-      }, 620);
-    } else if (el.classList.contains('active')) {
-      el.classList.add('wipe-out');
-      el.classList.remove('wipe-in');
-      setTimeout(() => {
-        el.classList.remove('active');
-        el.classList.remove('wipe-out');
-        el.style.webkitMaskImage = 'none';
-        el.style.maskImage = 'none';
-        el.style.webkitMaskSize = 'auto';
-        el.style.maskSize = 'auto';
-      }, 620);
+      }, 520);
+    } else {
+      el.classList.remove('active', 'wipe-out', 'wipe-in');
     }
   });
   if (OP_SCENES[idx].lightning) {
@@ -838,12 +827,8 @@ function opSetScene(idx) {
     };
     burst(640, 280);
     burst(1100, 220);
-    burst(1560, 420);
+    burst(1520, 320);
   }
-}
-
-function opShowLine() {
-  opTypeLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
 }
 
 function opNextStep() {
@@ -1484,26 +1469,15 @@ function endingSetScene(idx, immediate = false) {
   if (immediate) {
     setEndingBackground(idx);
     layer.classList.remove('wipe-in', 'wipe-out');
-    layer.style.webkitMaskImage = 'none';
-    layer.style.maskImage = 'none';
-    layer.style.webkitMaskSize = 'auto';
-    layer.style.maskSize = 'auto';
     return;
   }
-  layer.classList.remove('wipe-in');
-  layer.classList.add('wipe-out');
+  setEndingBackground(idx);
+  layer.classList.remove('wipe-out', 'wipe-in');
+  void layer.offsetWidth;
+  layer.classList.add('wipe-in');
   setTimeout(() => {
-    setEndingBackground(idx);
-    layer.classList.remove('wipe-out');
-    layer.classList.add('wipe-in');
-    setTimeout(() => {
-      layer.classList.remove('wipe-in', 'wipe-out');
-      layer.style.webkitMaskImage = 'none';
-      layer.style.maskImage = 'none';
-      layer.style.webkitMaskSize = 'auto';
-      layer.style.maskSize = 'auto';
-    }, 620);
-  }, 240);
+    layer.classList.remove('wipe-in');
+  }, 520);
 }
 
 function endingShowLine() {
