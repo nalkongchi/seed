@@ -260,29 +260,29 @@ body {
 
 /* 스테이지 */
 /* 노드 - 스프라이트 아이콘 방식 */
-.map-node { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:10; transform:translate(-50%,-50%); transition:transform 0.12s; }
+.map-node { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:10; transform:translate(-50%,-50%); transition:transform 0.12s; padding:0 3px; }
 .map-node:not(.locked):hover { transform:translate(-50%,-50%) scale(1.08); }
 .map-node:active { transform:translate(-50%,-50%) scale(0.95); }
 .map-node.locked { cursor:not-allowed; opacity:0.85; }
-.node-icon { width:80px; height:80px; background-image:url("images/node_icons.png"); background-size:424px 636px; background-repeat:no-repeat; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.9)) drop-shadow(0 0 4px rgba(0,0,0,0.6)); }
-.stage-0.locked    .node-icon { background-position:-61px -21px; }
-.stage-0.available .node-icon { background-position:-172px -21px; }
-.stage-0.cleared   .node-icon { background-position:-284px -21px; }
-.stage-1.locked    .node-icon { background-position:-61px -109px; }
-.stage-1.available .node-icon { background-position:-172px -109px; }
-.stage-1.cleared   .node-icon { background-position:-284px -109px; }
-.stage-2.locked    .node-icon { background-position:-61px -198px; }
-.stage-2.available .node-icon { background-position:-172px -198px; }
-.stage-2.cleared   .node-icon { background-position:-284px -198px; }
-.stage-3.locked    .node-icon { background-position:-61px -282px; }
-.stage-3.available .node-icon { background-position:-172px -282px; }
-.stage-3.cleared   .node-icon { background-position:-284px -282px; }
-.stage-4.locked    .node-icon { background-position:-61px -367px; }
-.stage-4.available .node-icon { background-position:-172px -367px; }
-.stage-4.cleared   .node-icon { background-position:-284px -367px; }
-.stage-5.locked    .node-icon { background-position:-61px -452px; }
-.stage-5.available .node-icon { background-position:-172px -452px; }
-.stage-5.cleared   .node-icon { background-position:-284px -452px; }
+.node-icon { width:80px; height:80px; background-image:url("images/node_icons.png"); background-size:410px 614px; background-repeat:no-repeat; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.9)) drop-shadow(0 0 4px rgba(0,0,0,0.6)); }
+.stage-0.locked    .node-icon { background-position:-58px -16px; }
+.stage-0.available .node-icon { background-position:-164px -16px; }
+.stage-0.cleared   .node-icon { background-position:-274px -16px; }
+.stage-1.locked    .node-icon { background-position:-58px -100px; }
+.stage-1.available .node-icon { background-position:-164px -100px; }
+.stage-1.cleared   .node-icon { background-position:-274px -100px; }
+.stage-2.locked    .node-icon { background-position:-58px -185px; }
+.stage-2.available .node-icon { background-position:-164px -185px; }
+.stage-2.cleared   .node-icon { background-position:-274px -185px; }
+.stage-3.locked    .node-icon { background-position:-58px -267px; }
+.stage-3.available .node-icon { background-position:-164px -267px; }
+.stage-3.cleared   .node-icon { background-position:-274px -267px; }
+.stage-4.locked    .node-icon { background-position:-58px -349px; }
+.stage-4.available .node-icon { background-position:-164px -349px; }
+.stage-4.cleared   .node-icon { background-position:-274px -349px; }
+.stage-5.locked    .node-icon { background-position:-58px -436px; }
+.stage-5.available .node-icon { background-position:-164px -436px; }
+.stage-5.cleared   .node-icon { background-position:-274px -436px; }
 .boss-tag { font-size:9px; font-weight:900; color:#ff6644; letter-spacing:2px; margin-top:5px; text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000; background:rgba(0,0,0,0.6); padding:2px 7px; filter:none; position:relative; z-index:2; }
 
 /* ═══════════════════════════════════════════
@@ -1225,9 +1225,9 @@ body {
 .map-node.stage-5 .node-icon,
 .map-node.boss .node-icon,
 .map-node.boss .boss-wide-icon {
-  width: 140px !important;
-  height: 112px !important;
-  background-size: 424px 636px !important;
+  width: 105px !important;
+  height: 95px !important;
+  background-size: 410px 614px !important;
   background-repeat: no-repeat;
 }
 .stage-5.locked .node-icon,
