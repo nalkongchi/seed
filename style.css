@@ -1232,6 +1232,9 @@ body {
 }
 .stage-5.locked .node-icon,
 .map-node.boss.locked .node-icon {
+  width: 80px !important;
+  height: 80px !important;
+  background-size: 410px 614px !important;
   background-position: -58px -436px !important;
 }
 .stage-5.available .node-icon,
