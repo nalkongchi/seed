@@ -963,13 +963,13 @@ function opTransitionToScene(nextIdx, done) {
   restartInlineAnimation(next.querySelector('.op-scene-bg'));
   opTransitionTimers.push(setTimeout(() => {
     if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
-  }, 160));
+  }, 280));
   opTransitionTimers.push(setTimeout(() => {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, false);
     opTransitioning = false;
     if (done) done();
-  }, 430));
+  }, 700));
 }
 
 function opShowLine() {

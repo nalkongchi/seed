@@ -3029,18 +3029,31 @@ body {
 }
 .op-shutter {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 150%;
   z-index: 2;
   opacity: 0;
   pointer-events: none;
   background:
-    repeating-linear-gradient(90deg,
-      rgba(0,0,0,0.96) 0 4px,
-      rgba(0,0,0,0.22) 4px 6px,
-      rgba(0,0,0,0.00) 6px 12px,
-      rgba(255,255,255,0.08) 12px 13px,
-      rgba(0,0,0,0.00) 13px 18px);
-  background-size: 22px 100%;
+    linear-gradient(180deg,
+      rgba(0,0,0,0.00) 0%,
+      rgba(0,0,0,0.10) 12%,
+      rgba(0,0,0,0.34) 20%,
+      rgba(0,0,0,0.74) 31%,
+      rgba(0,0,0,0.94) 43%,
+      rgba(0,0,0,0.72) 56%,
+      rgba(0,0,0,0.18) 71%,
+      rgba(0,0,0,0.00) 87%),
+    repeating-linear-gradient(180deg,
+      rgba(0,0,0,0.96) 0 2px,
+      rgba(0,0,0,0.26) 2px 3px,
+      rgba(0,0,0,0.00) 3px 8px,
+      rgba(255,255,255,0.06) 8px 9px,
+      rgba(0,0,0,0.00) 9px 14px);
+  background-size: 100% 100%, 100% 14px;
+  background-repeat: no-repeat, repeat;
   mix-blend-mode: normal;
 }
 .op-flash {
@@ -3062,12 +3075,25 @@ body {
   z-index: 3 !important;
 }
 .op-scene-layer.op-strip-in .op-shutter {
-  animation: op-strip-in 420ms cubic-bezier(.2,.65,.18,1) forwards;
+  animation: op-strip-rise 700ms cubic-bezier(.20,.68,.18,1) forwards;
 }
-@keyframes op-strip-in {
-  0% { opacity: 1; transform: translateX(-8%) scaleX(1.04); background-position: 0 0; }
-  55% { opacity: 0.82; }
-  100% { opacity: 0; transform: translateX(10%) scaleX(1.00); background-position: 18px 0; }
+@keyframes op-strip-rise {
+  0% {
+    opacity: 0.98;
+    transform: translateY(0) scaleY(1.02);
+    background-position: 0 0, 0 0;
+  }
+  20% {
+    opacity: 0.98;
+  }
+  58% {
+    opacity: 0.86;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-118%);
+    background-position: 0 0, 0 -18px;
+  }
 }
 
 #op-scene-container .op-scene-layer.active .op-scene-bg,
