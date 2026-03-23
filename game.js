@@ -833,10 +833,10 @@ let opSceneIdx = 0, opLineIdx = 0;
 let opTyping = false, opFullLine = '', opTypingTimer = null;
 let opSceneEls = [];
 let opTransitioning = false;
-let opTransitionCanvas = null;
-let endingTransitionCanvas = null;
 let opFxTimers = [];
 let opTransitionTimers = [];
+let opTransitionCanvas = null;
+let opTransitionFrame = 0;
 
 let endingSceneIdx = 0, endingLineIdx = 0;
 let endingTyping = false, endingFullLine = '', endingTypingTimer = null;
@@ -846,7 +846,175 @@ let endingRankData = null;
 let endingTransitioning = false;
 let endingFxTimers = [];
 let endingTransitionTimers = [];
-let endingTransitionClone = null;
+let endingTransitionCanvas = null;
+let endingTransitionFrame = 0;
+
+function stopBlindCanvas(which) {
+  if (which === 'op') {
+    if (opTransitionFrame) cancelAnimationFrame(opTransitionFrame);
+    opTransitionFrame = 0;
+    if (opTransitionCanvas && opTransitionCanvas.parentNode) opTransitionCanvas.parentNode.removeChild(opTransitionCanvas);
+    opTransitionCanvas = null;
+    return;
+  }
+  if (endingTransitionFrame) cancelAnimationFrame(endingTransitionFrame);
+  endingTransitionFrame = 0;
+  if (endingTransitionCanvas && endingTransitionCanvas.parentNode) endingTransitionCanvas.parentNode.removeChild(endingTransitionCanvas);
+  endingTransitionCanvas = null;
+}
+
+function ensureBlindCanvas(parent, which) {
+  if (!parent) return null;
+  stopBlindCanvas(which);
+  const canvas = document.createElement('canvas');
+  canvas.className = 'scene-blind-canvas ' + (which === 'op' ? 'opening-blind-canvas' : 'ending-blind-canvas');
+  parent.appendChild(canvas);
+  if (which === 'op') opTransitionCanvas = canvas;
+  else endingTransitionCanvas = canvas;
+  return canvas;
+}
+
+function setupHiDPICanvas(canvas, parent) {
+  if (!canvas || !parent) return null;
+  const rect = parent.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  canvas.width = Math.max(1, Math.round(width * dpr));
+  canvas.height = Math.max(1, Math.round(height * dpr));
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  return { ctx, width, height };
+}
+
+function drawImageCoverToContext(ctx, img, width, height) {
+  if (!ctx || !img || !img.naturalWidth || !img.naturalHeight) return false;
+  const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight);
+  const dw = img.naturalWidth * scale;
+  const dh = img.naturalHeight * scale;
+  const dx = (width - dw) / 2;
+  const dy = (height - dh) / 2;
+  ctx.drawImage(img, dx, dy, dw, dh);
+  return true;
+}
+
+function drawOpeningLayerSnapshot(targetCanvas, layer) {
+  if (!targetCanvas || !layer) return false;
+  const setup = setupHiDPICanvas(targetCanvas, layer.parentElement || layer);
+  if (!setup) return false;
+  const { ctx, width, height } = setup;
+  const bg = layer.querySelector('.op-scene-bg');
+  if (!bg || !bg.complete || !bg.naturalWidth) return false;
+  ctx.clearRect(0, 0, width, height);
+  drawImageCoverToContext(ctx, bg, width, height);
+  ctx.fillStyle = 'rgba(0,0,0,0.14)';
+  ctx.fillRect(0, 0, width, height);
+  return true;
+}
+
+function drawEndingSceneSnapshot(targetCanvas, sceneIdx, onReady) {
+  const parent = document.getElementById('ending-scene-wrap');
+  const setup = setupHiDPICanvas(targetCanvas, parent);
+  if (!setup) { onReady(false); return; }
+  const { ctx, width, height } = setup;
+  const scene = ENDING_SCENES[sceneIdx];
+
+  const paint = (img) => {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#0b0b0b';
+    ctx.fillRect(0, 0, width, height);
+    if (img && img.naturalWidth) drawImageCoverToContext(ctx, img, width, height);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(0, 0, width, height);
+    onReady(true);
+  };
+
+  if (scene && scene._imgCache && scene._imgCache.complete && scene._imgCache.naturalWidth) {
+    paint(scene._imgCache);
+    return;
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    scene._imgCache = img;
+    paint(img);
+  };
+  img.onerror = () => paint(null);
+  img.src = scene.image;
+}
+
+function runBlindLiftTransition(canvas, which, done) {
+  if (!canvas) { if (done) done(); return; }
+  const ctx = canvas.getContext('2d');
+  if (!ctx) { stopBlindCanvas(which); if (done) done(); return; }
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const width = Math.max(1, Math.round(canvas.width / dpr));
+  const height = Math.max(1, Math.round(canvas.height / dpr));
+  const base = document.createElement('canvas');
+  base.width = canvas.width;
+  base.height = canvas.height;
+  const bctx = base.getContext('2d');
+  if (!bctx) { stopBlindCanvas(which); if (done) done(); return; }
+  bctx.drawImage(canvas, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+
+  const duration = which === 'op' ? 1500 : 1750;
+  const stripe = 2;
+  const gap = which === 'op' ? 4 : 5;
+  const bandHeight = which === 'op' ? 20 : 24;
+  const shadeAlpha = which === 'op' ? 0.38 : 0.28;
+  const start = performance.now();
+  const ease = (t) => 1 - Math.pow(1 - t, 2.2);
+
+  const step = (now) => {
+    const raw = Math.min(1, (now - start) / duration);
+    const t = ease(raw);
+    const bandTop = Math.round(height - t * (height + bandHeight));
+    const fullyClearedFrom = Math.max(0, bandTop + bandHeight);
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(base, 0, 0, width, height);
+
+    if (fullyClearedFrom < height) ctx.clearRect(0, fullyClearedFrom, width, height - fullyClearedFrom);
+
+    const bandStart = Math.max(0, bandTop);
+    const bandEnd = Math.min(height, bandTop + bandHeight);
+    if (bandStart < bandEnd) {
+      for (let y = bandStart; y < bandEnd; y += gap) {
+        ctx.clearRect(0, y, width, stripe);
+      }
+      const grad = ctx.createLinearGradient(0, bandStart, 0, bandEnd);
+      grad.addColorStop(0, 'rgba(0,0,0,0.00)');
+      grad.addColorStop(0.28, 'rgba(0,0,0,' + (shadeAlpha * 0.45).toFixed(3) + ')');
+      grad.addColorStop(0.55, 'rgba(0,0,0,' + shadeAlpha.toFixed(3) + ')');
+      grad.addColorStop(0.82, 'rgba(0,0,0,0.10)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.00)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, bandStart, width, bandEnd - bandStart);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      for (let y = bandStart + 1; y < bandEnd; y += gap) {
+        ctx.fillRect(0, y, width, 1);
+      }
+    }
+
+    if (raw < 1) {
+      if (which === 'op') opTransitionFrame = requestAnimationFrame(step);
+      else endingTransitionFrame = requestAnimationFrame(step);
+      return;
+    }
+
+    stopBlindCanvas(which);
+    if (done) done();
+  };
+
+  if (which === 'op') opTransitionFrame = requestAnimationFrame(step);
+  else endingTransitionFrame = requestAnimationFrame(step);
+}
 
 function opRenderLine(line) {
   const safe = line
@@ -897,142 +1065,6 @@ function restartInlineAnimation(el) {
   el.style.animation = '';
 }
 
-
-function removeTransitionCanvas(which) {
-  const key = which === 'ending' ? 'endingTransitionCanvas' : 'opTransitionCanvas';
-  const node = key === 'endingTransitionCanvas' ? endingTransitionCanvas : opTransitionCanvas;
-  if (node && node.parentNode) node.parentNode.removeChild(node);
-  if (key === 'endingTransitionCanvas') endingTransitionCanvas = null;
-  else opTransitionCanvas = null;
-}
-
-function makeTransitionCanvas(parent, className) {
-  const canvas = document.createElement('canvas');
-  canvas.className = className;
-  canvas.width = Math.max(1, Math.round(parent.clientWidth || parent.offsetWidth || 390));
-  canvas.height = Math.max(1, Math.round(parent.clientHeight || parent.offsetHeight || 844));
-  parent.appendChild(canvas);
-  return canvas;
-}
-
-function drawImageCover(ctx, img, w, h) {
-  const iw = img.naturalWidth || img.videoWidth || img.width || w;
-  const ih = img.naturalHeight || img.videoHeight || img.height || h;
-  const ir = iw / ih;
-  const tr = w / h;
-  let sx = 0, sy = 0, sw = iw, sh = ih;
-  if (ir > tr) {
-    sw = ih * tr;
-    sx = (iw - sw) / 2;
-  } else {
-    sh = iw / tr;
-    sy = (ih - sh) / 2;
-  }
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
-}
-
-function paintOpeningSnapshotToCanvas(layer, canvas) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return false;
-  const img = layer ? layer.querySelector('.op-scene-bg') : null;
-  if (!img || !(img.complete || img.naturalWidth)) return false;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.imageSmoothingEnabled = false;
-  ctx.filter = 'brightness(0.88) saturate(0.95)';
-  drawImageCover(ctx, img, canvas.width, canvas.height);
-  ctx.filter = 'none';
-  const g = ctx.createLinearGradient(0, canvas.height * 0.72, 0, canvas.height);
-  g.addColorStop(0, 'rgba(0,0,0,0.03)');
-  g.addColorStop(0.38, 'rgba(0,0,0,0.10)');
-  g.addColorStop(1, 'rgba(0,0,0,0.38)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  return true;
-}
-
-function loadImageForTransition(src, onReady) {
-  if (!src) { onReady(null); return; }
-  const img = new Image();
-  img.onload = () => onReady(img);
-  img.onerror = () => onReady(null);
-  img.src = src;
-}
-
-function paintEndingSnapshotToCanvas(scene, canvas, onDone) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) { onDone(false); return; }
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = scene && scene.fallback ? scene.fallback : '#0b0b0b';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  loadImageForTransition(scene && scene.image, (img) => {
-    if (img) {
-      ctx.filter = 'brightness(0.82) saturate(0.90)';
-      drawImageCover(ctx, img, canvas.width, canvas.height);
-      ctx.filter = 'none';
-    }
-    const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    g.addColorStop(0, 'rgba(0,0,0,0.20)');
-    g.addColorStop(0.42, 'rgba(0,0,0,0.04)');
-    g.addColorStop(1, 'rgba(0,0,0,0.62)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    onDone(true);
-  });
-}
-
-function runBlindRevealTransition(canvas, options, bucket, done) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) { if (done) done(); return; }
-  const base = document.createElement('canvas');
-  base.width = canvas.width;
-  base.height = canvas.height;
-  const bctx = base.getContext('2d');
-  bctx.clearRect(0, 0, base.width, base.height);
-  bctx.drawImage(canvas, 0, 0);
-
-  const duration = options.duration || 2200;
-  const steps = options.steps || 36;
-  const stripe = options.stripe || 2;
-  const gap = options.gap || 2;
-  const lag = options.lag == null ? 0.16 : options.lag;
-  const interval = Math.max(16, Math.round(duration / steps));
-  let frame = 0;
-
-  function drawFrame() {
-    const p = Math.min(1, frame / steps);
-    const p2 = p <= lag ? 0 : Math.min(1, (p - lag) / (1 - lag));
-    const h = canvas.height;
-    const w = canvas.width;
-    const frontA = Math.round(h * p);
-    const frontB = Math.round(h * p2);
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(base, 0, 0);
-
-    for (let y = h - stripe; y >= h - frontA; y -= (stripe + gap) * 2) {
-      ctx.clearRect(0, Math.max(0, y), w, stripe);
-    }
-    for (let y = h - stripe - gap - stripe; y >= h - frontB; y -= (stripe + gap) * 2) {
-      ctx.clearRect(0, Math.max(0, y), w, stripe);
-    }
-
-    const frontY = Math.max(0, h - frontA - 1);
-    ctx.fillStyle = 'rgba(0,0,0,0.10)';
-    ctx.fillRect(0, Math.max(0, frontY - 1), w, 1);
-    ctx.fillStyle = 'rgba(255,255,255,0.03)';
-    ctx.fillRect(0, Math.max(0, frontY - 3), w, 1);
-
-    if (frame >= steps) {
-      if (done) done();
-      return;
-    }
-    frame += 1;
-    bucket.push(setTimeout(drawFrame, interval));
-  }
-  drawFrame();
-}
-
 function opTriggerLightning(layer) {
   const flash = layer ? layer.querySelector('.op-flash') : null;
   if (!flash) return;
@@ -1047,33 +1079,27 @@ function opTriggerLightning(layer) {
 
 function opCleanupLayer(el) {
   if (!el) return;
-  el.classList.remove('active', 'op-strip-in', 'op-strip-out', 'op-hold-under');
+  el.classList.remove('active', 'op-strip-in', 'op-hold-under');
   el.style.webkitMaskImage = 'none';
   el.style.maskImage = 'none';
   el.style.webkitMaskSize = 'auto';
   el.style.maskSize = 'auto';
-  el.style.animation = 'none';
-  el.style.visibility = '';
-  const shutter = el.querySelector('.op-shutter');
-  if (shutter) shutter.style.animation = 'none';
   const flash = el.querySelector('.op-flash');
   if (flash) flash.classList.remove('active');
 }
 
 function opSetScene(idx, immediate = false) {
   clearTimerBucket(opTransitionTimers);
-  removeTransitionCanvas('opening');
+  stopBlindCanvas('op');
   if (immediate) clearTimerBucket(opFxTimers);
   opSceneEls.forEach((el, i) => {
     if (i === idx) {
       el.classList.add('active');
-      el.classList.remove('op-strip-in', 'op-strip-out', 'op-hold-under', 'wipe-in', 'wipe-out');
+      el.classList.remove('op-strip-in', 'op-hold-under', 'wipe-in', 'wipe-out');
       el.style.webkitMaskImage = 'none';
       el.style.maskImage = 'none';
       el.style.webkitMaskSize = 'auto';
       el.style.maskSize = 'auto';
-      el.style.animation = 'none';
-      el.style.visibility = '';
       restartInlineAnimation(el.querySelector('.op-scene-bg'));
     } else {
       opCleanupLayer(el);
@@ -1088,8 +1114,7 @@ function opTransitionToScene(nextIdx, done) {
   const prevIdx = opSceneIdx;
   const prev = opSceneEls[prevIdx];
   const next = opSceneEls[nextIdx];
-  const container = document.getElementById('op-scene-container');
-  if (!next || prevIdx === nextIdx || !container) {
+  if (!next || prevIdx === nextIdx) {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, true);
     if (done) done();
@@ -1098,46 +1123,34 @@ function opTransitionToScene(nextIdx, done) {
   opTransitioning = true;
   clearTimerBucket(opTransitionTimers);
   clearTimerBucket(opFxTimers);
-  removeTransitionCanvas('opening');
+  stopBlindCanvas('op');
   opSceneEls.forEach((el, i) => {
     if (i !== prevIdx && i !== nextIdx) opCleanupLayer(el);
   });
-
-  next.classList.add('active', 'op-hold-under');
-  next.classList.remove('op-strip-in', 'op-strip-out');
-  next.style.visibility = '';
+  next.classList.add('active');
+  next.classList.remove('op-strip-in', 'op-hold-under');
+  next.style.webkitMaskImage = 'none';
+  next.style.maskImage = 'none';
+  next.style.webkitMaskSize = 'auto';
+  next.style.maskSize = 'auto';
   restartInlineAnimation(next.querySelector('.op-scene-bg'));
 
-  const canvas = makeTransitionCanvas(container, 'scene-blind-canvas opening-blind-canvas');
-  opTransitionCanvas = canvas;
-  const painted = paintOpeningSnapshotToCanvas(prev, canvas);
-  prev.style.visibility = 'hidden';
-  prev.classList.remove('active', 'op-strip-in', 'op-strip-out', 'op-hold-under');
-
-  if (!painted) {
+  const canvas = ensureBlindCanvas(document.getElementById('op-scene-container'), 'op');
+  const finalize = () => {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, false);
     opTransitioning = false;
+    if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
     if (done) done();
+  };
+
+  if (!prev || !drawOpeningLayerSnapshot(canvas, prev)) {
+    finalize();
     return;
   }
 
-  if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) {
-    opTransitionTimers.push(setTimeout(() => opTriggerLightning(next), 1360));
-  }
-
-  runBlindRevealTransition(canvas, {
-    duration: 2200,
-    steps: 36,
-    stripe: 2,
-    gap: 2,
-    lag: 0.16
-  }, opTransitionTimers, () => {
-    opSceneIdx = nextIdx;
-    opSetScene(nextIdx, false);
-    opTransitioning = false;
-    if (done) done();
-  });
+  opCleanupLayer(prev);
+  runBlindLiftTransition(canvas, 'op', finalize);
 }
 
 function opShowLine() {
@@ -1148,17 +1161,12 @@ function opNextStep() {
   if (opTransitioning) return;
   if (opTyping) {
     clearTimeout(opTypingTimer);
-    const textEl = document.getElementById('op-text');
-    if (textEl) textEl.innerHTML = opRenderLine(opFullLine);
+    document.getElementById('op-text').innerHTML = opRenderLine(opFullLine);
     opTyping = false;
     return;
   }
   const scene = OP_SCENES[opSceneIdx];
-  if (opLineIdx < scene.lines.length - 1) {
-    opLineIdx++;
-    opShowLine();
-    return;
-  }
+  if (opLineIdx < scene.lines.length - 1) { opLineIdx++; opShowLine(); return; }
   if (opSceneIdx < OP_SCENES.length - 1) {
     const nextIdx = opSceneIdx + 1;
     opLineIdx = 0;
@@ -1185,18 +1193,19 @@ function opSkipAll() {
   clearTimeout(opTypingTimer);
   clearTimerBucket(opFxTimers);
   clearTimerBucket(opTransitionTimers);
+  stopBlindCanvas('op');
   opTransitioning = false;
   opSceneIdx = OP_SCENES.length - 1;
   opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
   opSetScene(opSceneIdx, true);
-  const textEl = document.getElementById('op-text');
-  if (textEl) textEl.innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
+  document.getElementById('op-text').innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
   opTyping = false;
   opFinish();
 }
 
 function startOpening() {
   showScreen('opening-screen');
+  stopBlindCanvas('op');
 
   // 씬 요소 생성
   const container = document.getElementById('op-scene-container');
@@ -1779,6 +1788,7 @@ function setEndingBackground(idx) {
   layer.style.backgroundRepeat = 'no-repeat';
   const img = new Image();
   img.onload = () => {
+    scene._imgCache = img;
     layer.style.background = `url("${scene.image}"), ${scene.fallback}`;
     layer.style.backgroundSize = 'cover, cover';
     layer.style.backgroundPosition = 'center center, center center';
@@ -1789,45 +1799,37 @@ function setEndingBackground(idx) {
 
 function endingSetScene(idx, immediate = false) {
   const layer = document.getElementById('ending-bg-layer');
-  const overlay = document.querySelector('#ending-screen .ending-overlay');
   const wrap = document.getElementById('ending-scene-wrap');
   if (!layer) { setEndingBackground(idx); return; }
   clearTimerBucket(endingTransitionTimers);
   clearTimerBucket(endingFxTimers);
-  removeTransitionCanvas('ending');
+  stopBlindCanvas('ending');
   layer.classList.remove('wipe-in', 'wipe-out');
   layer.style.webkitMaskImage = 'none';
   layer.style.maskImage = 'none';
   layer.style.webkitMaskSize = 'auto';
   layer.style.maskSize = 'auto';
   layer.style.animation = 'none';
-  if (overlay) overlay.classList.remove('pass');
-  if (endingTransitionClone && endingTransitionClone.parentNode) {
-    endingTransitionClone.parentNode.removeChild(endingTransitionClone);
-  }
-  endingTransitionClone = null;
-  if (immediate || !overlay || !wrap) {
+  if (immediate || !wrap) {
+    endingTransitioning = false;
     setEndingBackground(idx);
     restartInlineAnimation(layer);
     return;
   }
+
+  const prevIdx = Math.max(0, idx - 1);
   endingTransitioning = true;
+  setEndingBackground(idx);
+  restartInlineAnimation(layer);
 
-  const canvas = makeTransitionCanvas(wrap, 'scene-blind-canvas ending-blind-canvas');
-  if (overlay && overlay.parentNode === wrap) wrap.insertBefore(canvas, overlay);
-  endingTransitionCanvas = canvas;
-
-  paintEndingSnapshotToCanvas(ENDING_SCENES[endingSceneIdx], canvas, () => {
-    setEndingBackground(idx);
-    restartInlineAnimation(layer);
-    runBlindRevealTransition(canvas, {
-      duration: 2720,
-      steps: 40,
-      stripe: 2,
-      gap: 2,
-      lag: 0.20
-    }, endingTransitionTimers, () => {
-      removeTransitionCanvas('ending');
+  const canvas = ensureBlindCanvas(wrap, 'ending');
+  drawEndingSceneSnapshot(canvas, prevIdx, (ready) => {
+    if (!ready) {
+      endingTransitioning = false;
+      stopBlindCanvas('ending');
+      return;
+    }
+    runBlindLiftTransition(canvas, 'ending', () => {
       endingTransitioning = false;
     });
   });
@@ -1930,6 +1932,8 @@ function showEndingRankPopup() {
 }
 
 function endingSkipToRank() {
+  stopBlindCanvas('ending');
+  endingTransitioning = false;
   if (!endingRankData) buildEndingRankData();
   endingTyping = false;
   endingAwaitingRank = false;
@@ -1981,6 +1985,7 @@ function endingNextStep() {
 
 function showEnding() {
   if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
+  stopBlindCanvas('ending');
   G.pendingDamage = false;
   clearTimerBucket(endingFxTimers);
   clearTimerBucket(endingTransitionTimers);
