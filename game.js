@@ -873,46 +873,17 @@ function opTypeLine(line) {
 function opSetScene(idx) {
   opSceneEls.forEach((el, i) => {
     const isCurrent = i === idx;
-    if (isCurrent) {
-      el.classList.add('active', 'wipe-in');
-      el.classList.remove('wipe-out');
-      const bg = el.querySelector('.op-scene-bg');
-      if (bg) {
-        bg.style.animation = 'none'; void bg.offsetWidth;
-        bg.style.animation = 'op-breathe-pan 11s ease-in-out forwards';
-      }
-      setTimeout(() => {
-        el.classList.remove('wipe-in');
-        el.style.webkitMaskImage = 'none';
-        el.style.maskImage = 'none';
-        el.style.webkitMaskSize = 'auto';
-        el.style.maskSize = 'auto';
-      }, 620);
-    } else if (el.classList.contains('active')) {
-      el.classList.add('wipe-out');
-      el.classList.remove('wipe-in');
-      setTimeout(() => {
-        el.classList.remove('active');
-        el.classList.remove('wipe-out');
-        el.style.webkitMaskImage = 'none';
-        el.style.maskImage = 'none';
-        el.style.webkitMaskSize = 'auto';
-        el.style.maskSize = 'auto';
-      }, 620);
-    }
+    el.classList.toggle('active', isCurrent);
+    el.classList.remove('wipe-in', 'wipe-out');
+    el.style.webkitMaskImage = 'none';
+    el.style.maskImage = 'none';
+    el.style.webkitMaskSize = 'auto';
+    el.style.maskSize = 'auto';
+    const bg = el.querySelector('.op-scene-bg');
+    if (bg) bg.style.animation = 'none';
+    const flash = el.querySelector('.op-flash');
+    if (flash) flash.classList.remove('active');
   });
-  if (OP_SCENES[idx].lightning) {
-    const flash = opSceneEls[idx].querySelector('.op-flash');
-    const burst = (delay, duration = 280) => {
-      setTimeout(() => {
-        flash.classList.add('active');
-        setTimeout(() => flash.classList.remove('active'), duration);
-      }, delay);
-    };
-    burst(640, 280);
-    burst(1100, 220);
-    burst(1560, 420);
-  }
 }
 
 function opShowLine() {
@@ -1529,7 +1500,6 @@ function endingTypeLine(line) {
 
 function setEndingBackground(idx) {
   const layer = document.getElementById('ending-bg-layer');
-  const flash = document.getElementById('ending-flash');
   if (!layer) return;
   const scene = ENDING_SCENES[idx];
   layer.style.background = scene.fallback;
@@ -1544,39 +1514,18 @@ function setEndingBackground(idx) {
     layer.style.backgroundRepeat = 'no-repeat, no-repeat';
   };
   img.src = scene.image;
-  if (flash && idx > 0) {
-    flash.classList.remove('show');
-    void flash.offsetWidth;
-    flash.classList.add('show');
-  }
 }
 
 function endingSetScene(idx, immediate = false) {
   const layer = document.getElementById('ending-bg-layer');
   if (!layer) { setEndingBackground(idx); return; }
-  if (immediate) {
-    setEndingBackground(idx);
-    layer.classList.remove('wipe-in', 'wipe-out');
-    layer.style.webkitMaskImage = 'none';
-    layer.style.maskImage = 'none';
-    layer.style.webkitMaskSize = 'auto';
-    layer.style.maskSize = 'auto';
-    return;
-  }
-  layer.classList.remove('wipe-in');
-  layer.classList.add('wipe-out');
-  setTimeout(() => {
-    setEndingBackground(idx);
-    layer.classList.remove('wipe-out');
-    layer.classList.add('wipe-in');
-    setTimeout(() => {
-      layer.classList.remove('wipe-in', 'wipe-out');
-      layer.style.webkitMaskImage = 'none';
-      layer.style.maskImage = 'none';
-      layer.style.webkitMaskSize = 'auto';
-      layer.style.maskSize = 'auto';
-    }, 620);
-  }, 240);
+  setEndingBackground(idx);
+  layer.classList.remove('wipe-in', 'wipe-out');
+  layer.style.webkitMaskImage = 'none';
+  layer.style.maskImage = 'none';
+  layer.style.webkitMaskSize = 'auto';
+  layer.style.maskSize = 'auto';
+  layer.style.animation = 'none';
 }
 
 function endingShowLine() {

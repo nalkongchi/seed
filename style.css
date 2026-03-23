@@ -2988,3 +2988,33 @@ body {
   transform-origin: center bottom;
   transform: translate(var(--sprite-shift-x, 0px), var(--sprite-shift-y, 0px)) scale(var(--sprite-scale, 1));
 }
+
+
+/* === v0.4 opening/ending transition off === */
+.op-scene-layer,
+.op-scene-layer.active {
+  transition: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+.op-scene-layer.wipe-out,
+.op-scene-layer.wipe-in,
+.ending-bg-layer.wipe-out,
+.ending-bg-layer.wipe-in {
+  animation: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  -webkit-mask-size: auto !important;
+  mask-size: auto !important;
+  opacity: 1 !important;
+}
+.op-scene-bg,
+#ending-bg-layer {
+  animation: none !important;
+  transform: none !important;
+}
+.op-flash,
+.ending-flash {
+  display: none !important;
+  animation: none !important;
+}
