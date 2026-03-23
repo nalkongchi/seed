@@ -844,6 +844,7 @@ let endingRankData = null;
 let endingTransitioning = false;
 let endingFxTimers = [];
 let endingTransitionTimers = [];
+let endingTransitionClone = null;
 
 function opRenderLine(line) {
   const safe = line
@@ -908,11 +909,14 @@ function opTriggerLightning(layer) {
 
 function opCleanupLayer(el) {
   if (!el) return;
-  el.classList.remove('active', 'op-strip-in', 'op-hold-under');
+  el.classList.remove('active', 'op-strip-in', 'op-strip-out', 'op-hold-under');
   el.style.webkitMaskImage = 'none';
   el.style.maskImage = 'none';
   el.style.webkitMaskSize = 'auto';
   el.style.maskSize = 'auto';
+  el.style.animation = 'none';
+  const shutter = el.querySelector('.op-shutter');
+  if (shutter) shutter.style.animation = 'none';
   const flash = el.querySelector('.op-flash');
   if (flash) flash.classList.remove('active');
 }
@@ -923,11 +927,12 @@ function opSetScene(idx, immediate = false) {
   opSceneEls.forEach((el, i) => {
     if (i === idx) {
       el.classList.add('active');
-      el.classList.remove('op-strip-in', 'op-hold-under', 'wipe-in', 'wipe-out');
+      el.classList.remove('op-strip-in', 'op-strip-out', 'op-hold-under', 'wipe-in', 'wipe-out');
       el.style.webkitMaskImage = 'none';
       el.style.maskImage = 'none';
       el.style.webkitMaskSize = 'auto';
       el.style.maskSize = 'auto';
+      el.style.animation = 'none';
       restartInlineAnimation(el.querySelector('.op-scene-bg'));
     } else {
       opCleanupLayer(el);
@@ -954,16 +959,27 @@ function opTransitionToScene(nextIdx, done) {
   opSceneEls.forEach((el, i) => {
     if (i !== prevIdx && i !== nextIdx) opCleanupLayer(el);
   });
-  if (prev) {
-    prev.classList.add('active', 'op-hold-under');
-    prev.classList.remove('op-strip-in');
+  if (next) {
+    next.classList.add('active', 'op-hold-under');
+    next.classList.remove('op-strip-in', 'op-strip-out');
+    restartInlineAnimation(next.querySelector('.op-scene-bg'));
   }
-  next.classList.add('active', 'op-strip-in');
-  next.classList.remove('op-hold-under');
-  restartInlineAnimation(next.querySelector('.op-scene-bg'));
+  if (prev) {
+    prev.classList.add('active', 'op-strip-out');
+    prev.classList.remove('op-strip-in', 'op-hold-under');
+    prev.style.animation = 'none';
+    void prev.offsetWidth;
+    prev.style.animation = '';
+    const shutter = prev.querySelector('.op-shutter');
+    if (shutter) {
+      shutter.style.animation = 'none';
+      void shutter.offsetWidth;
+      shutter.style.animation = '';
+    }
+  }
   opTransitionTimers.push(setTimeout(() => {
     if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
-  }, 900));
+  }, 1360));
   opTransitionTimers.push(setTimeout(() => {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, false);
@@ -1616,6 +1632,7 @@ function setEndingBackground(idx) {
 function endingSetScene(idx, immediate = false) {
   const layer = document.getElementById('ending-bg-layer');
   const overlay = document.querySelector('#ending-screen .ending-overlay');
+  const wrap = document.getElementById('ending-scene-wrap');
   if (!layer) { setEndingBackground(idx); return; }
   clearTimerBucket(endingTransitionTimers);
   clearTimerBucket(endingFxTimers);
@@ -1626,23 +1643,34 @@ function endingSetScene(idx, immediate = false) {
   layer.style.maskSize = 'auto';
   layer.style.animation = 'none';
   if (overlay) overlay.classList.remove('pass');
-  if (immediate || !overlay) {
+  if (endingTransitionClone && endingTransitionClone.parentNode) {
+    endingTransitionClone.parentNode.removeChild(endingTransitionClone);
+  }
+  endingTransitionClone = null;
+  if (immediate || !overlay || !wrap) {
     setEndingBackground(idx);
     restartInlineAnimation(layer);
     return;
   }
   endingTransitioning = true;
-  overlay.classList.remove('pass');
-  void overlay.offsetWidth;
-  overlay.classList.add('pass');
+  const clone = document.createElement('div');
+  clone.className = 'ending-transition-layer ending-strip-out';
+  clone.innerHTML = '<div class="ending-shutter"></div>';
+  clone.style.background = layer.style.background || getComputedStyle(layer).backgroundImage || '';
+  clone.style.backgroundSize = layer.style.backgroundSize || getComputedStyle(layer).backgroundSize;
+  clone.style.backgroundPosition = layer.style.backgroundPosition || getComputedStyle(layer).backgroundPosition;
+  clone.style.backgroundRepeat = layer.style.backgroundRepeat || getComputedStyle(layer).backgroundRepeat;
+  endingTransitionClone = clone;
+  wrap.insertBefore(clone, overlay);
+
+  setEndingBackground(idx);
+  restartInlineAnimation(layer);
+
   endingTransitionTimers.push(setTimeout(() => {
-    setEndingBackground(idx);
-    restartInlineAnimation(layer);
-  }, 230));
-  endingTransitionTimers.push(setTimeout(() => {
-    overlay.classList.remove('pass');
+    if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+    if (endingTransitionClone === clone) endingTransitionClone = null;
     endingTransitioning = false;
-  }, 640));
+  }, 2720));
 }
 
 function endingShowLine() {
