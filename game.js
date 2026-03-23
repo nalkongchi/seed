@@ -1140,6 +1140,61 @@ function opTransitionToScene(nextIdx, done) {
   });
 }
 
+function opShowLine() {
+  opTypeLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
+}
+
+function opNextStep() {
+  if (opTransitioning) return;
+  if (opTyping) {
+    clearTimeout(opTypingTimer);
+    const textEl = document.getElementById('op-text');
+    if (textEl) textEl.innerHTML = opRenderLine(opFullLine);
+    opTyping = false;
+    return;
+  }
+  const scene = OP_SCENES[opSceneIdx];
+  if (opLineIdx < scene.lines.length - 1) {
+    opLineIdx++;
+    opShowLine();
+    return;
+  }
+  if (opSceneIdx < OP_SCENES.length - 1) {
+    const nextIdx = opSceneIdx + 1;
+    opLineIdx = 0;
+    const textEl = document.getElementById('op-text');
+    if (textEl) textEl.innerHTML = '';
+    opTransitionToScene(nextIdx, () => {
+      opShowLine();
+    });
+    return;
+  }
+  opFinish();
+}
+
+function opFinish() {
+  document.getElementById('op-arrow').style.visibility = 'hidden';
+  document.getElementById('op-end-btn').style.display = 'block';
+  document.getElementById('op-tap').disabled = true;
+  document.getElementById('op-tap').style.pointerEvents = 'none';
+  document.getElementById('op-skip').style.display = 'block';
+}
+
+function opSkipAll() {
+  playUIClick();
+  clearTimeout(opTypingTimer);
+  clearTimerBucket(opFxTimers);
+  clearTimerBucket(opTransitionTimers);
+  opTransitioning = false;
+  opSceneIdx = OP_SCENES.length - 1;
+  opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
+  opSetScene(opSceneIdx, true);
+  const textEl = document.getElementById('op-text');
+  if (textEl) textEl.innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
+  opTyping = false;
+  opFinish();
+}
+
 function startOpening() {
   showScreen('opening-screen');
 
