@@ -832,12 +832,18 @@ const ENDING_SCENES = [
 let opSceneIdx = 0, opLineIdx = 0;
 let opTyping = false, opFullLine = '', opTypingTimer = null;
 let opSceneEls = [];
+let opTransitioning = false;
+let opFxTimers = [];
+let opTransitionTimers = [];
 
 let endingSceneIdx = 0, endingLineIdx = 0;
 let endingTyping = false, endingFullLine = '', endingTypingTimer = null;
 let endingAwaitingRank = false;
 let endingRankPopupShown = false;
 let endingRankData = null;
+let endingTransitioning = false;
+let endingFxTimers = [];
+let endingTransitionTimers = [];
 
 function opRenderLine(line) {
   const safe = line
@@ -870,20 +876,100 @@ function opTypeLine(line) {
   tick();
 }
 
-function opSetScene(idx) {
+function clearTimerBucket(bucket) {
+  while (bucket.length) clearTimeout(bucket.pop());
+}
+
+function restartCSSAnimation(el, className) {
+  if (!el) return;
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+}
+
+function restartInlineAnimation(el) {
+  if (!el) return;
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+}
+
+function opTriggerLightning(layer) {
+  const flash = layer ? layer.querySelector('.op-flash') : null;
+  if (!flash) return;
+  clearTimerBucket(opFxTimers);
+  const pulse = () => {
+    restartCSSAnimation(flash, 'active');
+  };
+  pulse();
+  opFxTimers.push(setTimeout(pulse, 180));
+  opFxTimers.push(setTimeout(() => flash.classList.remove('active'), 860));
+}
+
+function opCleanupLayer(el) {
+  if (!el) return;
+  el.classList.remove('active', 'op-strip-in', 'op-hold-under');
+  el.style.webkitMaskImage = 'none';
+  el.style.maskImage = 'none';
+  el.style.webkitMaskSize = 'auto';
+  el.style.maskSize = 'auto';
+  const flash = el.querySelector('.op-flash');
+  if (flash) flash.classList.remove('active');
+}
+
+function opSetScene(idx, immediate = false) {
+  clearTimerBucket(opTransitionTimers);
+  if (immediate) clearTimerBucket(opFxTimers);
   opSceneEls.forEach((el, i) => {
-    const isCurrent = i === idx;
-    el.classList.toggle('active', isCurrent);
-    el.classList.remove('wipe-in', 'wipe-out');
-    el.style.webkitMaskImage = 'none';
-    el.style.maskImage = 'none';
-    el.style.webkitMaskSize = 'auto';
-    el.style.maskSize = 'auto';
-    const bg = el.querySelector('.op-scene-bg');
-    if (bg) bg.style.animation = 'none';
-    const flash = el.querySelector('.op-flash');
-    if (flash) flash.classList.remove('active');
+    if (i === idx) {
+      el.classList.add('active');
+      el.classList.remove('op-strip-in', 'op-hold-under', 'wipe-in', 'wipe-out');
+      el.style.webkitMaskImage = 'none';
+      el.style.maskImage = 'none';
+      el.style.webkitMaskSize = 'auto';
+      el.style.maskSize = 'auto';
+      restartInlineAnimation(el.querySelector('.op-scene-bg'));
+    } else {
+      opCleanupLayer(el);
+    }
   });
+  if (immediate && OP_SCENES[idx] && OP_SCENES[idx].lightning) {
+    opTriggerLightning(opSceneEls[idx]);
+  }
+}
+
+function opTransitionToScene(nextIdx, done) {
+  const prevIdx = opSceneIdx;
+  const prev = opSceneEls[prevIdx];
+  const next = opSceneEls[nextIdx];
+  if (!next || prevIdx === nextIdx) {
+    opSceneIdx = nextIdx;
+    opSetScene(nextIdx, true);
+    if (done) done();
+    return;
+  }
+  opTransitioning = true;
+  clearTimerBucket(opTransitionTimers);
+  clearTimerBucket(opFxTimers);
+  opSceneEls.forEach((el, i) => {
+    if (i !== prevIdx && i !== nextIdx) opCleanupLayer(el);
+  });
+  if (prev) {
+    prev.classList.add('active', 'op-hold-under');
+    prev.classList.remove('op-strip-in');
+  }
+  next.classList.add('active', 'op-strip-in');
+  next.classList.remove('op-hold-under');
+  restartInlineAnimation(next.querySelector('.op-scene-bg'));
+  opTransitionTimers.push(setTimeout(() => {
+    if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
+  }, 160));
+  opTransitionTimers.push(setTimeout(() => {
+    opSceneIdx = nextIdx;
+    opSetScene(nextIdx, false);
+    opTransitioning = false;
+    if (done) done();
+  }, 430));
 }
 
 function opShowLine() {
@@ -891,6 +977,7 @@ function opShowLine() {
 }
 
 function opNextStep() {
+  if (opTransitioning) return;
   if (opTyping) {
     clearTimeout(opTypingTimer);
     document.getElementById('op-text').innerHTML = opRenderLine(opFullLine);
@@ -900,10 +987,13 @@ function opNextStep() {
   const scene = OP_SCENES[opSceneIdx];
   if (opLineIdx < scene.lines.length - 1) { opLineIdx++; opShowLine(); return; }
   if (opSceneIdx < OP_SCENES.length - 1) {
-    opSceneIdx++;
+    const nextIdx = opSceneIdx + 1;
     opLineIdx = 0;
-    opSetScene(opSceneIdx);
-    opShowLine();
+    const textEl = document.getElementById('op-text');
+    if (textEl) textEl.innerHTML = '';
+    opTransitionToScene(nextIdx, () => {
+      opShowLine();
+    });
     return;
   }
   opFinish();
@@ -920,9 +1010,12 @@ function opFinish() {
 function opSkipAll() {
   playUIClick();
   clearTimeout(opTypingTimer);
+  clearTimerBucket(opFxTimers);
+  clearTimerBucket(opTransitionTimers);
+  opTransitioning = false;
   opSceneIdx = OP_SCENES.length - 1;
   opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
-  opSetScene(opSceneIdx);
+  opSetScene(opSceneIdx, true);
   document.getElementById('op-text').innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
   opTyping = false;
   opFinish();
@@ -940,12 +1033,16 @@ function startOpening() {
     layer.innerHTML =
       '<img class="op-scene-bg" src="' + scene.image + '" alt="">' +
       '<div class="op-scene-overlay"></div>' +
+      '<div class="op-shutter"></div>' +
       '<div class="op-flash"></div>';
     container.appendChild(layer);
     return layer;
   });
 
   // 상태 초기화
+  clearTimerBucket(opFxTimers);
+  clearTimerBucket(opTransitionTimers);
+  opTransitioning = false;
   opSceneIdx = 0; opLineIdx = 0; opTyping = false;
   document.getElementById('op-arrow').style.visibility = 'visible';
   document.getElementById('op-end-btn').style.display = 'none';
@@ -962,7 +1059,7 @@ function startOpening() {
   skip.onclick = opSkipAll;
   end.onclick  = startGame;
 
-  opSetScene(0);
+  opSetScene(0, true);
   opShowLine();
 }
 
@@ -1518,14 +1615,34 @@ function setEndingBackground(idx) {
 
 function endingSetScene(idx, immediate = false) {
   const layer = document.getElementById('ending-bg-layer');
+  const overlay = document.querySelector('#ending-screen .ending-overlay');
   if (!layer) { setEndingBackground(idx); return; }
-  setEndingBackground(idx);
+  clearTimerBucket(endingTransitionTimers);
+  clearTimerBucket(endingFxTimers);
   layer.classList.remove('wipe-in', 'wipe-out');
   layer.style.webkitMaskImage = 'none';
   layer.style.maskImage = 'none';
   layer.style.webkitMaskSize = 'auto';
   layer.style.maskSize = 'auto';
   layer.style.animation = 'none';
+  if (overlay) overlay.classList.remove('pass');
+  if (immediate || !overlay) {
+    setEndingBackground(idx);
+    restartInlineAnimation(layer);
+    return;
+  }
+  endingTransitioning = true;
+  overlay.classList.remove('pass');
+  void overlay.offsetWidth;
+  overlay.classList.add('pass');
+  endingTransitionTimers.push(setTimeout(() => {
+    setEndingBackground(idx);
+    restartInlineAnimation(layer);
+  }, 230));
+  endingTransitionTimers.push(setTimeout(() => {
+    overlay.classList.remove('pass');
+    endingTransitioning = false;
+  }, 640));
 }
 
 function endingShowLine() {
@@ -1646,7 +1763,7 @@ function endingFinish() {
 }
 
 function endingNextStep() {
-  if (endingRankPopupShown) return;
+  if (endingRankPopupShown || endingTransitioning) return;
   if (endingTyping) {
     clearTimeout(endingTypingTimer);
     const textEl = document.getElementById('ending-text');
@@ -1677,6 +1794,9 @@ function endingNextStep() {
 function showEnding() {
   if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
   G.pendingDamage = false;
+  clearTimerBucket(endingFxTimers);
+  clearTimerBucket(endingTransitionTimers);
+  endingTransitioning = false;
   endingSceneIdx = 0;
   endingLineIdx = 0;
   endingTyping = false;
