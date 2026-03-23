@@ -964,7 +964,7 @@ function runBlindLiftTransition(canvas, which, done) {
   ctx.imageSmoothingEnabled = false;
 
   const duration = which === 'op' ? 1500 : 1750;
-  const stripe = 2;
+  const stripe = 4;
   const gap = which === 'op' ? 4 : 5;
   const bandHeight = which === 'op' ? 20 : 24;
   const shadeAlpha = which === 'op' ? 0.38 : 0.28;
