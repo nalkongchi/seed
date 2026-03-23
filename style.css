@@ -3088,7 +3088,9 @@ body {
 .op-scene-layer.op-strip-out {
   display: block !important;
   z-index: 3 !important;
-  animation: op-scene-out-fade 2200ms steps(30, end) forwards;
+  overflow: hidden !important;
+  animation: op-scene-out-reveal 2200ms steps(30, end) forwards;
+  will-change: clip-path;
 }
 .op-scene-layer.op-strip-out .op-shutter {
   animation: op-strip-rise 2200ms steps(30, end) forwards;
@@ -3108,10 +3110,15 @@ body {
     background-position: 0 0, 0 -12px, 0 -7px, -4px 0;
   }
 }
-@keyframes op-scene-out-fade {
-  0%, 26% { opacity: 1; }
-  58% { opacity: 0.98; }
-  100% { opacity: 0; }
+@keyframes op-scene-out-reveal {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 100% 0);
+  }
 }
 
 #op-scene-container .op-scene-layer.active .op-scene-bg,
@@ -3151,7 +3158,9 @@ body {
   pointer-events: none;
 }
 .ending-transition-layer.ending-strip-out {
-  animation: ending-scene-out-fade 2720ms steps(32, end) forwards;
+  overflow: hidden !important;
+  animation: ending-scene-out-reveal 2720ms steps(32, end) forwards;
+  will-change: clip-path;
 }
 .ending-transition-layer.ending-strip-out .ending-shutter {
   animation: ending-strip-rise 2720ms steps(32, end) forwards;
@@ -3173,8 +3182,13 @@ body {
     background-position: 0 0, 0 -10px, 0 -6px, -3px 0;
   }
 }
-@keyframes ending-scene-out-fade {
-  0%, 24% { opacity: 1; }
-  62% { opacity: 0.96; }
-  100% { opacity: 0; }
+@keyframes ending-scene-out-reveal {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 100% 0);
+  }
 }
