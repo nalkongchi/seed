@@ -3032,33 +3032,40 @@ body {
   left: 0;
   right: 0;
   top: 100%;
-  height: 160%;
+  height: 168%;
   z-index: 2;
   opacity: 0;
   pointer-events: none;
   background:
     linear-gradient(180deg,
       rgba(0,0,0,0.00) 0%,
-      rgba(0,0,0,0.12) 10%,
-      rgba(0,0,0,0.42) 20%,
-      rgba(0,0,0,0.84) 32%,
-      rgba(0,0,0,0.97) 45%,
-      rgba(0,0,0,0.82) 57%,
-      rgba(0,0,0,0.30) 72%,
-      rgba(0,0,0,0.00) 90%),
+      rgba(0,0,0,0.10) 8%,
+      rgba(0,0,0,0.28) 16%,
+      rgba(0,0,0,0.64) 26%,
+      rgba(0,0,0,0.94) 38%,
+      rgba(0,0,0,0.92) 52%,
+      rgba(0,0,0,0.46) 68%,
+      rgba(0,0,0,0.08) 84%,
+      rgba(0,0,0,0.00) 100%),
     repeating-linear-gradient(180deg,
-      rgba(0,0,0,0.98) 0 4px,
-      rgba(0,0,0,0.64) 4px 6px,
-      rgba(0,0,0,0.14) 6px 10px,
-      rgba(255,255,255,0.08) 10px 12px,
-      rgba(0,0,0,0.00) 12px 24px),
+      rgba(8,8,8,0.00) 0 2px,
+      rgba(12,12,12,0.94) 2px 4px,
+      rgba(12,12,12,0.94) 4px 6px,
+      rgba(8,8,8,0.00) 6px 10px,
+      rgba(12,12,12,0.92) 10px 12px,
+      rgba(8,8,8,0.00) 12px 16px),
+    repeating-linear-gradient(180deg,
+      rgba(8,8,8,0.00) 0 6px,
+      rgba(0,0,0,0.82) 6px 8px,
+      rgba(8,8,8,0.00) 8px 16px),
     repeating-linear-gradient(90deg,
-      rgba(0,0,0,0.00) 0 14px,
-      rgba(0,0,0,0.18) 14px 18px,
-      rgba(255,255,255,0.04) 18px 20px,
-      rgba(0,0,0,0.00) 20px 34px);
-  background-size: 100% 100%, 100% 24px, 34px 100%;
-  background-repeat: no-repeat, repeat, repeat;
+      rgba(0,0,0,0.00) 0 2px,
+      rgba(0,0,0,0.18) 2px 4px,
+      rgba(255,255,255,0.05) 4px 5px,
+      rgba(0,0,0,0.00) 5px 8px);
+  background-size: 100% 100%, 100% 16px, 100% 16px, 8px 100%;
+  background-repeat: no-repeat, repeat, repeat, repeat;
+  background-position: 0 0, 0 0, 0 0, 0 0;
   mix-blend-mode: normal;
 }
 .op-flash {
@@ -3080,24 +3087,27 @@ body {
   z-index: 3 !important;
 }
 .op-scene-layer.op-strip-in .op-shutter {
-  animation: op-strip-rise 1400ms steps(18, end) forwards;
+  animation: op-strip-rise 2200ms steps(30, end) forwards;
 }
 @keyframes op-strip-rise {
   0% {
-    opacity: 0.98;
-    transform: translateY(0) scaleY(1.02);
-    background-position: 0 0, 0 0;
+    opacity: 0.99;
+    transform: translateY(0) scaleY(1.01);
+    background-position: 0 0, 0 0, 0 0, 0 0;
   }
-  20% {
-    opacity: 0.98;
+  18% {
+    opacity: 0.99;
   }
-  58% {
-    opacity: 0.86;
+  52% {
+    opacity: 0.95;
+  }
+  78% {
+    opacity: 0.78;
   }
   100% {
     opacity: 0;
     transform: translateY(-118%);
-    background-position: 0 0, 0 -32px, -20px 0;
+    background-position: 0 0, 0 -18px, 0 -8px, -6px 0;
   }
 }
 
