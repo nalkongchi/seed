@@ -300,33 +300,48 @@ function formatQuestion(text) {
   return String(text).replace(/([.?!~…])\s+/g, '$1\n');
 }
 
-function splitLeadLabel(text) {
-  const cleaned = cleanStudyText(text).replace(/\s+/g, ' ').trim();
-  const match = cleaned.match(/^\(([^)]+)\)\s*([^.!?\n]+?)\.\s*(.*)$/);
-  if (!match) return { label: '', body: cleaned };
-  return {
-    label: `(${match[1]}) ${match[2].trim()}`,
-    body: (match[3] || '').trim()
-  };
-}
 
-function formatQuestionBodyLines(text) {
-  return formatQuestion(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
+function splitLeadLabel(text) {
+  const clean = cleanStudyText(text);
+  const lines = clean.split(/\n+/).map(v => v.trim()).filter(Boolean);
+  if (!lines.length) return { label: '', bodyLines: [] };
+  if (lines.length > 1) return { label: lines[0], bodyLines: lines.slice(1) };
+  const single = lines[0];
+  const legacy = single.match(/^(\([^)]+\)\s*[^.?!~…]+?)\.\s+(.+)$/);
+  if (legacy) return { label: legacy[1].trim(), bodyLines: [legacy[2].trim()] };
+  return { label: '', bodyLines: [single] };
 }
 
 function formatStudyQuestionHtml(text) {
-  const parsed = splitLeadLabel(text);
-  const rawLines = parsed.label ? [parsed.label, ...formatQuestionBodyLines(parsed.body)] : cleanStudyText(text).split(/\n+/).map(v => v.trim()).filter(Boolean);
-  if (!rawLines.length) return '';
-  const head = '<div class="study-line-label">' + highlightNumbers(escapeHtml(rawLines[0])) + '</div>';
-  const body = rawLines.slice(1).map(line => '<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
-  return head + body;
+  const parts = splitLeadLabel(text);
+  const chunks = [];
+  if (parts.label) {
+    chunks.push('<div class="study-line-label">' + highlightNumbers(escapeHtml(parts.label)) + '</div>');
+  }
+  parts.bodyLines.forEach(line => {
+    chunks.push('<div class="study-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>');
+  });
+  return chunks.join('');
 }
 
-function formatBattleQuestionHtml(text) {
-  const parsed = splitLeadLabel(text);
-  const lines = parsed.label ? [parsed.label, ...formatQuestionBodyLines(parsed.body)] : formatQuestionBodyLines(text);
-  return lines.map((line, idx) => '<div class="' + (idx === 0 && parsed.label ? 'battle-line-label' : 'battle-line-body') + '">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
+function formatBattleQuestionHtml(question) {
+  const q = question || {};
+  const chunks = [];
+  const labelInfo = q.studyText ? splitLeadLabel(q.studyText) : { label: '', bodyLines: [] };
+  if (labelInfo.label) {
+    let bodySource = String(q.text || '').trim();
+    if (bodySource.startsWith(labelInfo.label)) {
+      bodySource = bodySource.slice(labelInfo.label.length).replace(/^[\s.。]+/, '');
+    }
+    const bodyLines = formatQuestion(bodySource).split(/\n+/).map(v => v.trim()).filter(Boolean);
+    chunks.push('<div class="battle-line-label">' + highlightNumbers(escapeHtml(labelInfo.label)) + '</div>');
+    bodyLines.forEach(line => {
+      chunks.push('<div class="battle-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>');
+    });
+    return chunks.join('');
+  }
+  return formatQuestion(String(q.text || '')).split(/\n+/).map(v => v.trim()).filter(Boolean)
+    .map(line => '<div class="battle-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
 }
 
 function formatReasonHtml(text, labelClass = 'reason-line-label') {
@@ -345,9 +360,11 @@ function formatReasonHtml(text, labelClass = 'reason-line-label') {
       firstLabelDone = true;
       continue;
     }
-    if (/^참고\)/.test(line)) {
+    if (/^\(?참고\)/.test(line)) {
       inRefs = true;
+      const refLine = line.replace(/^\(?참고\)\s*/, '').trim();
       chunks.push('<div class="reason-ref-title">참고)</div>');
+      if (refLine) chunks.push('<div class="reason-ref-line">' + highlightNumbers(escapeHtml(refLine)) + '</div>');
       continue;
     }
     const cls = inRefs ? 'reason-ref-line' : 'reason-main-line';
@@ -417,6 +434,41 @@ function buildStudyPool() {
 
 function cleanStudyText(text) {
   return String(text || '').replace(/^\s*["“”']+/, '').replace(/["“”']+\s*$/, '');
+}
+
+
+const BATTLE_SPRITE_TUNING = {
+  enemy: {
+    default: { scale: 1.16, x: '0px', y: '2px' },
+    0: { scale: 1.18, x: '0px', y: '4px' },
+    1: { scale: 1.16, x: '0px', y: '4px' },
+    2: { scale: 1.17, x: '0px', y: '4px' },
+    3: { scale: 1.24, x: '0px', y: '6px' },
+    4: { scale: 1.22, x: '0px', y: '5px' },
+    5: { scale: 1.30, x: '-4px', y: '8px' }
+  },
+  player: {
+    default: { scale: 1.18, x: '0px', y: '4px' }
+  }
+};
+
+function applySpriteVars(el, conf) {
+  if (!el) return;
+  const scale = conf && conf.scale != null ? conf.scale : 1;
+  const x = conf && conf.x != null ? conf.x : '0px';
+  const y = conf && conf.y != null ? conf.y : '0px';
+  el.style.setProperty('--sprite-scale', String(scale));
+  el.style.setProperty('--sprite-shift-x', x);
+  el.style.setProperty('--sprite-shift-y', y);
+}
+
+function applyBattleSpriteTuning(node) {
+  const enemyEl = document.getElementById('battle-card-img');
+  const playerEl = document.getElementById('arena-player-sprite');
+  const enemyConf = (BATTLE_SPRITE_TUNING.enemy && (BATTLE_SPRITE_TUNING.enemy[node.id] || BATTLE_SPRITE_TUNING.enemy.default)) || { scale: 1 };
+  const playerConf = (BATTLE_SPRITE_TUNING.player && (BATTLE_SPRITE_TUNING.player[node.id] || BATTLE_SPRITE_TUNING.player.default)) || { scale: 1 };
+  applySpriteVars(enemyEl, enemyConf);
+  applySpriteVars(playerEl, playerConf);
 }
 
 function updateStudyStats() {
@@ -644,9 +696,9 @@ function initTitle() {
     primaryBtn.querySelector('.tmenu-label').textContent = '모험 시작';
     restartBtn.style.display = 'none';
     applyTop(primaryBtn, '21%');
-    applyTop(studyBtn, '47.0%');
-    applyTop(wrongBtn, '55.5%');
-    applyTop(settingBtn, '64.0%');
+    applyTop(studyBtn, '38.5%');
+    applyTop(wrongBtn, '47.0%');
+    applyTop(settingBtn, '55.5%');
   }
   updateSettingUI();
   Sound.playBGM('bgm_title');
@@ -1237,6 +1289,7 @@ function doStartActualBattle() {
   if (playerSprite) {
     playerSprite.innerHTML = '<img src="images/player_back.png" alt="' + (G.playerName || '용사') + '">';
   }
+  applyBattleSpriteTuning(node);
 
   const bossLabel = document.getElementById('boss-label');
   const bubble = document.getElementById('speech-bubble');
@@ -1309,7 +1362,7 @@ function animateHpBreak(idx) {
 function loadQuestion() {
   if (!G.shuffledQ.length) return;
   const q = G.shuffledQ[G.currentQ];
-  document.getElementById('battle-question').innerHTML = formatBattleQuestionHtml(q.text);
+  document.getElementById('battle-question').innerHTML = formatBattleQuestionHtml(q);
   document.getElementById('q-counter').textContent = '문제 ' + G.questionTurn;
   updatePlayerFlavorLine();
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);

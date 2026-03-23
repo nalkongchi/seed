@@ -449,34 +449,34 @@ var NODES = [
     return prefix + '\n' + valuesText + '일 때 판정은?';
   }
 
-  function formatThresholdValue(metric) {
-    return formatNumber(metric.threshold, metric.format) + (metric.unit || '');
-  }
 
-  function buildReason(prefix, entries, answer) {
-    const failed = entries.filter(e => !e.pass);
-    const parts = [];
-    const refLine = '(참고) ' + entries.map(e => e.metric.label + ' ' + formatThresholdValue(e.metric)).join(', ');
-    if (answer === 'pass') {
-      if (entries.length === 1) {
-        const e = entries[0];
-        parts.push(prefix + '의 ' + e.metric.label + ' 기준은 ' + formatThreshold(e.metric) + '입니다. ' + formatValue(e.metric, e.value) + '는 기준을 충족하므로 합격입니다.');
-      } else {
-        parts.push(prefix + '의 제시 항목은 모두 기준을 충족하므로 합격입니다.');
-      }
+function buildReferenceLine(entries) {
+  return '(참고) ' + entries.map(e => e.metric.label + ' ' + formatNumber(e.metric.threshold, e.metric.format) + (e.metric.unit || '')).join(', ');
+}
+
+function buildReason(prefix, entries, answer) {
+  const failed = entries.filter(e => !e.pass);
+  const parts = [];
+  if (answer === 'pass') {
+    if (entries.length === 1) {
+      const e = entries[0];
+      parts.push(prefix + '의 ' + e.metric.label + ' 기준은 ' + formatThreshold(e.metric) + '입니다. ' + formatValue(e.metric, e.value) + '는 기준을 충족하므로 합격입니다.');
     } else {
-      if (failed.length === 1) {
-        const e = failed[0];
-        const verdict = e.metric.type === 'min' ? '기준에 미달하므로' : '기준을 넘었으므로';
-        parts.push(prefix + '의 ' + e.metric.label + ' 기준은 ' + formatThreshold(e.metric) + '입니다. ' + formatValue(e.metric, e.value) + '는 ' + verdict + ' 불합격입니다.');
-      } else {
-        const failTexts = failed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value));
-        parts.push(prefix + '에서는 ' + failTexts.join(', ') + '가 각각 해당 기준을 벗어나 불합격입니다.');
-      }
+      parts.push(prefix + '의 제시 항목은 모두 기준을 충족하므로 합격입니다.');
     }
-    parts.push(refLine);
-    return parts.join('\n\n');
+  } else {
+    if (failed.length === 1) {
+      const e = failed[0];
+      const verdict = e.metric.type === 'min' ? '기준에 미달하므로' : '기준을 넘었으므로';
+      parts.push(prefix + '의 ' + e.metric.label + ' 기준은 ' + formatThreshold(e.metric) + '입니다. ' + formatValue(e.metric, e.value) + '는 ' + verdict + ' 불합격입니다.');
+    } else {
+      const failTexts = failed.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value));
+      parts.push(prefix + '에서는 ' + failTexts.join(', ') + '가 각각 해당 기준을 벗어나 불합격입니다.');
+    }
   }
+  parts.push(buildReferenceLine(entries));
+  return parts.join('\n\n');
+}
 
   function chooseProfile(stage) {
     const ids = STAGE_PROFILE_IDS[stage];
