@@ -833,6 +833,8 @@ let opSceneIdx = 0, opLineIdx = 0;
 let opTyping = false, opFullLine = '', opTypingTimer = null;
 let opSceneEls = [];
 let opTransitioning = false;
+let opTransitionCanvas = null;
+let endingTransitionCanvas = null;
 let opFxTimers = [];
 let opTransitionTimers = [];
 
@@ -895,6 +897,142 @@ function restartInlineAnimation(el) {
   el.style.animation = '';
 }
 
+
+function removeTransitionCanvas(which) {
+  const key = which === 'ending' ? 'endingTransitionCanvas' : 'opTransitionCanvas';
+  const node = key === 'endingTransitionCanvas' ? endingTransitionCanvas : opTransitionCanvas;
+  if (node && node.parentNode) node.parentNode.removeChild(node);
+  if (key === 'endingTransitionCanvas') endingTransitionCanvas = null;
+  else opTransitionCanvas = null;
+}
+
+function makeTransitionCanvas(parent, className) {
+  const canvas = document.createElement('canvas');
+  canvas.className = className;
+  canvas.width = Math.max(1, Math.round(parent.clientWidth || parent.offsetWidth || 390));
+  canvas.height = Math.max(1, Math.round(parent.clientHeight || parent.offsetHeight || 844));
+  parent.appendChild(canvas);
+  return canvas;
+}
+
+function drawImageCover(ctx, img, w, h) {
+  const iw = img.naturalWidth || img.videoWidth || img.width || w;
+  const ih = img.naturalHeight || img.videoHeight || img.height || h;
+  const ir = iw / ih;
+  const tr = w / h;
+  let sx = 0, sy = 0, sw = iw, sh = ih;
+  if (ir > tr) {
+    sw = ih * tr;
+    sx = (iw - sw) / 2;
+  } else {
+    sh = iw / tr;
+    sy = (ih - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+}
+
+function paintOpeningSnapshotToCanvas(layer, canvas) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return false;
+  const img = layer ? layer.querySelector('.op-scene-bg') : null;
+  if (!img || !(img.complete || img.naturalWidth)) return false;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = false;
+  ctx.filter = 'brightness(0.88) saturate(0.95)';
+  drawImageCover(ctx, img, canvas.width, canvas.height);
+  ctx.filter = 'none';
+  const g = ctx.createLinearGradient(0, canvas.height * 0.72, 0, canvas.height);
+  g.addColorStop(0, 'rgba(0,0,0,0.03)');
+  g.addColorStop(0.38, 'rgba(0,0,0,0.10)');
+  g.addColorStop(1, 'rgba(0,0,0,0.38)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  return true;
+}
+
+function loadImageForTransition(src, onReady) {
+  if (!src) { onReady(null); return; }
+  const img = new Image();
+  img.onload = () => onReady(img);
+  img.onerror = () => onReady(null);
+  img.src = src;
+}
+
+function paintEndingSnapshotToCanvas(scene, canvas, onDone) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) { onDone(false); return; }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = scene && scene.fallback ? scene.fallback : '#0b0b0b';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  loadImageForTransition(scene && scene.image, (img) => {
+    if (img) {
+      ctx.filter = 'brightness(0.82) saturate(0.90)';
+      drawImageCover(ctx, img, canvas.width, canvas.height);
+      ctx.filter = 'none';
+    }
+    const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    g.addColorStop(0, 'rgba(0,0,0,0.20)');
+    g.addColorStop(0.42, 'rgba(0,0,0,0.04)');
+    g.addColorStop(1, 'rgba(0,0,0,0.62)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    onDone(true);
+  });
+}
+
+function runBlindRevealTransition(canvas, options, bucket, done) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) { if (done) done(); return; }
+  const base = document.createElement('canvas');
+  base.width = canvas.width;
+  base.height = canvas.height;
+  const bctx = base.getContext('2d');
+  bctx.clearRect(0, 0, base.width, base.height);
+  bctx.drawImage(canvas, 0, 0);
+
+  const duration = options.duration || 2200;
+  const steps = options.steps || 36;
+  const stripe = options.stripe || 2;
+  const gap = options.gap || 2;
+  const lag = options.lag == null ? 0.16 : options.lag;
+  const interval = Math.max(16, Math.round(duration / steps));
+  let frame = 0;
+
+  function drawFrame() {
+    const p = Math.min(1, frame / steps);
+    const p2 = p <= lag ? 0 : Math.min(1, (p - lag) / (1 - lag));
+    const h = canvas.height;
+    const w = canvas.width;
+    const frontA = Math.round(h * p);
+    const frontB = Math.round(h * p2);
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(base, 0, 0);
+
+    for (let y = h - stripe; y >= h - frontA; y -= (stripe + gap) * 2) {
+      ctx.clearRect(0, Math.max(0, y), w, stripe);
+    }
+    for (let y = h - stripe - gap - stripe; y >= h - frontB; y -= (stripe + gap) * 2) {
+      ctx.clearRect(0, Math.max(0, y), w, stripe);
+    }
+
+    const frontY = Math.max(0, h - frontA - 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    ctx.fillRect(0, Math.max(0, frontY - 1), w, 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.fillRect(0, Math.max(0, frontY - 3), w, 1);
+
+    if (frame >= steps) {
+      if (done) done();
+      return;
+    }
+    frame += 1;
+    bucket.push(setTimeout(drawFrame, interval));
+  }
+  drawFrame();
+}
+
 function opTriggerLightning(layer) {
   const flash = layer ? layer.querySelector('.op-flash') : null;
   if (!flash) return;
@@ -915,6 +1053,7 @@ function opCleanupLayer(el) {
   el.style.webkitMaskSize = 'auto';
   el.style.maskSize = 'auto';
   el.style.animation = 'none';
+  el.style.visibility = '';
   const shutter = el.querySelector('.op-shutter');
   if (shutter) shutter.style.animation = 'none';
   const flash = el.querySelector('.op-flash');
@@ -923,6 +1062,7 @@ function opCleanupLayer(el) {
 
 function opSetScene(idx, immediate = false) {
   clearTimerBucket(opTransitionTimers);
+  removeTransitionCanvas('opening');
   if (immediate) clearTimerBucket(opFxTimers);
   opSceneEls.forEach((el, i) => {
     if (i === idx) {
@@ -933,6 +1073,7 @@ function opSetScene(idx, immediate = false) {
       el.style.webkitMaskSize = 'auto';
       el.style.maskSize = 'auto';
       el.style.animation = 'none';
+      el.style.visibility = '';
       restartInlineAnimation(el.querySelector('.op-scene-bg'));
     } else {
       opCleanupLayer(el);
@@ -947,7 +1088,8 @@ function opTransitionToScene(nextIdx, done) {
   const prevIdx = opSceneIdx;
   const prev = opSceneEls[prevIdx];
   const next = opSceneEls[nextIdx];
-  if (!next || prevIdx === nextIdx) {
+  const container = document.getElementById('op-scene-container');
+  if (!next || prevIdx === nextIdx || !container) {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, true);
     if (done) done();
@@ -956,85 +1098,46 @@ function opTransitionToScene(nextIdx, done) {
   opTransitioning = true;
   clearTimerBucket(opTransitionTimers);
   clearTimerBucket(opFxTimers);
+  removeTransitionCanvas('opening');
   opSceneEls.forEach((el, i) => {
     if (i !== prevIdx && i !== nextIdx) opCleanupLayer(el);
   });
-  if (next) {
-    next.classList.add('active', 'op-hold-under');
-    next.classList.remove('op-strip-in', 'op-strip-out');
-    restartInlineAnimation(next.querySelector('.op-scene-bg'));
-  }
-  if (prev) {
-    prev.classList.add('active', 'op-strip-out');
-    prev.classList.remove('op-strip-in', 'op-hold-under');
-    prev.style.animation = 'none';
-    void prev.offsetWidth;
-    prev.style.animation = '';
-    const shutter = prev.querySelector('.op-shutter');
-    if (shutter) {
-      shutter.style.animation = 'none';
-      void shutter.offsetWidth;
-      shutter.style.animation = '';
-    }
-  }
-  opTransitionTimers.push(setTimeout(() => {
-    if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
-  }, 1360));
-  opTransitionTimers.push(setTimeout(() => {
+
+  next.classList.add('active', 'op-hold-under');
+  next.classList.remove('op-strip-in', 'op-strip-out');
+  next.style.visibility = '';
+  restartInlineAnimation(next.querySelector('.op-scene-bg'));
+
+  const canvas = makeTransitionCanvas(container, 'scene-blind-canvas opening-blind-canvas');
+  opTransitionCanvas = canvas;
+  const painted = paintOpeningSnapshotToCanvas(prev, canvas);
+  prev.style.visibility = 'hidden';
+  prev.classList.remove('active', 'op-strip-in', 'op-strip-out', 'op-hold-under');
+
+  if (!painted) {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, false);
     opTransitioning = false;
     if (done) done();
-  }, 2200));
-}
-
-function opShowLine() {
-  opTypeLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
-}
-
-function opNextStep() {
-  if (opTransitioning) return;
-  if (opTyping) {
-    clearTimeout(opTypingTimer);
-    document.getElementById('op-text').innerHTML = opRenderLine(opFullLine);
-    opTyping = false;
     return;
   }
-  const scene = OP_SCENES[opSceneIdx];
-  if (opLineIdx < scene.lines.length - 1) { opLineIdx++; opShowLine(); return; }
-  if (opSceneIdx < OP_SCENES.length - 1) {
-    const nextIdx = opSceneIdx + 1;
-    opLineIdx = 0;
-    const textEl = document.getElementById('op-text');
-    if (textEl) textEl.innerHTML = '';
-    opTransitionToScene(nextIdx, () => {
-      opShowLine();
-    });
-    return;
+
+  if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) {
+    opTransitionTimers.push(setTimeout(() => opTriggerLightning(next), 1360));
   }
-  opFinish();
-}
 
-function opFinish() {
-  document.getElementById('op-arrow').style.visibility = 'hidden';
-  document.getElementById('op-end-btn').style.display = 'block';
-  document.getElementById('op-tap').disabled = true;
-  document.getElementById('op-tap').style.pointerEvents = 'none';
-  document.getElementById('op-skip').style.display = 'block';
-}
-
-function opSkipAll() {
-  playUIClick();
-  clearTimeout(opTypingTimer);
-  clearTimerBucket(opFxTimers);
-  clearTimerBucket(opTransitionTimers);
-  opTransitioning = false;
-  opSceneIdx = OP_SCENES.length - 1;
-  opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
-  opSetScene(opSceneIdx, true);
-  document.getElementById('op-text').innerHTML = opRenderLine(OP_SCENES[opSceneIdx].lines[opLineIdx]);
-  opTyping = false;
-  opFinish();
+  runBlindRevealTransition(canvas, {
+    duration: 2200,
+    steps: 36,
+    stripe: 2,
+    gap: 2,
+    lag: 0.16
+  }, opTransitionTimers, () => {
+    opSceneIdx = nextIdx;
+    opSetScene(nextIdx, false);
+    opTransitioning = false;
+    if (done) done();
+  });
 }
 
 function startOpening() {
@@ -1636,6 +1739,7 @@ function endingSetScene(idx, immediate = false) {
   if (!layer) { setEndingBackground(idx); return; }
   clearTimerBucket(endingTransitionTimers);
   clearTimerBucket(endingFxTimers);
+  removeTransitionCanvas('ending');
   layer.classList.remove('wipe-in', 'wipe-out');
   layer.style.webkitMaskImage = 'none';
   layer.style.maskImage = 'none';
@@ -1653,24 +1757,25 @@ function endingSetScene(idx, immediate = false) {
     return;
   }
   endingTransitioning = true;
-  const clone = document.createElement('div');
-  clone.className = 'ending-transition-layer ending-strip-out';
-  clone.innerHTML = '<div class="ending-shutter"></div>';
-  clone.style.background = layer.style.background || getComputedStyle(layer).backgroundImage || '';
-  clone.style.backgroundSize = layer.style.backgroundSize || getComputedStyle(layer).backgroundSize;
-  clone.style.backgroundPosition = layer.style.backgroundPosition || getComputedStyle(layer).backgroundPosition;
-  clone.style.backgroundRepeat = layer.style.backgroundRepeat || getComputedStyle(layer).backgroundRepeat;
-  endingTransitionClone = clone;
-  wrap.insertBefore(clone, overlay);
 
-  setEndingBackground(idx);
-  restartInlineAnimation(layer);
+  const canvas = makeTransitionCanvas(wrap, 'scene-blind-canvas ending-blind-canvas');
+  if (overlay && overlay.parentNode === wrap) wrap.insertBefore(canvas, overlay);
+  endingTransitionCanvas = canvas;
 
-  endingTransitionTimers.push(setTimeout(() => {
-    if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
-    if (endingTransitionClone === clone) endingTransitionClone = null;
-    endingTransitioning = false;
-  }, 2720));
+  paintEndingSnapshotToCanvas(ENDING_SCENES[endingSceneIdx], canvas, () => {
+    setEndingBackground(idx);
+    restartInlineAnimation(layer);
+    runBlindRevealTransition(canvas, {
+      duration: 2720,
+      steps: 40,
+      stripe: 2,
+      gap: 2,
+      lag: 0.20
+    }, endingTransitionTimers, () => {
+      removeTransitionCanvas('ending');
+      endingTransitioning = false;
+    });
+  });
 }
 
 function endingShowLine() {

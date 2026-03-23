@@ -3020,6 +3020,19 @@ body {
 }
 
 
+
+.scene-blind-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 3;
+}
+.opening-blind-canvas { z-index: 3; }
+.ending-blind-canvas { z-index: 1; }
+
 /* === v0.5 stable opening/ending scene transitions === */
 .op-scene-bg {
   z-index: 0;
