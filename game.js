@@ -963,18 +963,19 @@ function runBlindLiftTransition(canvas, which, done) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.imageSmoothingEnabled = false;
 
-  const duration = which === 'op' ? 1500 : 1750;
+  const duration = which === 'op' ? 1850 : 2150;
   const stripe = 4;
   const gap = which === 'op' ? 4 : 5;
   const bandHeight = which === 'op' ? 20 : 24;
   const shadeAlpha = which === 'op' ? 0.38 : 0.28;
+  const motionStep = which === 'op' ? 3 : 3;
   const start = performance.now();
-  const ease = (t) => 1 - Math.pow(1 - t, 2.2);
 
   const step = (now) => {
     const raw = Math.min(1, (now - start) / duration);
-    const t = ease(raw);
-    const bandTop = Math.round(height - t * (height + bandHeight));
+    const travel = raw * (height + bandHeight);
+    const snappedTravel = raw >= 1 ? (height + bandHeight) : Math.floor(travel / motionStep) * motionStep;
+    const bandTop = Math.round(height - snappedTravel);
     const fullyClearedFrom = Math.max(0, bandTop + bandHeight);
 
     ctx.clearRect(0, 0, width, height);
