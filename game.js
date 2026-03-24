@@ -965,9 +965,9 @@ function runBlindLiftTransition(canvas, which, done) {
 
   const duration = which === 'op' ? 1850 : 2150;
   const stripe = 4;
-  const gap = which === 'op' ? 4 : 5;
-  const bandHeight = which === 'op' ? 20 : 24;
-  const shadeAlpha = which === 'op' ? 0.38 : 0.28;
+  const gap = which === 'op' ? 8 : 9;
+  const bandHeight = which === 'op' ? 12 : 14;
+  const shadeAlpha = which === 'op' ? 0.16 : 0.12;
   const motionStep = which === 'op' ? 3 : 3;
   const start = performance.now();
 
@@ -989,16 +989,8 @@ function runBlindLiftTransition(canvas, which, done) {
       for (let y = bandStart; y < bandEnd; y += gap) {
         ctx.clearRect(0, y, width, stripe);
       }
-      const grad = ctx.createLinearGradient(0, bandStart, 0, bandEnd);
-      grad.addColorStop(0, 'rgba(0,0,0,0.00)');
-      grad.addColorStop(0.28, 'rgba(0,0,0,' + (shadeAlpha * 0.45).toFixed(3) + ')');
-      grad.addColorStop(0.55, 'rgba(0,0,0,' + shadeAlpha.toFixed(3) + ')');
-      grad.addColorStop(0.82, 'rgba(0,0,0,0.10)');
-      grad.addColorStop(1, 'rgba(0,0,0,0.00)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, bandStart, width, bandEnd - bandStart);
-      ctx.fillStyle = 'rgba(255,255,255,0.05)';
-      for (let y = bandStart + 1; y < bandEnd; y += gap) {
+      ctx.fillStyle = 'rgba(0,0,0,' + shadeAlpha.toFixed(3) + ')';
+      for (let y = bandStart + stripe; y < bandEnd; y += gap) {
         ctx.fillRect(0, y, width, 1);
       }
     }
