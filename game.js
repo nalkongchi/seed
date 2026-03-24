@@ -965,10 +965,14 @@ function runBlindLiftTransition(canvas, which, done) {
 
   const duration = which === 'op' ? 1850 : 2150;
   const stripe = 4;
-  const gap = which === 'op' ? 8 : 9;
+  const rowGap = which === 'op' ? 8 : 9;
   const bandHeight = which === 'op' ? 12 : 14;
-  const shadeAlpha = which === 'op' ? 0.16 : 0.12;
+  const shadeAlpha = which === 'op' ? 0.14 : 0.11;
   const motionStep = which === 'op' ? 3 : 3;
+  const blockPattern = which === 'op' ? [10, 12, 14, 12] : [12, 14, 16, 14];
+  const blockGap = which === 'op' ? 8 : 10;
+  const patternStride = Math.max(...blockPattern) + blockGap;
+  const stagger = Math.floor(patternStride / 2);
   const start = performance.now();
 
   const step = (now) => {
@@ -986,12 +990,22 @@ function runBlindLiftTransition(canvas, which, done) {
     const bandStart = Math.max(0, bandTop);
     const bandEnd = Math.min(height, bandTop + bandHeight);
     if (bandStart < bandEnd) {
-      for (let y = bandStart; y < bandEnd; y += gap) {
-        ctx.clearRect(0, y, width, stripe);
-      }
-      ctx.fillStyle = 'rgba(0,0,0,' + shadeAlpha.toFixed(3) + ')';
-      for (let y = bandStart + stripe; y < bandEnd; y += gap) {
-        ctx.fillRect(0, y, width, 1);
+      let rowIndex = 0;
+      for (let y = bandStart; y < bandEnd; y += rowGap) {
+        const offsetX = (rowIndex % 2 === 0) ? 0 : stagger;
+        let x = -patternStride + offsetX;
+        let blockIndex = rowIndex % blockPattern.length;
+        while (x < width) {
+          const blockW = blockPattern[blockIndex % blockPattern.length];
+          ctx.clearRect(x, y, blockW, stripe);
+          if (shadeAlpha > 0) {
+            ctx.fillStyle = 'rgba(0,0,0,' + shadeAlpha.toFixed(3) + ')';
+            ctx.fillRect(x, y + stripe, blockW, 1);
+          }
+          x += blockW + blockGap;
+          blockIndex++;
+        }
+        rowIndex++;
       }
     }
 
