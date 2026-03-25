@@ -3114,3 +3114,21 @@ body {
 .judge-btn.is-ox-mode .judge-label {
   letter-spacing: 0.18em !important;
 }
+
+
+/* v0.6-2 battle text sizing */
+.battle-side-name,
+.player-side .battle-side-name,
+.enemy-side .battle-side-name {
+  font-size: 13px !important;
+}
+.battle-name-badge,
+.battle-player-badge {
+  font-size: 15px !important;
+}
+.battle-line-label,
+.battle-line-body,
+#battle-player-line,
+.bubble-text {
+  font-size: 15px !important;
+}

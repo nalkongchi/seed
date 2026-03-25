@@ -442,7 +442,7 @@ function formatReasonHtml(text, labelClass = 'reason-line-label') {
 }
 
 
-const PLAYER_FLAVOR_LINES = ['........', '.....네?', '확인해 볼게요.', '뭐라구요?'];
+const PLAYER_FLAVOR_LINES = ['........', '.....네?', '확인해 볼게요.', '뭐라구요?', '잠깐만요...', '다시 보겠습니다.', '흠... 확인 중입니다.', '기준을 보죠.', '수치부터 볼게요.', '어디 보자...', '잠시만요.', '기준대로 판단하겠습니다.'];
 
 function getRandomPlayerFlavor() {
   return PLAYER_FLAVOR_LINES[Math.floor(Math.random() * PLAYER_FLAVOR_LINES.length)];
