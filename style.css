@@ -3128,16 +3128,42 @@ body {
   100% { opacity: 0; transform: translateX(300%) skewX(-10deg); }
 }
 
-
-/* === v0.5 clean blind transition layer === */
-.scene-blind-canvas {
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  display:block;
-  pointer-events:none;
-  image-rendering:pixelated;
+/* v0.6 - wrongnote grouping + stage5 O/X labels */
+.wrongnote-item-title {
+  font-size: 13px;
+  color: #f1e0a2;
+  margin-bottom: 6px;
+  line-height: 1.45;
+  font-family:'Galmuri9','Noto Sans KR',sans-serif;
 }
-.opening-blind-canvas { z-index:3; }
-.ending-blind-canvas { z-index:2; }
+.wrongnote-item-guide {
+  font-size: 11px;
+  color: #b8c5b3;
+  margin-bottom: 8px;
+  line-height: 1.55;
+  font-family:'Galmuri9','Noto Sans KR',sans-serif;
+}
+.wrongnote-item-examples-label {
+  font-size: 10px;
+  color: #8eb68e;
+  margin-bottom: 4px;
+  font-family:'Galmuri9','Noto Sans KR',sans-serif;
+}
+.wrongnote-item-examples {
+  margin: 0 0 8px 0;
+  padding-left: 16px;
+}
+.wrongnote-item-examples li {
+  color: #ddd;
+  font-size: 11px;
+  line-height: 1.55;
+  margin-bottom: 2px;
+  font-family:'Galmuri9','Noto Sans KR',sans-serif;
+}
+.wrongnote-item-examples li .highlight {
+  color: var(--gold);
+  font-weight: 700;
+}
+.judge-btn.is-ox-mode .judge-label {
+  letter-spacing: 0.18em !important;
+}

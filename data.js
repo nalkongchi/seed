@@ -1,7 +1,7 @@
 // ============================================================
-// data.js - 종자검사원 문제 데이터 (v15)
-// 스테이지 1,2,3,4,6은 규격 기반 랜덤 생성형으로 재구성했습니다.
-// 스테이지 5는 기존 고정 문제를 유지합니다.
+// data.js - 종자검사원 문제 데이터 (v0.6)
+// 스테이지 1,2,3,4,6은 규격 기반 랜덤 생성형 문제를 사용합니다.
+// 스테이지 5는 종자검사요령 O/X 전용 문제로 재구성합니다.
 // ============================================================
 
 var NODES = [
@@ -83,43 +83,7 @@ var NODES = [
     "x": 195,
     "y": 210,
     "bossLine": null,
-    "questions": [
-      {
-        "text": "\"검사 유효기간이 어제 만료됐어요. 보관 상태가 완벽한데 유효하지 않나요?\"",
-        "answer": "fail",
-        "reason": "검사 유효기간이 경과한 종자는 재검사 없이 합격 처리가 불가합니다."
-      },
-      {
-        "text": "\"지난해 합격 종자인데, 올해 재검사 없이 유통해도 되죠?\"",
-        "answer": "fail",
-        "reason": "유효기간 내라도 재검사 규정이 있으면 따라야 합니다. 임의 유통은 법령 위반입니다."
-      },
-      {
-        "text": "\"검사 성적서에 수분 함량을 잘못 기재했어요. 실제 수치는 기준 이내예요. 괜찮죠?\"",
-        "answer": "fail",
-        "reason": "검사 성적서의 오기재는 행정상 하자입니다. 실제 수치와 무관하게 재발급이 필요합니다."
-      },
-      {
-        "text": "\"종자관리사가 현장에 없었지만 검사는 진행했어요. 결과는 정상이에요.\"",
-        "answer": "fail",
-        "reason": "검사는 자격을 갖춘 종자관리사가 실시해야 합니다. 절차 위반으로 검사 결과가 무효입니다."
-      },
-      {
-        "text": "\"검사 기록부를 3년간 보관했어요. 법령상 보관 기간 충족이죠?\"",
-        "answer": "pass",
-        "reason": "종자 검사 기록부 보관 기간 기준을 충족합니다. 적합합니다."
-      },
-      {
-        "text": "\"원산지를 국내산으로 정확히 표기했고 품질 기준도 다 충족했어요.\"",
-        "answer": "pass",
-        "reason": "원산지 표기 정확, 품질 기준 충족. 법령상 문제 없습니다. 합격입니다."
-      },
-      {
-        "text": "\"반올림하면 기준치 이내인데, 감사에서 문제가 될까요?\"",
-        "answer": "fail",
-        "reason": "기준 수치는 반올림을 적용하지 않습니다. 감사 시 기준 초과로 지적 대상이 됩니다."
-      }
-    ]
+    "questions": []
   },
   {
     "id": 5,
@@ -499,6 +463,99 @@ function buildReason(prefix, entries, answer) {
     return weightedSample(selected, count, m => diffWeight[m.difficulty] || 1);
   }
 
+  function buildGeneratedWrongNoteMeta(prefix, profile, selected, entries, answer, valuesText) {
+    const failedEntries = entries.filter(e => !e.pass);
+    if (answer === 'fail' && failedEntries.length === 1) {
+      const target = failedEntries[0];
+      return {
+        ruleKey: 'metric:' + profile.id + ':' + target.metric.label + ':' + target.metric.type + ':' + target.metric.threshold,
+        mistakeType: target.metric.label + ' 기준 ' + (target.metric.type === 'min' ? '미달' : '초과'),
+        ruleSummary: prefix + ' · ' + target.metric.label + ' ' + formatThreshold(target.metric),
+        noteExample: target.metric.label + ' ' + formatValue(target.metric, target.value)
+      };
+    }
+    if (answer === 'pass' && selected.length === 1) {
+      const target = entries[0];
+      return {
+        ruleKey: 'metricpass:' + profile.id + ':' + target.metric.label + ':' + target.metric.type + ':' + target.metric.threshold,
+        mistakeType: target.metric.label + ' 기준 충족 판정',
+        ruleSummary: prefix + ' · ' + target.metric.label + ' ' + formatThreshold(target.metric),
+        noteExample: target.metric.label + ' ' + formatValue(target.metric, target.value)
+      };
+    }
+    const relevant = answer === 'fail' && failedEntries.length ? failedEntries : entries;
+    const labels = relevant.map(e => e.metric.label).sort().join('|');
+    const summary = relevant.map(e => e.metric.label + ' ' + formatThreshold(e.metric)).join(', ');
+    const example = relevant.map(e => e.metric.label + ' ' + formatValue(e.metric, e.value)).join(', ');
+    return {
+      ruleKey: (answer === 'fail' ? 'combofail:' : 'combopass:') + profile.id + ':' + labels,
+      mistakeType: answer === 'fail' ? '복합 기준 위반' : '복합 기준 충족 판정',
+      ruleSummary: prefix + ' · ' + summary,
+      noteExample: example || valuesText
+    };
+  }
+
+  function makeStage5Question(storyLead, statement, answer, reason, ruleKey, mistakeType, ruleSummary, noteExample) {
+    const prefix = '(종자검사요령)';
+    const storyText = storyLead + ' ' + prefix + ' ' + statement + ' ' + (answer === 'pass' ? 'O냐 X냐?' : '자, O냐 X냐?');
+    const studyText = prefix + '\n' + statement;
+    return {
+      text: storyText,
+      storyText,
+      studyText,
+      answer,
+      reason,
+      uiMode: 'ox',
+      ruleKey,
+      mistakeType,
+      ruleSummary,
+      noteExample: noteExample || statement
+    };
+  }
+
+  function buildStage5QuestionBank() {
+    return [
+      makeStage5Question('기한 하나 틀리면 전부 틀리는 거다.', '포장검사 신청은 검사희망일 10일 전까지 해야 한다.', 'pass', '포장검사 신청은 검사희망일 10일 전까지 해야 하므로 맞는 진술입니다.', 'stage5:field-apply-deadline', '포장검사 신청 기한', '검사희망일 10일 전까지', '포장검사 신청 10일 전'),
+      makeStage5Question('날짜 하루 차이로 판정이 갈린다.', '포장검사 신청은 검사희망일 7일 전까지 하면 된다.', 'fail', '포장검사 신청은 검사희망일 10일 전까지 해야 합니다. 7일 전까지라고 한 진술은 틀립니다.', 'stage5:field-apply-deadline', '포장검사 신청 기한', '검사희망일 10일 전까지', '포장검사 신청 7일 전'),
+      makeStage5Question('기억이 아니라 기준으로 답해.', '희망일이 4월 20일일 때, 4월 10일 포장검사 신청은 적절하다.', 'pass', '포장검사 신청은 검사희망일 10일 전까지 해야 합니다. 희망일이 4월 20일이면 4월 10일까지 신청할 수 있으므로 적절합니다.', 'stage5:field-apply-case-pass', '포장검사 신청 사례 판정', '희망일 기준 10일 전까지', '4월 20일 희망일 / 4월 10일 신청'),
+      makeStage5Question('기한 계산은 감으로 하는 게 아니다.', '희망일이 4월 20일일 때, 4월 12일 포장검사 신청은 적절하다.', 'fail', '포장검사 신청은 검사희망일 10일 전까지 해야 합니다. 희망일이 4월 20일이면 4월 10일까지 신청해야 하므로 4월 12일 신청은 부적절합니다.', 'stage5:field-apply-case-fail', '포장검사 신청 사례 판정', '희망일 기준 10일 전까지', '4월 20일 희망일 / 4월 12일 신청'),
+      makeStage5Question('통보 기한도 규정으로 본다.', '포장검사 결과는 검사완료 후 7일 이내 신청자에게 통지해야 한다.', 'pass', '포장검사 결과 통지는 검사완료 후 7일 이내여야 하므로 맞는 진술입니다.', 'stage5:field-result-notice', '포장검사 결과통지 기한', '검사완료 후 7일 이내', '포장검사 결과통지 7일 이내'),
+      makeStage5Question('재관리 횟수도 숫자로 묶인다.', '규격에 미달한 포장은 재관리를 2회까지 요구할 수 있다.', 'fail', '재관리는 1회에 한하여 요구할 수 있습니다. 2회까지 가능하다는 진술은 틀립니다.', 'stage5:remanage-count', '재관리 횟수', '재관리 1회 한정', '재관리 2회'),
+      makeStage5Question('한 번 더 준다고 두 번 더 주는 건 아니다.', '규격에 미달한 포장은 재관리를 1회에 한하여 요구할 수 있다.', 'pass', '재관리는 1회 한정이므로 맞는 진술입니다.', 'stage5:remanage-count', '재관리 횟수', '재관리 1회 한정', '재관리 1회'),
+      makeStage5Question('신청서는 날짜를 맞춰야 효력이 있다.', '종자검사 신청서는 검사희망일 3일 전까지 제출해야 한다.', 'pass', '종자검사 신청은 검사희망일 3일 전까지 해야 하므로 맞는 진술입니다.', 'stage5:seed-apply-deadline', '종자검사 신청 기한', '검사희망일 3일 전까지', '종자검사 신청 3일 전'),
+      makeStage5Question('숫자 하나 바꾸면 규정도 바뀌는 줄 아나.', '종자검사 신청은 검사희망일 5일 전까지 하면 된다.', 'fail', '종자검사 신청은 검사희망일 3일 전까지 해야 합니다. 5일 전까지라고 한 진술은 공식 기준과 다릅니다.', 'stage5:seed-apply-deadline', '종자검사 신청 기한', '검사희망일 3일 전까지', '종자검사 신청 5일 전'),
+      makeStage5Question('맞는 날짜를 찍어야 통과한다.', '희망일이 4월 20일일 때, 4월 17일 종자검사 신청은 적절하다.', 'pass', '종자검사 신청은 검사희망일 3일 전까지 가능합니다. 희망일이 4월 20일이면 4월 17일 신청은 적절합니다.', 'stage5:seed-apply-case-pass', '종자검사 신청 사례 판정', '희망일 기준 3일 전까지', '4월 20일 희망일 / 4월 17일 신청'),
+      makeStage5Question('하루 밀리면 바로 틀린 거다.', '희망일이 4월 20일일 때, 4월 18일 종자검사 신청은 적절하다.', 'fail', '종자검사 신청은 검사희망일 3일 전까지 해야 합니다. 희망일이 4월 20일이면 4월 17일까지 신청해야 하므로 4월 18일 신청은 부적절합니다.', 'stage5:seed-apply-case-fail', '종자검사 신청 사례 판정', '희망일 기준 3일 전까지', '4월 20일 희망일 / 4월 18일 신청'),
+      makeStage5Question('재검사도 기간을 놓치면 끝이다.', '재검사 신청은 결과 통보일부터 15일 이내에 해야 한다.', 'pass', '재검사 신청 기한은 결과 통보일부터 15일 이내이므로 맞는 진술입니다.', 'stage5:reinspect-deadline', '재검사 신청 기한', '결과 통보일부터 15일 이내', '재검사 신청 15일 이내'),
+      makeStage5Question('날짜를 세는 건 기본이다.', '5월 1일 결과를 통보받고 5월 14일 재검사를 신청했다. 기한 내 신청이다.', 'pass', '재검사 신청은 결과 통보일부터 15일 이내에 해야 합니다. 5월 14일 신청은 기한 내이므로 맞는 진술입니다.', 'stage5:reinspect-case-pass', '재검사 신청 사례 판정', '결과 통보일부터 15일 이내', '5월 1일 통보 / 5월 14일 신청'),
+      makeStage5Question('늦은 신청은 이유가 있어도 늦은 거다.', '5월 1일 결과를 통보받고 5월 18일 재검사를 신청했다. 기한 내 신청이다.', 'fail', '재검사 신청은 결과 통보일부터 15일 이내에 해야 합니다. 5월 18일 신청은 기한을 넘겼으므로 틀린 진술입니다.', 'stage5:reinspect-case-fail', '재검사 신청 사례 판정', '결과 통보일부터 15일 이내', '5월 1일 통보 / 5월 18일 신청'),
+      makeStage5Question('보관기간도 종별로 다르다.', '원원종 제출시료의 보관기간은 3년이다.', 'pass', '제출시료 보관기간은 원원종 3년, 원종 2년, 보급종 1년, 기타 종자 6개월입니다. 원원종 3년은 맞는 진술입니다.', 'stage5:sample-storage-breeder', '제출시료 보관기간', '원원종 3년', '원원종 3년'),
+      makeStage5Question('기준표를 뒤집어 읽으면 바로 틀린다.', '보급종 제출시료의 보관기간은 2년이다.', 'fail', '보급종 제출시료의 보관기간은 1년입니다. 2년이라고 한 진술은 틀립니다.', 'stage5:sample-storage-supply', '제출시료 보관기간', '보급종 1년', '보급종 2년'),
+      makeStage5Question('기간은 짧아도 기준은 확실하다.', '기타 종자 제출시료의 보관기간은 6개월이다.', 'pass', '기타 종자 제출시료의 보관기간은 6개월이므로 맞는 진술입니다.', 'stage5:sample-storage-other', '제출시료 보관기간', '기타 종자 6개월', '기타 종자 6개월'),
+      makeStage5Question('시행일 하나도 정확히 기억해야 한다.', '이 고시의 시행일은 2026년 1월 8일이다.', 'pass', '고시 시행일은 2026년 1월 8일이므로 맞는 진술입니다.', 'stage5:notice-effective-date', '고시 시행일', '2026년 1월 8일 시행', '시행일 2026.1.8'),
+      makeStage5Question('재검토기한도 마음대로 줄일 수 없다.', '이 고시는 2026년 7월 1일 기준으로 매 2년마다 재검토한다.', 'fail', '재검토기한은 2026년 7월 1일을 기준으로 매 3년마다입니다. 매 2년마다라는 진술은 틀립니다.', 'stage5:review-cycle', '재검토기한', '2026년 7월 1일 기준 매 3년', '재검토 2년마다'),
+      makeStage5Question('절차는 원칙부터 맞춰라.', '포장검사는 원칙적으로 필지별로 한다.', 'pass', '포장검사는 원칙적으로 필지별로 실시하므로 맞는 진술입니다.', 'stage5:field-by-lot', '포장검사 원칙', '포장검사는 필지별 검사 원칙', '필지별 검사'),
+      makeStage5Question('분명한 결과 앞에서는 절차도 달라진다.', '달관검사 결과만으로 합격 또는 불합격이 분명해도 표본검사를 반드시 해야 한다.', 'fail', '달관검사 결과만으로 합격 또는 불합격이 분명하면 표본검사를 생략할 수 있습니다. 반드시 해야 한다는 진술은 틀립니다.', 'stage5:field-visual-skip-sampling', '달관검사와 표본검사', '달관검사로 판정이 분명하면 표본검사 생략 가능', '달관검사 후 표본검사 필수'),
+      makeStage5Question('절차는 출발점부터 제한된다.', '종자검사는 포장검사에 합격한 포장에서 생산된 종자를 대상으로 한다.', 'pass', '종자검사는 포장검사 합격 포장에서 생산된 종자를 대상으로 하므로 맞는 진술입니다.', 'stage5:seed-test-source', '종자검사 대상', '포장검사 합격 포장 생산 종자', '포장검사 합격 포장 종자'),
+      makeStage5Question('소집단 숫자도 헷갈리면 안 된다.', '감자류 소집단의 최대중량은 40톤이다.', 'pass', '감자류 소집단 최대중량은 40톤이므로 맞는 진술입니다.', 'stage5:seed-lot-potato', '소집단 최대중량', '감자류 40톤', '감자류 40톤'),
+      makeStage5Question('무게 기준을 부풀리면 바로 틀린다.', '15kg 미만 소형 포장물은 150kg으로 재구성하면 된다.', 'fail', '15kg 미만 소형 포장물은 100kg으로 재구성합니다. 150kg이라는 진술은 틀립니다.', 'stage5:small-pack-rebuild', '소형 포장물 재구성', '15kg 미만은 100kg 재구성', '소형 포장물 150kg 재구성'),
+      makeStage5Question('숫자는 반복까지 기억해야 한다.', '발아검정에서 정립종자 100립씩 4반복이면 총 400립이다.', 'pass', '정립종자 100립씩 4반복이면 총 400립이므로 맞는 진술입니다.', 'stage5:germination-count', '발아검정 반복수', '100립 × 4반복 = 400립', '100립 × 4반복'),
+      makeStage5Question('TR 기준은 한 자리 차이로 갈린다.', '순도분석에서 0.05% 이하는 TR로 적는다.', 'fail', 'TR 표기는 0.05% 미만일 때 적용합니다. 0.05% 이하는 TR이라는 진술은 틀립니다.', 'stage5:purity-tr', 'TR 표기 기준', '0.05% 미만 = TR', '0.05% 이하 = TR'),
+      makeStage5Question('합계가 틀리면 분석도 흔들린다.', '순도분석 전체 합은 100.0이 되어야 한다.', 'pass', '순도분석 결과의 전체 합은 100.0이 되어야 하므로 맞는 진술입니다.', 'stage5:purity-total', '순도분석 전체 합', '전체 합 100.0', '전체 합 100.0'),
+      makeStage5Question('재분석 기준은 낮게 잡히지 않는다.', '분석값 차이가 3% 이상이면 재분석한다.', 'fail', '분석값 차이가 5% 이상이면 재분석합니다. 3% 이상이라는 진술은 틀립니다.', 'stage5:reanalysis-gap', '재분석 기준', '차이 5% 이상 재분석', '차이 3% 이상 재분석'),
+      makeStage5Question('계산착오 의심 기준도 숫자로 고정된다.', '순도분석 전체 합이 100.0에서 0.1%를 넘게 벗어나면 계산착오를 의심한다.', 'pass', '전체 합이 100.0에서 0.1%를 넘게 벗어나면 계산착오를 의심하므로 맞는 진술입니다.', 'stage5:calc-error', '계산착오 의심 기준', '100.0에서 0.1% 넘게 벗어나면 계산착오 의심', '100.0 ± 0.1% 초과'),
+      makeStage5Question('기한을 못 맞추면 중간통보가 따라온다.', '종자검사는 희망일로부터 20일 이내에 완료해야 하며, 20일 내 완료하지 못하면 중간통보를 해야 한다.', 'pass', '종자검사는 희망일로부터 20일 이내 완료가 원칙이며, 그 기간 내 완료하지 못하면 중간통보를 해야 하므로 맞는 진술입니다.', 'stage5:seed-complete-notice', '종자검사 완료와 중간통보', '희망일로부터 20일 이내 완료, 미완료 시 중간통보', '20일 내 완료 / 미완료 시 중간통보'),
+      makeStage5Question('중간통보를 빼먹어도 되는 규정은 없다.', '종자검사는 20일을 넘겨도 별도 중간통보 없이 진행할 수 있다.', 'fail', '희망일로부터 20일 이내 완료하지 못하면 중간통보를 해야 합니다. 별도 중간통보 없이 진행할 수 있다는 진술은 틀립니다.', 'stage5:seed-complete-notice', '종자검사 완료와 중간통보', '희망일로부터 20일 이내 완료, 미완료 시 중간통보', '20일 초과 / 중간통보 없음'),
+      makeStage5Question('시간 기준도 외워서 끝낼 일이 아니다.', '수분측정용 시료는 건조기에 넣은 뒤 2분 후에 칭량한다.', 'pass', '수분측정에서는 시료를 건조기에 넣은 뒤 2분 후에 칭량하므로 맞는 진술입니다.', 'stage5:moisture-weigh-2min', '수분측정 칭량 시점', '건조기에 넣은 뒤 2분', '2분 후 칭량'),
+      makeStage5Question('30초를 넘기면 기준도 빗나간다.', '수분측정 시 칭량은 건조기에서 꺼낸 뒤 1분 이내면 된다.', 'fail', '칭량은 건조기에서 꺼낸 뒤 30초 이내에 해야 합니다. 1분 이내라는 진술은 틀립니다.', 'stage5:moisture-weigh-30sec', '수분측정 칭량 시간', '건조기에서 꺼낸 뒤 30초 이내', '1분 이내 칭량'),
+      makeStage5Question('시료 수분이 높으면 전처리 기준이 붙는다.', '순도분석 의뢰시료의 수분이 17% 이상이면 전처리를 검토한다.', 'pass', '순도분석 의뢰시료의 수분이 17% 이상이면 전처리 기준을 적용하므로 맞는 진술입니다.', 'stage5:purity-moisture-17', '순도분석 전처리 기준', '수분 17% 이상', '수분 17% 이상 전처리'),
+      makeStage5Question('작물별 수분 한도도 다르게 기억해야 한다.', '벼 정립종자의 수분 한도는 13%다.', 'pass', '벼 정립종자의 수분 한도는 13%이므로 맞는 진술입니다.', 'stage5:rice-moisture-limit', '정립종자 수분 한도', '벼 13%', '벼 13%'),
+      makeStage5Question('작물별 숫자를 섞으면 바로 틀린다.', '콩 정립종자의 수분 한도는 12%다.', 'fail', '콩 정립종자의 수분 한도는 10%입니다. 12%라는 진술은 틀립니다.', 'stage5:soy-moisture-limit', '정립종자 수분 한도', '콩 10%', '콩 12%'),
+      makeStage5Question('건조 조건은 온도와 시간이 함께 맞아야 한다.', '고온건조법은 103±2℃에서 17±1시간 처리한다.', 'pass', '고온건조법 조건은 103±2℃, 17±1시간이므로 맞는 진술입니다.', 'stage5:drying-temp-time', '고온건조법 조건', '103±2℃ / 17±1시간', '103±2℃, 17±1시간'),
+      makeStage5Question('침지시간은 작물에 따라 다르다.', '침지시간은 옥수수 4시간, 다른 곡류 2시간, 기타 종자 1시간이다.', 'pass', '침지시간 기준은 옥수수 4시간, 다른 곡류 2시간, 기타 종자 1시간이므로 맞는 진술입니다.', 'stage5:soak-time', '침지시간 기준', '옥수수 4시간 / 다른 곡류 2시간 / 기타 종자 1시간', '옥수수 4시간 / 곡류 2시간 / 기타 1시간')
+    ];
+  }
+
   function makeQuestion(stage) {
     const cfg = GENERATOR_CONFIG[stage];
     const profile = chooseProfile(stage);
@@ -517,7 +574,18 @@ function buildReason(prefix, entries, answer) {
     const storyText = buildStoryText(stage, prefix, valuesText);
     const studyText = buildStudyText(prefix, valuesText);
     const reason = buildReason(prefix, entries, answer);
-    return { text: storyText, storyText, studyText, answer, reason };
+    const noteMeta = buildGeneratedWrongNoteMeta(prefix, profile, selected, entries, answer, valuesText);
+    return {
+      text: storyText,
+      storyText,
+      studyText,
+      answer,
+      reason,
+      ruleKey: noteMeta.ruleKey,
+      mistakeType: noteMeta.mistakeType,
+      ruleSummary: noteMeta.ruleSummary,
+      noteExample: noteMeta.noteExample
+    };
   }
 
   function generateStageQuestions(stage) {
@@ -540,5 +608,6 @@ function buildReason(prefix, entries, answer) {
   NODES[1].questions = generateStageQuestions(2);
   NODES[2].questions = generateStageQuestions(3);
   NODES[3].questions = generateStageQuestions(4);
+  NODES[4].questions = buildStage5QuestionBank();
   NODES[5].questions = generateStageQuestions(6);
 })();

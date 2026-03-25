@@ -131,8 +131,28 @@ const Sound = (() => {
 const WrongNote = (() => {
   const KEY = 'seedGame_wrongnote';
 
+  function normalize(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((item, idx) => {
+      if (item && item.ruleKey && item.groupTitle) return item;
+      if (item && item.text) {
+        const legacyText = cleanStudyText(item.text || '');
+        return {
+          ruleKey: 'legacy:' + idx + ':' + legacyText,
+          groupTitle: legacyText || '기존 오답',
+          guideText: item.reason || '',
+          recentExamples: legacyText ? [legacyText] : [],
+          sampleReason: item.reason || '',
+          noteMode: item.uiMode === 'ox' ? 'ox' : 'judge',
+          updatedAt: Date.now() - idx
+        };
+      }
+      return null;
+    }).filter(Boolean).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  }
+
   function load() {
-    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; }
+    try { return normalize(JSON.parse(localStorage.getItem(KEY)) || []); } catch(e) { return []; }
   }
 
   function save(list) {
@@ -141,12 +161,41 @@ const WrongNote = (() => {
 
   function add(q) {
     const list = load();
-    // 중복 방지
-    if (!list.find(item => item.text === q.text)) {
-      list.unshift({ text: q.text, answer: q.answer, reason: q.reason });
-      if (list.length > 50) list.pop();
-      save(list);
+    const ruleKey = q.ruleKey || q.mistakeType || cleanStudyText(q.studyText || q.text || '');
+    const groupTitle = q.mistakeType || cleanStudyText((q.studyText || q.text || '').split(/\n+/)[0] || '오답 유형');
+    const guideText = q.ruleSummary || (String(q.reason || '').split(/\n\n+/)[0] || '');
+    const exampleText = cleanStudyText(q.noteExample || q.studyText || q.text || '');
+    const sampleReason = q.reason || '';
+    const noteMode = q.uiMode === 'ox' ? 'ox' : 'judge';
+    const now = Date.now();
+
+    let item = list.find(entry => entry.ruleKey === ruleKey);
+    if (!item) {
+      item = {
+        ruleKey,
+        groupTitle,
+        guideText,
+        recentExamples: [],
+        sampleReason,
+        noteMode,
+        updatedAt: now
+      };
+      list.unshift(item);
     }
+
+    item.groupTitle = groupTitle;
+    item.guideText = guideText || item.guideText || '';
+    item.sampleReason = sampleReason || item.sampleReason || '';
+    item.noteMode = noteMode;
+    item.updatedAt = now;
+
+    if (exampleText) {
+      item.recentExamples = [exampleText].concat((item.recentExamples || []).filter(v => v !== exampleText)).slice(0, 3);
+    }
+
+    list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    if (list.length > 50) list.length = 50;
+    save(list);
   }
 
   function clear() { save([]); }
@@ -329,7 +378,9 @@ function formatBattleQuestionHtml(question) {
   const chunks = [];
   const labelInfo = q.studyText ? splitLeadLabel(q.studyText) : { label: '', bodyLines: [] };
   if (labelInfo.label) {
-    let bodySource = String(q.text || '').trim();
+    let bodySource = String(q.storyText || q.text || '').trim();
+    const escapedLabel = labelInfo.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    bodySource = bodySource.replace(new RegExp('\\s*' + escapedLabel + '\\s*'), ' ').trim();
     if (bodySource.startsWith(labelInfo.label)) {
       bodySource = bodySource.slice(labelInfo.label.length).replace(/^[\s.。]+/, '');
     }
@@ -340,7 +391,7 @@ function formatBattleQuestionHtml(question) {
     });
     return chunks.join('');
   }
-  return formatQuestion(String(q.text || '')).split(/\n+/).map(v => v.trim()).filter(Boolean)
+  return formatQuestion(String(q.storyText || q.text || '')).split(/\n+/).map(v => v.trim()).filter(Boolean)
     .map(line => '<div class="battle-line-body">' + highlightNumbers(escapeHtml(line)) + '</div>').join('');
 }
 
@@ -422,6 +473,48 @@ const STUDY = {
   current: null
 };
 
+function isOxQuestion(q) {
+  return !!(q && q.uiMode === 'ox');
+}
+
+function getChoiceLabel(choice, q) {
+  if (isOxQuestion(q)) return choice === 'pass' ? 'O' : 'X';
+  return choice === 'pass' ? '합격' : '불합격';
+}
+
+function getChoiceResultSuffix(choice, q, correct) {
+  const label = getChoiceLabel(choice, q);
+  if (isOxQuestion(q)) return correct ? (label + '가 맞습니다.') : (label + '가 정답입니다.');
+  return correct ? (label + '이 맞습니다.') : (label + '이 정답입니다.');
+}
+
+function updateJudgeButtonsForQuestion(q, scope) {
+  const ox = isOxQuestion(q);
+  if (scope === 'study') {
+    const passLabel = document.querySelector('#study-screen .btn-pass .judge-label');
+    const failLabel = document.querySelector('#study-screen .btn-fail .judge-label');
+    const passBtn = document.getElementById('study-pass-btn');
+    const failBtn = document.getElementById('study-fail-btn');
+    const prompt = document.querySelector('#study-screen .study-prompt');
+    if (passLabel) passLabel.textContent = ox ? 'O' : '합격';
+    if (failLabel) failLabel.textContent = ox ? 'X' : '불합격';
+    if (passBtn) passBtn.classList.toggle('is-ox-mode', ox);
+    if (failBtn) failBtn.classList.toggle('is-ox-mode', ox);
+    if (prompt) prompt.innerHTML = ox
+      ? '다음 진술을 보고 <span class="tut-good">O</span> 또는 <span class="tut-bad">X</span>를 고르세요.'
+      : '다음 내용을 보고 <span class="tut-good">합격</span> 또는 <span class="tut-bad">불합격</span>을 판정하세요.';
+    return;
+  }
+  const passLabel = document.querySelector('#battle-screen .btn-pass .judge-label');
+  const failLabel = document.querySelector('#battle-screen .btn-fail .judge-label');
+  const passBtn = document.querySelector('#battle-screen .btn-pass');
+  const failBtn = document.querySelector('#battle-screen .btn-fail');
+  if (passLabel) passLabel.textContent = ox ? 'O' : '합격';
+  if (failLabel) failLabel.textContent = ox ? 'X' : '불합격';
+  if (passBtn) passBtn.classList.toggle('is-ox-mode', ox);
+  if (failBtn) failBtn.classList.toggle('is-ox-mode', ox);
+}
+
 function buildStudyPool() {
   const all = [];
   NODES.forEach((node, nodeIdx) => {
@@ -489,6 +582,7 @@ function showStudyQuestion() {
   const stageEl = document.getElementById('study-question-stage');
   if (stageEl) stageEl.textContent = '';
   const studyBody = STUDY.current.studyText || STUDY.current.text;
+  updateJudgeButtonsForQuestion(STUDY.current, 'study');
   document.getElementById('study-question').innerHTML = formatStudyQuestionHtml(studyBody);
   document.getElementById('study-result-box').classList.remove('show', 'correct', 'wrong');
   document.getElementById('study-pass-btn').disabled = false;
@@ -525,8 +619,8 @@ function answerStudy(choice) {
   document.getElementById('study-pass-btn').disabled = true;
   document.getElementById('study-fail-btn').disabled = true;
   const correct = choice === STUDY.current.answer;
-  const userJudge = choice === 'pass' ? '합격' : '불합격';
-  const correctJudge = STUDY.current.answer === 'pass' ? '합격' : '불합격';
+  const userJudge = getChoiceLabel(choice, STUDY.current);
+  const correctJudge = getChoiceLabel(STUDY.current.answer, STUDY.current);
   if (correct) {
     STUDY.correct++;
     Sound.playSE('se_correct');
@@ -538,9 +632,9 @@ function answerStudy(choice) {
   const box = document.getElementById('study-result-box');
   box.className = 'study-result-box show ' + (correct ? 'correct' : 'wrong');
   document.getElementById('study-result-title').textContent = correct ? '정답!' : '오답!';
-  document.getElementById('study-result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
+  document.getElementById('study-result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (choice === 'pass' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
   let reasonText = (STUDY.current.reason || '').trim();
-  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
+  const suffix = getChoiceResultSuffix(STUDY.current.answer, STUDY.current, correct);
   if (!reasonText) reasonText = suffix;
   else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
   document.getElementById('study-result-reason').innerHTML = formatReasonHtml(reasonText, 'study-reason-label');
@@ -835,8 +929,6 @@ let opSceneEls = [];
 let opTransitioning = false;
 let opFxTimers = [];
 let opTransitionTimers = [];
-let opTransitionCanvas = null;
-let opTransitionFrame = 0;
 
 let endingSceneIdx = 0, endingLineIdx = 0;
 let endingTyping = false, endingFullLine = '', endingTypingTimer = null;
@@ -846,182 +938,6 @@ let endingRankData = null;
 let endingTransitioning = false;
 let endingFxTimers = [];
 let endingTransitionTimers = [];
-let endingTransitionCanvas = null;
-let endingTransitionFrame = 0;
-
-function stopBlindCanvas(which) {
-  if (which === 'op') {
-    if (opTransitionFrame) cancelAnimationFrame(opTransitionFrame);
-    opTransitionFrame = 0;
-    if (opTransitionCanvas && opTransitionCanvas.parentNode) opTransitionCanvas.parentNode.removeChild(opTransitionCanvas);
-    opTransitionCanvas = null;
-    return;
-  }
-  if (endingTransitionFrame) cancelAnimationFrame(endingTransitionFrame);
-  endingTransitionFrame = 0;
-  if (endingTransitionCanvas && endingTransitionCanvas.parentNode) endingTransitionCanvas.parentNode.removeChild(endingTransitionCanvas);
-  endingTransitionCanvas = null;
-}
-
-function ensureBlindCanvas(parent, which) {
-  if (!parent) return null;
-  stopBlindCanvas(which);
-  const canvas = document.createElement('canvas');
-  canvas.className = 'scene-blind-canvas ' + (which === 'op' ? 'opening-blind-canvas' : 'ending-blind-canvas');
-  parent.appendChild(canvas);
-  if (which === 'op') opTransitionCanvas = canvas;
-  else endingTransitionCanvas = canvas;
-  return canvas;
-}
-
-function setupHiDPICanvas(canvas, parent) {
-  if (!canvas || !parent) return null;
-  const rect = parent.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect.width));
-  const height = Math.max(1, Math.round(rect.height));
-  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-  canvas.width = Math.max(1, Math.round(width * dpr));
-  canvas.height = Math.max(1, Math.round(height * dpr));
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-  return { ctx, width, height };
-}
-
-function drawImageCoverToContext(ctx, img, width, height) {
-  if (!ctx || !img || !img.naturalWidth || !img.naturalHeight) return false;
-  const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight);
-  const dw = img.naturalWidth * scale;
-  const dh = img.naturalHeight * scale;
-  const dx = (width - dw) / 2;
-  const dy = (height - dh) / 2;
-  ctx.drawImage(img, dx, dy, dw, dh);
-  return true;
-}
-
-function drawOpeningLayerSnapshot(targetCanvas, layer) {
-  if (!targetCanvas || !layer) return false;
-  const setup = setupHiDPICanvas(targetCanvas, layer.parentElement || layer);
-  if (!setup) return false;
-  const { ctx, width, height } = setup;
-  const bg = layer.querySelector('.op-scene-bg');
-  if (!bg || !bg.complete || !bg.naturalWidth) return false;
-  ctx.clearRect(0, 0, width, height);
-  drawImageCoverToContext(ctx, bg, width, height);
-  ctx.fillStyle = 'rgba(0,0,0,0.14)';
-  ctx.fillRect(0, 0, width, height);
-  return true;
-}
-
-function drawEndingSceneSnapshot(targetCanvas, sceneIdx, onReady) {
-  const parent = document.getElementById('ending-scene-wrap');
-  const setup = setupHiDPICanvas(targetCanvas, parent);
-  if (!setup) { onReady(false); return; }
-  const { ctx, width, height } = setup;
-  const scene = ENDING_SCENES[sceneIdx];
-
-  const paint = (img) => {
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#0b0b0b';
-    ctx.fillRect(0, 0, width, height);
-    if (img && img.naturalWidth) drawImageCoverToContext(ctx, img, width, height);
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    ctx.fillRect(0, 0, width, height);
-    onReady(true);
-  };
-
-  if (scene && scene._imgCache && scene._imgCache.complete && scene._imgCache.naturalWidth) {
-    paint(scene._imgCache);
-    return;
-  }
-
-  const img = new Image();
-  img.onload = () => {
-    scene._imgCache = img;
-    paint(img);
-  };
-  img.onerror = () => paint(null);
-  img.src = scene.image;
-}
-
-function runBlindLiftTransition(canvas, which, done) {
-  if (!canvas) { if (done) done(); return; }
-  const ctx = canvas.getContext('2d');
-  if (!ctx) { stopBlindCanvas(which); if (done) done(); return; }
-  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-  const width = Math.max(1, Math.round(canvas.width / dpr));
-  const height = Math.max(1, Math.round(canvas.height / dpr));
-  const base = document.createElement('canvas');
-  base.width = canvas.width;
-  base.height = canvas.height;
-  const bctx = base.getContext('2d');
-  if (!bctx) { stopBlindCanvas(which); if (done) done(); return; }
-  bctx.drawImage(canvas, 0, 0);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-
-  const duration = which === 'op' ? 1850 : 2150;
-  const stripe = 4;
-  const rowGap = which === 'op' ? 8 : 9;
-  const bandHeight = which === 'op' ? 12 : 14;
-  const shadeAlpha = which === 'op' ? 0.14 : 0.11;
-  const motionStep = which === 'op' ? 3 : 3;
-  const blockPattern = which === 'op' ? [10, 12, 14, 12] : [12, 14, 16, 14];
-  const blockGap = which === 'op' ? 8 : 10;
-  const patternStride = Math.max(...blockPattern) + blockGap;
-  const stagger = Math.floor(patternStride / 2);
-  const start = performance.now();
-
-  const step = (now) => {
-    const raw = Math.min(1, (now - start) / duration);
-    const travel = raw * (height + bandHeight);
-    const snappedTravel = raw >= 1 ? (height + bandHeight) : Math.floor(travel / motionStep) * motionStep;
-    const bandTop = Math.round(height - snappedTravel);
-    const fullyClearedFrom = Math.max(0, bandTop + bandHeight);
-
-    ctx.clearRect(0, 0, width, height);
-    ctx.drawImage(base, 0, 0, width, height);
-
-    if (fullyClearedFrom < height) ctx.clearRect(0, fullyClearedFrom, width, height - fullyClearedFrom);
-
-    const bandStart = Math.max(0, bandTop);
-    const bandEnd = Math.min(height, bandTop + bandHeight);
-    if (bandStart < bandEnd) {
-      let rowIndex = 0;
-      for (let y = bandStart; y < bandEnd; y += rowGap) {
-        const offsetX = (rowIndex % 2 === 0) ? 0 : stagger;
-        let x = -patternStride + offsetX;
-        let blockIndex = rowIndex % blockPattern.length;
-        while (x < width) {
-          const blockW = blockPattern[blockIndex % blockPattern.length];
-          ctx.clearRect(x, y, blockW, stripe);
-          if (shadeAlpha > 0) {
-            ctx.fillStyle = 'rgba(0,0,0,' + shadeAlpha.toFixed(3) + ')';
-            ctx.fillRect(x, y + stripe, blockW, 1);
-          }
-          x += blockW + blockGap;
-          blockIndex++;
-        }
-        rowIndex++;
-      }
-    }
-
-    if (raw < 1) {
-      if (which === 'op') opTransitionFrame = requestAnimationFrame(step);
-      else endingTransitionFrame = requestAnimationFrame(step);
-      return;
-    }
-
-    stopBlindCanvas(which);
-    if (done) done();
-  };
-
-  if (which === 'op') opTransitionFrame = requestAnimationFrame(step);
-  else endingTransitionFrame = requestAnimationFrame(step);
-}
 
 function opRenderLine(line) {
   const safe = line
@@ -1097,7 +1013,6 @@ function opCleanupLayer(el) {
 
 function opSetScene(idx, immediate = false) {
   clearTimerBucket(opTransitionTimers);
-  stopBlindCanvas('op');
   if (immediate) clearTimerBucket(opFxTimers);
   opSceneEls.forEach((el, i) => {
     if (i === idx) {
@@ -1130,34 +1045,25 @@ function opTransitionToScene(nextIdx, done) {
   opTransitioning = true;
   clearTimerBucket(opTransitionTimers);
   clearTimerBucket(opFxTimers);
-  stopBlindCanvas('op');
   opSceneEls.forEach((el, i) => {
     if (i !== prevIdx && i !== nextIdx) opCleanupLayer(el);
   });
-  next.classList.add('active');
-  next.classList.remove('op-strip-in', 'op-hold-under');
-  next.style.webkitMaskImage = 'none';
-  next.style.maskImage = 'none';
-  next.style.webkitMaskSize = 'auto';
-  next.style.maskSize = 'auto';
+  if (prev) {
+    prev.classList.add('active', 'op-hold-under');
+    prev.classList.remove('op-strip-in');
+  }
+  next.classList.add('active', 'op-strip-in');
+  next.classList.remove('op-hold-under');
   restartInlineAnimation(next.querySelector('.op-scene-bg'));
-
-  const canvas = ensureBlindCanvas(document.getElementById('op-scene-container'), 'op');
-  const finalize = () => {
+  opTransitionTimers.push(setTimeout(() => {
+    if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
+  }, 160));
+  opTransitionTimers.push(setTimeout(() => {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, false);
     opTransitioning = false;
-    if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
     if (done) done();
-  };
-
-  if (!prev || !drawOpeningLayerSnapshot(canvas, prev)) {
-    finalize();
-    return;
-  }
-
-  opCleanupLayer(prev);
-  runBlindLiftTransition(canvas, 'op', finalize);
+  }, 430));
 }
 
 function opShowLine() {
@@ -1200,7 +1106,6 @@ function opSkipAll() {
   clearTimeout(opTypingTimer);
   clearTimerBucket(opFxTimers);
   clearTimerBucket(opTransitionTimers);
-  stopBlindCanvas('op');
   opTransitioning = false;
   opSceneIdx = OP_SCENES.length - 1;
   opLineIdx  = OP_SCENES[opSceneIdx].lines.length - 1;
@@ -1212,7 +1117,6 @@ function opSkipAll() {
 
 function startOpening() {
   showScreen('opening-screen');
-  stopBlindCanvas('op');
 
   // 씬 요소 생성
   const container = document.getElementById('op-scene-container');
@@ -1384,10 +1288,12 @@ function showWrongnote() {
     list.forEach(item => {
       const div = document.createElement('div');
       div.className = 'wrongnote-item';
+      const examples = (item.recentExamples || []).map(ex => '<li>' + highlightNumbers(escapeHtml(ex)) + '</li>').join('');
       div.innerHTML =
-        '<div class="wrongnote-item-q">' + highlightNumbers(item.text) + '</div>' +
-        '<div class="wrongnote-item-ans">정답: ' + (item.answer === 'pass' ? '합격' : '불합격') + '</div>' +
-        '<div class="wrongnote-item-reason">' + item.reason + '</div>';
+        '<div class="wrongnote-item-title">' + highlightNumbers(escapeHtml(item.groupTitle || '오답 유형')) + '</div>' +
+        (item.guideText ? '<div class="wrongnote-item-guide">기준: ' + highlightNumbers(escapeHtml(item.guideText)) + '</div>' : '') +
+        (examples ? '<div class="wrongnote-item-examples-label">최근 오답 예시</div><ul class="wrongnote-item-examples">' + examples + '</ul>' : '') +
+        (item.sampleReason ? '<div class="wrongnote-item-reason">' + item.sampleReason + '</div>' : '');
       body.appendChild(div);
     });
   }
@@ -1620,6 +1526,7 @@ function animateHpBreak(idx) {
 function loadQuestion() {
   if (!G.shuffledQ.length) return;
   const q = G.shuffledQ[G.currentQ];
+  updateJudgeButtonsForQuestion(q, 'battle');
   document.getElementById('battle-question').innerHTML = formatBattleQuestionHtml(q);
   document.getElementById('q-counter').textContent = '문제 ' + G.questionTurn;
   updatePlayerFlavorLine();
@@ -1636,17 +1543,17 @@ function answer(choice) {
   document.querySelectorAll('.judge-btn').forEach(b => b.disabled = true);
   const q = G.shuffledQ[G.currentQ];
   const correct = choice === q.answer;
-  const userJudge = choice === 'pass' ? '합격' : '불합격';
-  const correctJudge = q.answer === 'pass' ? '합격' : '불합격';
+  const userJudge = getChoiceLabel(choice, q);
+  const correctJudge = getChoiceLabel(q.answer, q);
 
   const box = document.getElementById('result-box');
   box.className = 'result-box ' + (correct ? 'correct' : 'wrong');
   document.getElementById('result-badge').textContent = '채점 결과';
   document.getElementById('result-title').textContent = correct ? '정답!' : '오답!';
-  document.getElementById('result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (userJudge === '합격' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
+  document.getElementById('result-answer').innerHTML = '당신의 판정: <span class="judge-word ' + (choice === 'pass' ? 'pass' : 'fail') + '">' + userJudge + '</span>';
 
   let reasonText = (q.reason || '').trim();
-  const suffix = correct ? (correctJudge + '이 맞습니다.') : (correctJudge + '이 정답입니다.');
+  const suffix = getChoiceResultSuffix(q.answer, q, correct);
   if (!reasonText) reasonText = suffix;
   else if (!reasonText.includes(correctJudge)) reasonText = reasonText.replace(/[.。!?！？]?$/, '') + '. ' + suffix;
   document.getElementById('result-reason').innerHTML = formatReasonHtml(reasonText);
@@ -1795,7 +1702,6 @@ function setEndingBackground(idx) {
   layer.style.backgroundRepeat = 'no-repeat';
   const img = new Image();
   img.onload = () => {
-    scene._imgCache = img;
     layer.style.background = `url("${scene.image}"), ${scene.fallback}`;
     layer.style.backgroundSize = 'cover, cover';
     layer.style.backgroundPosition = 'center center, center center';
@@ -1806,40 +1712,34 @@ function setEndingBackground(idx) {
 
 function endingSetScene(idx, immediate = false) {
   const layer = document.getElementById('ending-bg-layer');
-  const wrap = document.getElementById('ending-scene-wrap');
+  const overlay = document.querySelector('#ending-screen .ending-overlay');
   if (!layer) { setEndingBackground(idx); return; }
   clearTimerBucket(endingTransitionTimers);
   clearTimerBucket(endingFxTimers);
-  stopBlindCanvas('ending');
   layer.classList.remove('wipe-in', 'wipe-out');
   layer.style.webkitMaskImage = 'none';
   layer.style.maskImage = 'none';
   layer.style.webkitMaskSize = 'auto';
   layer.style.maskSize = 'auto';
   layer.style.animation = 'none';
-  if (immediate || !wrap) {
-    endingTransitioning = false;
+  if (overlay) overlay.classList.remove('pass');
+  if (immediate || !overlay) {
     setEndingBackground(idx);
     restartInlineAnimation(layer);
     return;
   }
-
-  const prevIdx = Math.max(0, idx - 1);
   endingTransitioning = true;
-  setEndingBackground(idx);
-  restartInlineAnimation(layer);
-
-  const canvas = ensureBlindCanvas(wrap, 'ending');
-  drawEndingSceneSnapshot(canvas, prevIdx, (ready) => {
-    if (!ready) {
-      endingTransitioning = false;
-      stopBlindCanvas('ending');
-      return;
-    }
-    runBlindLiftTransition(canvas, 'ending', () => {
-      endingTransitioning = false;
-    });
-  });
+  overlay.classList.remove('pass');
+  void overlay.offsetWidth;
+  overlay.classList.add('pass');
+  endingTransitionTimers.push(setTimeout(() => {
+    setEndingBackground(idx);
+    restartInlineAnimation(layer);
+  }, 230));
+  endingTransitionTimers.push(setTimeout(() => {
+    overlay.classList.remove('pass');
+    endingTransitioning = false;
+  }, 640));
 }
 
 function endingShowLine() {
@@ -1939,8 +1839,6 @@ function showEndingRankPopup() {
 }
 
 function endingSkipToRank() {
-  stopBlindCanvas('ending');
-  endingTransitioning = false;
   if (!endingRankData) buildEndingRankData();
   endingTyping = false;
   endingAwaitingRank = false;
@@ -1992,7 +1890,6 @@ function endingNextStep() {
 
 function showEnding() {
   if (G.damageTimer) { clearTimeout(G.damageTimer); G.damageTimer = null; }
-  stopBlindCanvas('ending');
   G.pendingDamage = false;
   clearTimerBucket(endingFxTimers);
   clearTimerBucket(endingTransitionTimers);
