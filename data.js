@@ -107,11 +107,11 @@ var NODES = [
 
 (function seedQuestionFactory() {
   const GENERATOR_CONFIG = {
-    1: { count: 14, metricsPerQuestion: 1, passChance: 0.56 },
-    2: { count: 16, metricsPerQuestion: 3, passChance: 0.55 },
-    3: { count: 16, metricsPerQuestion: 3, passChance: 0.52 },
-    4: { count: 16, metricsPerQuestion: 3, passChance: 0.50 },
-    6: { count: 18, metricsPerQuestion: 5, passChance: 0.46 }
+    1: { count: 20, metricsPerQuestion: 1, passChance: 0.56 },
+    2: { count: 20, metricsPerQuestion: 3, passChance: 0.55 },
+    3: { count: 20, metricsPerQuestion: 3, passChance: 0.52 },
+    4: { count: 20, metricsPerQuestion: 3, passChance: 0.50 },
+    6: { count: 20, metricsPerQuestion: 5, passChance: 0.46 }
   };
 
   const DIFFICULTY_PICK = {
@@ -132,29 +132,29 @@ var NODES = [
 
   const STORY_TEMPLATES = {
     1: [
-      '{prefix}. {values}예요. 이 정도면 괜찮죠?',
-      '{prefix}. {values}인데요, 한번 봐주세요~',
-      '{prefix}. {values}예요. 맞게 가져온 것 같은데요?'
+      '{prefix}\n{values}예요. 이 정도면 괜찮죠?',
+      '{prefix}\n{values}인데요, 한번 봐주세요~',
+      '{prefix}\n{values}예요. 맞게 가져온 것 같은데요?'
     ],
     2: [
-      '{prefix}. 정성껏 골라온 물량이에요. {values}예요. 한번 봐주세요.',
-      '{prefix}. 이번 건 꽤 잘 나온 편이에요~ {values}예요. 어떠세요?',
-      '{prefix}. 상태는 꽤 안정적인 것 같은데요~ {values}예요.'
+      '{prefix}\n정성껏 골라온 물량이에요. {values}예요. 한번 봐주세요.',
+      '{prefix}\n이번 건 꽤 잘 나온 편이에요~ {values}예요. 어떠세요?',
+      '{prefix}\n상태는 꽤 안정적인 것 같은데요~ {values}예요.'
     ],
     3: [
-      '{prefix}. 꽤 그럴듯하지? {values}야. 어디 판정해 봐.',
-      '{prefix}. 이번 건 제법 괜찮아 보여. {values}야.',
-      '{prefix}. 정성은 충분히 들였어. {values}다.'
+      '{prefix}\n꽤 그럴듯하지? {values}야. 어디 판정해 봐.',
+      '{prefix}\n이번 건 제법 괜찮아 보여. {values}야.',
+      '{prefix}\n정성은 충분히 들였어. {values}다.'
     ],
     4: [
-      '{prefix}. 기준에 맞춰 정리했어. {values}다. 확인해 봐.',
-      '{prefix}. 이 정도면 빠질 데 없지. {values}야.',
-      '{prefix}. 수치는 충분히 보여줬어. {values}다.'
+      '{prefix}\n기준에 맞춰 정리했어. {values}다. 확인해 봐.',
+      '{prefix}\n이 정도면 빠질 데 없지. {values}야.',
+      '{prefix}\n수치는 충분히 보여줬어. {values}다.'
     ],
     6: [
-      '{prefix}. 숫자는 다 보여줬다. {values}다. 자, 판정해 봐.',
-      '{prefix}. 이 정도 수치면 쉽게 말하긴 어렵겠지. {values}다.',
-      '{prefix}. 전부 확인하고도 같은 판정을 내릴 수 있겠나? {values}다.'
+      '{prefix}\n숫자는 다 보여줬다. {values}다. 자, 판정해 봐.',
+      '{prefix}\n이 정도 수치면 쉽게 말하긴 어렵겠지. {values}다.',
+      '{prefix}\n전부 확인하고도 같은 판정을 내릴 수 있겠나? {values}다.'
     ]
   };
 
@@ -322,6 +322,14 @@ var NODES = [
 
   function rand(min, max) { return Math.random() * (max - min) + min; }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function shuffleLocal(arr) {
+    const copy = arr.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function roundByFormat(v, format) {
     if (format === 'int') return Math.round(v);
@@ -588,12 +596,13 @@ function buildReason(prefix, entries, answer) {
     };
   }
 
-  function generateStageQuestions(stage) {
+  function generateStageQuestions(stage, countOverride) {
     const cfg = GENERATOR_CONFIG[stage];
+    const targetCount = Math.max(1, Number(countOverride) || cfg.count);
     const out = [];
     const seen = new Set();
     let guard = 0;
-    while (out.length < cfg.count && guard < cfg.count * 20) {
+    while (out.length < targetCount && guard < targetCount * 24) {
       guard++;
       const q = makeQuestion(stage);
       const key = q.studyText;
@@ -604,10 +613,20 @@ function buildReason(prefix, entries, answer) {
     return out;
   }
 
-  NODES[0].questions = generateStageQuestions(1);
-  NODES[1].questions = generateStageQuestions(2);
-  NODES[2].questions = generateStageQuestions(3);
-  NODES[3].questions = generateStageQuestions(4);
-  NODES[4].questions = buildStage5QuestionBank();
-  NODES[5].questions = generateStageQuestions(6);
+  function generateNodeQuestions(nodeIdx, countOverride) {
+    const node = NODES[nodeIdx];
+    if (!node) return [];
+    const stage = nodeIdx + 1;
+    if (stage === 5) {
+      const bank = buildStage5QuestionBank();
+      return shuffleLocal(bank).slice(0, Math.min(bank.length, Math.max(1, Number(countOverride) || 20)));
+    }
+    return generateStageQuestions(stage, countOverride);
+  }
+
+  window.SeedQuestionFactory = {
+    generateStageQuestions,
+    buildStage5QuestionBank,
+    generateNodeQuestions
+  };
 })();

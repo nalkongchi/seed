@@ -301,6 +301,22 @@ function resetWholeGame() {
   G.nodeStatus[0] = 'available';
 }
 
+function refreshNodeQuestions(idx, count) {
+  const factory = window.SeedQuestionFactory;
+  if (!factory || typeof factory.generateNodeQuestions !== 'function' || !NODES[idx]) return [];
+  NODES[idx].questions = factory.generateNodeQuestions(idx, count || 20);
+  return NODES[idx].questions;
+}
+
+function ensureNodeQuestions(idx, count) {
+  const node = NODES[idx];
+  if (!node) return [];
+  if (!Array.isArray(node.questions) || !node.questions.length) {
+    return refreshNodeQuestions(idx, count || 20);
+  }
+  return node.questions;
+}
+
 function resetNodeBattle(idx) {
   if (G.damageTimer) {
     clearTimeout(G.damageTimer);
@@ -316,7 +332,8 @@ function resetNodeBattle(idx) {
   G.enemyHp = NODES[idx].maxHp;
   G.correct = 0;
   G.wrong = 0;
-  G.shuffledQ = shuffle([...NODES[idx].questions]);
+  refreshNodeQuestions(idx, 20);
+  G.shuffledQ = shuffle([...(NODES[idx].questions || [])]);
 }
 
 // ==============================
@@ -518,7 +535,8 @@ function updateJudgeButtonsForQuestion(q, scope) {
 function buildStudyPool() {
   const all = [];
   NODES.forEach((node, nodeIdx) => {
-    node.questions.forEach((q, qIdx) => {
+    const questions = ensureNodeQuestions(nodeIdx, 20);
+    questions.forEach((q, qIdx) => {
       all.push({ ...q, _nodeIdx: nodeIdx, _qIdx: qIdx, _nodeLabel: node.label.split('\n').join(' '), _enemy: node.enemy });
     });
   });
@@ -703,7 +721,7 @@ function finalizeAfterDamage() {
   G.currentQ++;
   G.questionTurn++;
   if (G.currentQ >= G.shuffledQ.length) {
-    G.shuffledQ = shuffle([...NODES[G.currentNode].questions]);
+    G.shuffledQ = shuffle([...(ensureNodeQuestions(G.currentNode, 20) || [])]);
     G.currentQ = 0;
   }
   loadQuestion();
@@ -1033,10 +1051,8 @@ function opSetScene(idx, immediate = false) {
 }
 
 function opTransitionToScene(nextIdx, done) {
-  const prevIdx = opSceneIdx;
-  const prev = opSceneEls[prevIdx];
   const next = opSceneEls[nextIdx];
-  if (!next || prevIdx === nextIdx) {
+  if (!next || opSceneIdx === nextIdx) {
     opSceneIdx = nextIdx;
     opSetScene(nextIdx, true);
     if (done) done();
@@ -1045,25 +1061,12 @@ function opTransitionToScene(nextIdx, done) {
   opTransitioning = true;
   clearTimerBucket(opTransitionTimers);
   clearTimerBucket(opFxTimers);
-  opSceneEls.forEach((el, i) => {
-    if (i !== prevIdx && i !== nextIdx) opCleanupLayer(el);
-  });
-  if (prev) {
-    prev.classList.add('active', 'op-hold-under');
-    prev.classList.remove('op-strip-in');
-  }
-  next.classList.add('active', 'op-strip-in');
-  next.classList.remove('op-hold-under');
-  restartInlineAnimation(next.querySelector('.op-scene-bg'));
+  opSceneIdx = nextIdx;
+  opSetScene(nextIdx, true);
   opTransitionTimers.push(setTimeout(() => {
-    if (OP_SCENES[nextIdx] && OP_SCENES[nextIdx].lightning) opTriggerLightning(next);
-  }, 160));
-  opTransitionTimers.push(setTimeout(() => {
-    opSceneIdx = nextIdx;
-    opSetScene(nextIdx, false);
     opTransitioning = false;
     if (done) done();
-  }, 430));
+  }, 0));
 }
 
 function opShowLine() {
@@ -1716,6 +1719,7 @@ function endingSetScene(idx, immediate = false) {
   if (!layer) { setEndingBackground(idx); return; }
   clearTimerBucket(endingTransitionTimers);
   clearTimerBucket(endingFxTimers);
+  endingTransitioning = false;
   layer.classList.remove('wipe-in', 'wipe-out');
   layer.style.webkitMaskImage = 'none';
   layer.style.maskImage = 'none';
@@ -1723,23 +1727,8 @@ function endingSetScene(idx, immediate = false) {
   layer.style.maskSize = 'auto';
   layer.style.animation = 'none';
   if (overlay) overlay.classList.remove('pass');
-  if (immediate || !overlay) {
-    setEndingBackground(idx);
-    restartInlineAnimation(layer);
-    return;
-  }
-  endingTransitioning = true;
-  overlay.classList.remove('pass');
-  void overlay.offsetWidth;
-  overlay.classList.add('pass');
-  endingTransitionTimers.push(setTimeout(() => {
-    setEndingBackground(idx);
-    restartInlineAnimation(layer);
-  }, 230));
-  endingTransitionTimers.push(setTimeout(() => {
-    overlay.classList.remove('pass');
-    endingTransitioning = false;
-  }, 640));
+  setEndingBackground(idx);
+  restartInlineAnimation(layer);
 }
 
 function endingShowLine() {
